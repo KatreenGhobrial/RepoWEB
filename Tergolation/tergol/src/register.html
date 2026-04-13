@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport " content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="flex justify-center items-center font-sans h-96 m-8">
+    <div class="p-8 w-96 bg-white rounded-md  shadow-xl">
+      <h1 class="font-semibold text-2xl mb-8">Register</h1>
+      <form id="registerForm" action="register.html" method="post">
+        <label class="" for="userInput">Username </label>
+        <input class="border rounded w-full mb-4 h-8" type="text" id="userInput" required />
+        <label class="" for="emailInput">Email</label>
+        <input class="border rounded w-full mb-4 h-8" type="email" id="emailInput" required />
+        <label for="passInput">Password</label>
+        <input class="border rounded w-full mb-4 h-8"  type="password" id="passInput" required />
+        <label for="verify password">Verify Password</label>
+        <input class="border rounded w-full mb-4 h-8 " placeholder="Confirm password"   type="password" id="verifypassword" required />
+        <label for="date">Date of Birth</label>
+        <input class="border rounded  w-full mb-4 h-8 " type="date" id="dateId" required />
+        <button
+          type="submit"
+          class="w-full p-3 bg-blue-500 text-white rounded hover:bg-blue-600">
+          Register
+        </button>
+         <a href="login.html" class="block text-center mt-4 text-blue-500 hover:underline">Already have an account? Login</a>
+      </form>
+      <div id="registerMessage" class="mt-2 text-red-500 text-center text-sm"></div>
+    </div>
+  <script src="register.js"></script>
+  </body>
+</html>
