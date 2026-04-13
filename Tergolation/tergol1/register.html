@@ -12,7 +12,7 @@
   <body class="flex justify-center items-center font-sans h-96 m-8">
     <div class="p-8 w-96 bg-white rounded-md  shadow-xl">
       <h1 class="font-semibold text-2xl mb-8">Register</h1>
-      <form>
+      <form id="registerForm" action="register.html" method="post">
         <label class="" for="userInput">Username </label>
         <input class="border rounded w-full mb-4 h-8" type="text" id="userInput" required />
         <label class="" for="emailInput">Email</label>
@@ -30,6 +30,8 @@
         </button>
          <a href="login.html" class="block text-center mt-4 text-blue-500 hover:underline">Already have an account? Login</a>
       </form>
+      <div id="registerMessage" class="mt-2 text-red-500 text-center text-sm"></div>
     </div>
+  <script src="register.js"></script>
   </body>
 </html>
