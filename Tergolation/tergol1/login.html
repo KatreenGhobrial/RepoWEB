@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport " content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Tirgul 2</title>
     <link rel="stylesheet" href="style.css" />
     <link
       href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
@@ -13,7 +13,8 @@
   <body class="content">
     <div class="container">
       <h1>Login</h1>
-      <form>
+      <form id="loginForm" action="login" method="post">
+        
         <label for="userInput">Username or Email</label>
         <input type="text" id="userInput" required />
         <label for="passInput">Password</label>
@@ -27,7 +28,7 @@
           href="register.html"
           class="block text-center w-full p-3 mt-4 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
           >Register</a>
-        <a href="#" class="block text-right mt-4 text-blue-500 hover:underline">Forgot Password?</a>
+        <a href="#" class="block text-right mt-4 text-blue-500 hover:underline" onclick="alert('Forgot password functionality to be implemented.');">Forgot Password?</a>
         
       </form>
     </div>
