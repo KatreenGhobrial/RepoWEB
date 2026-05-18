@@ -1,45 +1,49 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { login } from './UsersManager/UsersService';
+import ActionButton from '../UIComponents/ActionButton';
+import LabeledInput from '../UIComponents/LabeledInput';
 
+// 1. Add "{ setUser }: { setUser: any }" here so it accepts the prop
+export default function Login({ setUser }: { setUser: any }) {
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const navigate = useNavigate();
 
-import './App.css'
-import IoTPic from './assets/IoTPic.png'
-import Footer from './UIComponnents/Footer';
-import Login from './UsersManager/Login';
+    const handleLogin = (e: any) => {
+        e.preventDefault(); 
+        
+        const loggedInUser = login(username, password);
+        
+        if (loggedInUser) {
+            // 2. Tell App.tsx who just logged in
+            setUser(loggedInUser); 
+            navigate('/profile'); 
+        } else {
+            alert("Invalid username or password");
+        }
+    };
 
-
-function App() {
-  const menuItems = [
-    { label: 'Home', path: '/' },
-    { label: 'About', path: '/about' },
-    { label: 'Services', path: '/services' },
-    { label: 'Contact', path: '/contact' },
-    { label: 'Login', path: '/login' },
-  ];
-
-  return (
-    <div className="min-h-screen w-full bg-gradient-to-r from-blue-400 to-emerald-400">
-
-      <header className="flex items-center justify-between py-6 px-8 md:px-32 bg-white text-black drop-shadow-md">
-        <a href="#">
-          <img className="w-12 hover:scale-110 transition-all" src={IoTPic} alt="Logo" />
-        </a>
-
-        <ul className='hidden md:flex items-center gap-12 font-semibold text-base'>
-          {menuItems.map((item, index) => (
-            <li
-              key={index}
-              className="p-3 text-gray-700 hover:bg-sky-400 hover:text-white rounded-md transition-all cursor-pointer"
-            >
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      </header>
-      <Login></Login>
-      <Footer></Footer>
-    </div>
-
-
-  )
+    return (
+        <div className="bg-white p-8 rounded shadow-md w-96 justify-self-center justify-items-center mx-auto my-16">
+            <h2 className="text-xl font-bold mb-6 text-center">Login</h2>
+            
+            {/* 3. Make sure the form calls handleLogin on submit */}
+            <form id="loginForm" onSubmit={handleLogin}>
+                <LabeledInput 
+                    label="Username or Email" 
+                    type="text" 
+                    value={username}
+                    onChange={(e: any) => setUsername(e.target.value)} 
+                />
+                <LabeledInput 
+                    label="Password" 
+                    type="password" 
+                    value={password}
+                    onChange={(e: any) => setPassword(e.target.value)} 
+                />
+                <ActionButton text="Login" backgroundColor="CornflowerBlue" type="submit" />
+            </form>
+        </div>
+    );
 }
-
-export default App
