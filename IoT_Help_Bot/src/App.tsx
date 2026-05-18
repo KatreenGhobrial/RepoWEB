@@ -1,49 +1,60 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { login } from './UsersManager/UsersService';
-import ActionButton from '../UIComponents/ActionButton';
-import LabeledInput from '../UIComponents/LabeledInput';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import Navbar from './UIComponents/Navbar';
+import Footer from './UIComponents/Footer';
+import Login from './UsersManager/Login';
+import Register from './UsersManager/Register';
+import Profile from './UsersManager/profile';
+import ManageUsers from './UsersManager/ManagerUsers';
+import Home from './pages/Home';
+import About from './pages/About';
+import Services from './pages/Services';
+import Contact from './pages/Contact';
+import Dashboard from './pages/Dashboard';
+import { logout } from './UsersManager/UsersService';
+import './App.css';
 
-// 1. Add "{ setUser }: { setUser: any }" here so it accepts the prop
-export default function Login({ setUser }: { setUser: any }) {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+export default function App() {
+    const [user, setUser] = useState<any>(null);
+    const [theme, setTheme] = useState<string>('');
     const navigate = useNavigate();
 
-    const handleLogin = (e: any) => {
-        e.preventDefault(); 
-        
-        const loggedInUser = login(username, password);
-        
-        if (loggedInUser) {
-            // 2. Tell App.tsx who just logged in
-            setUser(loggedInUser); 
-            navigate('/profile'); 
-        } else {
-            alert("Invalid username or password");
-        }
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'dark' ? '' : 'dark');
+    };
+
+    const handleLogout = () => {
+        logout();
+        setUser(null);
+        navigate('/login');
     };
 
     return (
-        <div className="bg-white p-8 rounded shadow-md w-96 justify-self-center justify-items-center mx-auto my-16">
-            <h2 className="text-xl font-bold mb-6 text-center">Login</h2>
-            
-            {/* 3. Make sure the form calls handleLogin on submit */}
-            <form id="loginForm" onSubmit={handleLogin}>
-                <LabeledInput 
-                    label="Username or Email" 
-                    type="text" 
-                    value={username}
-                    onChange={(e: any) => setUsername(e.target.value)} 
+        <div className={`min-h-screen flex flex-col transition-colors duration-300 ${theme}`}>
+            <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-gray-100">
+                <Navbar
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
+                    user={user}
+                    onLogout={handleLogout}
                 />
-                <LabeledInput 
-                    label="Password" 
-                    type="password" 
-                    value={password}
-                    onChange={(e: any) => setPassword(e.target.value)} 
-                />
-                <ActionButton text="Login" backgroundColor="CornflowerBlue" type="submit" />
-            </form>
+
+                <main className="flex-grow pt-16">
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/services" element={<Services />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/login" element={<Login setUser={setUser} />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
+                        <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/login" replace />} />
+                        <Route path="/manage-users" element={user?.role === 'Admin' ? <ManageUsers /> : <Navigate to="/login" replace />} />
+                    </Routes>
+                </main>
+
+                <Footer />
+            </div>
         </div>
     );
 }
