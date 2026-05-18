@@ -1,4 +1,4 @@
-import { teamMembers } from '../data/fakeData';
+import { teamMembers } from '../API_Service/fakeData';
 
 export default function About() {
     return (

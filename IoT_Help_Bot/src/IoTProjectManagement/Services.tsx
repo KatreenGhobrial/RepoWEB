@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { iotServices, pricingTiers } from '../data/fakeData';
+import { iotServices, pricingTiers } from '../API_Service/fakeData';
 import { Link } from 'react-router-dom';
 
 export default function Services() {

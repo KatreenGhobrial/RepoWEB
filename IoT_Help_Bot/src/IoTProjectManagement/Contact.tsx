@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { faqs } from '../data/fakeData';
+import { faqs } from '../API_Service/fakeData';
 
 export default function Contact() {
     const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });

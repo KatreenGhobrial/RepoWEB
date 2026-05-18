@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { homeStats, homeFeatures, testimonials } from '../data/fakeData';
+import { homeStats, homeFeatures, testimonials } from '../API_Service/fakeData';
 
 export default function Home() {
     return (

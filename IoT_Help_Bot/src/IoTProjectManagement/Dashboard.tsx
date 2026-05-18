@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { dashboardStats, devices, supportTickets, recentActivity, chatMessages } from '../data/fakeData';
-import type { ChatMessage } from '../data/fakeData';
+import { dashboardStats, devices, supportTickets, recentActivity, chatMessages } from '../API_Service/fakeData';
+import type { ChatMessage } from '../API_Service/fakeData';
 
 export default function Dashboard({ user }: { user: any }) {
     const [messages, setMessages] = useState<ChatMessage[]>(chatMessages);
