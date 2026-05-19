@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT HelpBot - Detect Conflict</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-100">
+
+    <div class="flex min-h-screen">
+
+        <!-- Sidebar -->
+        <aside class="w-72 bg-slate-950 text-white p-6 flex flex-col justify-between">
+
+            <div>
+                <div class="flex items-center gap-4 mb-10">
+                    <div class="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-2xl">
+                        🤖
+                    </div>
+
+                    <div>
+                        <h1 class="font-bold text-lg">IoT Project Hub</h1>
+                        <p class="text-sm text-slate-400">Socratic support platform</p>
+                    </div>
+                </div>
+
+                <nav class="space-y-4 text-base">
+                    <a href="dashboard.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
+                        Dashboard
+                    </a>
+
+                   <a href="project-setup.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
+                     Project Setup
+                    </a>
+
+                    <a href="tasks-team.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
+                         Tasks & Team
+                    </a>
+
+                   <a href="socratic-bot.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
+                      Socratic Bot
+                    </a>
+
+                    <a href="detect-conflict.html" class="block px-5 py-4 rounded-3xl bg-white text-slate-950 font-bold">
+                         Detect Conflict
+                    </a>
+
+                    <a href="monitor-panel.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
+                        Mentor Panel
+                    </a>
+                </nav>
+            </div>
+
+            <div class="bg-slate-800 rounded-3xl p-5">
+                <p class="text-sm text-slate-400">Signed in as</p>
+                <p id="studentName" class="font-bold text-base">Student</p>
+                <p class="text-sm text-slate-400 mb-4">Student</p>
+
+                <a href="login.html"
+                   class="block bg-white text-slate-950 text-center py-3 rounded-2xl font-bold text-sm">
+                    Sign out
+                </a>
+            </div>
+
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 p-10">
+
+            <!-- Header -->
+            <header class="flex justify-between items-start mb-10">
+
+                <div>
+                    <h2 class="text-4xl font-bold text-slate-950">
+                        Detect Conflict
+                    </h2>
+
+                    <p class="text-xl text-slate-500 mt-1">
+                        Detect possible conflicts between hardware, protocol, power, database and project requirements.
+                    </p>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm">
+                        ⚠️ Risks
+                    </span>
+
+                    <span class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm">
+                        🔋 Power
+                    </span>
+
+                    <span class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm">
+                        📡 Protocol
+                    </span>
+                </div>
+
+            </header>
+
+            <!-- Summary cards -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+                    <p class="text-slate-500 text-lg mb-3">Detected Conflicts</p>
+                    <h3 id="conflictCount" class="text-5xl font-bold text-slate-950">0</h3>
+                    <p class="text-slate-500 text-lg mt-3">From demo rules</p>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+                    <p class="text-slate-500 text-lg mb-3">Highest Risk</p>
+                    <h3 id="highestRiskText" class="text-5xl font-bold text-slate-950">None</h3>
+                    <p class="text-slate-500 text-lg mt-3">Based on conflict level</p>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+                    <p class="text-slate-500 text-lg mb-3">Bot Recommendation</p>
+                    <h3 class="text-5xl font-bold text-slate-950">Ready</h3>
+                    <p class="text-slate-500 text-lg mt-3">Use Socratic questions after detection</p>
+                </div>
+
+            </section>
+
+            <!-- Form + Result -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+                <!-- Form -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+
+                    <h3 class="text-2xl font-bold text-slate-950 mb-6">
+                        Check project configuration
+                    </h3>
+
+                    <form id="conflictForm" class="space-y-5">
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">
+                                Main Device
+                            </label>
+
+                            <select id="deviceInput"
+                                    class="w-full border border-slate-300 rounded-2xl px-4 py-3">
+                                <option>ESP32</option>
+                                <option>Arduino Uno</option>
+                                <option>Raspberry Pi</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">
+                                Power Source
+                            </label>
+
+                            <select id="powerInput"
+                                    class="w-full border border-slate-300 rounded-2xl px-4 py-3">
+                                <option>Battery</option>
+                                <option>USB Power</option>
+                                <option>Wall Adapter</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">
+                                Communication Protocol
+                            </label>
+
+                            <select id="protocolInput"
+                                    class="w-full border border-slate-300 rounded-2xl px-4 py-3">
+                                <option>HTTP</option>
+                                <option>MQTT</option>
+                                <option>CoAP</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">
+                                Database
+                            </label>
+
+                            <select id="databaseInput"
+                                    class="w-full border border-slate-300 rounded-2xl px-4 py-3">
+                                <option>MongoDB</option>
+                                <option>MySQL</option>
+                                <option>Firebase</option>
+                                <option>No Database</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">
+                                Project Requirement
+                            </label>
+
+                            <select id="requirementInput"
+                                    class="w-full border border-slate-300 rounded-2xl px-4 py-3">
+                                <option>Low latency</option>
+                                <option>Long battery life</option>
+                                <option>Store sensor history</option>
+                                <option>Simple demo only</option>
+                            </select>
+                        </div>
+
+                        <p id="conflictMessage" class="text-sm"></p>
+
+                        <button type="submit"
+                                class="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800">
+                            Detect conflicts
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <!-- Result -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+
+                    <h3 class="text-2xl font-bold text-slate-950 mb-6">
+                        Detection result
+                    </h3>
+
+                    <div id="resultContainer" class="space-y-4">
+                        <div class="border border-slate-200 rounded-2xl p-5">
+                            <p class="text-sm text-slate-400 mb-1">Status</p>
+                            <p class="font-bold text-slate-900">
+                                Select configuration and click Detect conflicts.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Existing conflicts from JSON -->
+            <section class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">
+                        ⚠️
+                    </div>
+
+                    <h3 class="text-2xl font-bold text-slate-950">
+                        Existing project conflicts
+                    </h3>
+                </div>
+
+                <div id="conflictsContainer" class="grid md:grid-cols-2 gap-4">
+                    <!-- JS inserts conflicts -->
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    
+   <div id="scrollHint"
+     class="hidden fixed bottom-6 left-8 bg-slate-950 text-white px-5 py-3 rounded-full border-2 border-white shadow-lg text-sm font-bold z-50 animate-bounce cursor-pointer">
+    ↓ Scroll down
+    </div>
+
+    <script src="./scroll-hint.js"></script>
+    <script src="detect-conflict.js"></script>
+
+</body>
+</html>
