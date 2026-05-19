@@ -6,11 +6,11 @@ import Login from './UsersManager/Login';
 import Register from './UsersManager/Register';
 import Profile from './UsersManager/profile';
 import ManageUsers from './UsersManager/ManagerUsers';
-import Home from './pages/Home';
-import About from './pages/About';
-import Services from './pages/Services';
-import Contact from './pages/Contact';
-import Dashboard from './pages/Dashboard';
+import Home from './Pages/Home';
+import About from './Pages/About';
+import Services from './Pages/Services';
+import Contact from './Pages/Contact';
+import Dashboard from './Pages/Dashboard';
 import { logout } from './UsersManager/UsersService';
 import './App.css';
 
