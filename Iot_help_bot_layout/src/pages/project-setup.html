@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IoT HelpBot - Tasks & Team</title>
+    <title>IoT HelpBot - Project Setup</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
 
@@ -37,14 +37,14 @@
 
             <a
               href="project-setup.html"
-              class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950"
+              class="block px-5 py-4 rounded-3xl bg-white text-slate-950 font-bold"
             >
               Project Setup
             </a>
 
             <a
               href="tasks-team.html"
-              class="block px-5 py-4 rounded-3xl bg-white text-slate-950 font-bold"
+              class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950"
             >
               Tasks & Team
             </a>
@@ -78,7 +78,7 @@
         <!-- Header -->
         <header class="flex justify-between items-start mb-10">
           <div>
-            <h2 class="text-4xl font-bold text-slate-950">Smart Greenhouse</h2>
+           <h2 class="text-4xl font-bold text-slate-950">IoT Help Bot</h2>
 
             <p class="text-xl text-slate-500 mt-1">
               Manage architecture, detect IoT risks, and support collaboration.
@@ -86,23 +86,6 @@
           </div>
 
           <div class="flex items-center gap-4">
-            <span
-              class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm"
-            >
-              📶 2 alerts
-            </span>
-
-            <span
-              class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm"
-            >
-              ⚙️ ESP32
-            </span>
-
-            <span
-              class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm"
-            >
-              🛡️ HTTP
-            </span>
 
             <div
               class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm flex items-center gap-3"
@@ -121,45 +104,144 @@
             </a>
           </div>
         </header>
-        <!-- Summary cards -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+        <!-- Setup form + summary -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- Form -->
           <div
             class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
           >
-            <p class="text-slate-500 text-lg mb-3">Team Members</p>
-            <h3 id="membersCount" class="text-5xl font-bold text-slate-950">
-              0
+            <h3 class="text-2xl font-bold text-slate-950 mb-6">
+              Basic project details
             </h3>
-            <p class="text-slate-500 text-lg mt-3">Students in the project</p>
+
+            <form id="setupForm" class="space-y-5">
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">
+                  Project Name
+                </label>
+                <input
+                  id="projectNameInput"
+                  type="text"
+                  class="w-full border border-slate-300 rounded-2xl px-4 py-3"
+                  placeholder="IoT Help Bot"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">
+                  Main Device
+                </label>
+                <select
+                  id="deviceInput"
+                  class="w-full border border-slate-300 rounded-2xl px-4 py-3"
+                >
+                  <option>ESP32</option>
+                  <option>Arduino Uno</option>
+                  <option>Raspberry Pi</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">
+                  Communication Protocol
+                </label>
+                <select
+                  id="protocolInput"
+                  class="w-full border border-slate-300 rounded-2xl px-4 py-3"
+                >
+                  <option>HTTP</option>
+                  <option>MQTT</option>
+                  <option>CoAP</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">
+                  Database
+                </label>
+                <select
+                  id="databaseInput"
+                  class="w-full border border-slate-300 rounded-2xl px-4 py-3"
+                >
+                  <option>MongoDB</option>
+                  <option>MySQL</option>
+                  <option>Firebase</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">
+                  Power Source
+                </label>
+                <select
+                  id="powerInput"
+                  class="w-full border border-slate-300 rounded-2xl px-4 py-3"
+                >
+                  <option>Battery</option>
+                  <option>USB Power</option>
+                  <option>Wall Adapter</option>
+                </select>
+              </div>
+
+              <p id="setupMessage" class="text-sm"></p>
+
+              <button
+                type="submit"
+                class="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800"
+              >
+                Save setup
+              </button>
+            </form>
           </div>
 
+          <!-- Summary -->
           <div
             class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
           >
-            <p class="text-slate-500 text-lg mb-3">Completed Tasks</p>
-            <h3
-              id="completedTasksCount"
-              class="text-5xl font-bold text-slate-950"
-            >
-              0
+            <h3 class="text-2xl font-bold text-slate-950 mb-6">
+              Current architecture summary
             </h3>
-            <p id="totalTasksText" class="text-slate-500 text-lg mt-3">
-              0 total tasks
-            </p>
-          </div>
 
-          <div
-            class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
-          >
-            <p class="text-slate-500 text-lg mb-3">Project Status</p>
-            <h3 id="projectStatus" class="text-5xl font-bold text-slate-950">
-              Active
-            </h3>
-            <p class="text-slate-500 text-lg mt-3">Demo collaboration board</p>
+            <div class="space-y-4">
+              <div class="border border-slate-200 rounded-2xl p-5">
+                <p class="text-sm text-slate-400 mb-1">Project</p>
+                <p
+                  id="projectNameText"
+                  class="text-xl font-bold text-slate-900"
+                >
+                  IoT Help Bot
+                </p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="border border-slate-200 rounded-2xl p-5">
+                  <p class="text-sm text-slate-400 mb-1">Device</p>
+                  <p id="deviceText" class="font-bold text-slate-900">ESP32</p>
+                </div>
+
+                <div class="border border-slate-200 rounded-2xl p-5">
+                  <p class="text-sm text-slate-400 mb-1">Protocol</p>
+                  <p id="protocolText" class="font-bold text-slate-900">HTTP</p>
+                </div>
+
+                <div class="border border-slate-200 rounded-2xl p-5">
+                  <p class="text-sm text-slate-400 mb-1">Database</p>
+                  <p id="databaseText" class="font-bold text-slate-900">
+                    MongoDB
+                  </p>
+                </div>
+
+                <div class="border border-slate-200 rounded-2xl p-5">
+                  <p class="text-sm text-slate-400 mb-1">Power</p>
+                  <p id="powerText" class="font-bold text-slate-900">Battery</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <!-- Team members -->
+        <!-- Architecture flow -->
         <section
           class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 mb-8"
         >
@@ -167,103 +249,14 @@
             <div
               class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl"
             >
-              👥
+              🔗
             </div>
 
-            <h3 class="text-2xl font-bold text-slate-950">Team members</h3>
+            <h3 class="text-2xl font-bold text-slate-950">Architecture flow</h3>
           </div>
 
-          <div
-            id="teamContainer"
-            class="grid md:grid-cols-2 xl:grid-cols-4 gap-4"
-          >
-            <!-- JS inserts team cards -->
-          </div>
-        </section>
-
-        <!-- Tasks -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Task list -->
-          <div
-            class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
-          >
-            <div class="flex items-center gap-4 mb-8">
-              <div
-                class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl"
-              >
-                ✅
-              </div>
-
-              <h3 class="text-2xl font-bold text-slate-950">Project tasks</h3>
-            </div>
-
-            <div id="tasksContainer" class="space-y-4">
-              <!-- JS inserts tasks -->
-            </div>
-          </div>
-
-          <!-- Add task demo -->
-          <div
-            class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
-          >
-            <h3 class="text-2xl font-bold text-slate-950 mb-6">
-              Add demo task
-            </h3>
-
-            <form id="taskForm" class="space-y-5">
-              <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">
-                  Task title
-                </label>
-
-                <input
-                  id="taskTitleInput"
-                  type="text"
-                  class="w-full border border-slate-300 rounded-2xl px-4 py-3"
-                  placeholder="Check database connection"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">
-                  Owner
-                </label>
-
-                <select
-                  id="taskOwnerInput"
-                  class="w-full border border-slate-300 rounded-2xl px-4 py-3"
-                >
-                  <option>Hardware Student</option>
-                  <option>Backend Student</option>
-                  <option>Frontend Student</option>
-                  <option>AI Student</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">
-                  Status
-                </label>
-
-                <select
-                  id="taskStatusInput"
-                  class="w-full border border-slate-300 rounded-2xl px-4 py-3"
-                >
-                  <option>To Do</option>
-                  <option>In Progress</option>
-                  <option>Done</option>
-                </select>
-              </div>
-
-              <p id="taskMessage" class="text-sm"></p>
-
-              <button
-                type="submit"
-                class="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800"
-              >
-                Add task
-              </button>
-            </form>
+          <div id="flowContainer" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <!-- JS inserts flow cards -->
           </div>
         </section>
       </main>
@@ -276,7 +269,7 @@
       ↓ Scroll down
     </div>
 
-    <script src="tasks-team.js"></script>
+    <script src="project-setup.js"></script>
     <script src="./scroll-hint.js"></script>
   </body>
 </html>
