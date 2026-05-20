@@ -1,253 +1,281 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>IoT HelpBot - Socratic Bot</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
+  </head>
 
-<body class="min-h-screen bg-slate-100">
-
+  <body class="min-h-screen bg-slate-100">
     <div class="flex min-h-screen">
-
-        <!-- Sidebar -->
-        <aside class="w-72 bg-slate-950 text-white p-6 flex flex-col justify-between">
+      <!-- Sidebar -->
+      <aside
+        class="w-72 bg-slate-950 text-white p-6 flex flex-col justify-between"
+      >
+        <div>
+          <div class="flex items-center gap-4 mb-10">
+            <div
+              class="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-2xl"
+            >
+              🤖
+            </div>
 
             <div>
-                <div class="flex items-center gap-4 mb-10">
-                    <div class="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-2xl">
-                        🤖
-                    </div>
+              <h1 class="font-bold text-lg">IoT Project Hub</h1>
+              <p class="text-sm text-slate-400">Socratic support platform</p>
+            </div>
+          </div>
+          <nav class="space-y-4 text-base">
+            <a
+              href="dashboard.html"
+              class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950"
+            >
+              Dashboard
+            </a>
 
-                    <div>
-                        <h1 class="font-bold text-lg">IoT Project Hub</h1>
-                        <p class="text-sm text-slate-400">Socratic support platform</p>
-                    </div>
-                </div>
-                <nav class="space-y-4 text-base">
-                    <a href="dashboard.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
-                        Dashboard
-                    </a>
+            <a
+              href="project-setup.html"
+              class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950"
+            >
+              Project Setup
+            </a>
 
-                   <a href="project-setup.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
-                     Project Setup
-                    </a>
+            <a
+              href="tasks-team.html"
+              class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950"
+            >
+              Tasks & Team
+            </a>
 
-                    <a href="tasks-team.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
-                         Tasks & Team
-                    </a>
+            <a
+              href="socratic-bot.html"
+              class="block px-5 py-4 rounded-3xl bg-white text-slate-950 font-bold"
+            >
+              Socratic Bot
+            </a>
 
-                   <a href="socratic-bot.html" class="block px-5 py-4 rounded-3xl bg-white text-slate-950 font-bold">
-                      Socratic Bot
-                    </a>
+            <a
+              href="detect-conflict.html"
+              class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950"
+            >
+              Detect Conflict
+            </a>
 
-                    <a href="detect-conflict.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
-                         Detect Conflict
-                    </a>
+            <a
+              href="monitor-panel.html"
+              class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950"
+            >
+              Mentor Panel
+            </a>
+          </nav>
+        </div>
+      </aside>
 
-                    <a href="monitor-panel.html" class="block px-5 py-4 rounded-3xl hover:bg-white hover:text-slate-950">
-                        Mentor Panel
-                    </a>
-                </nav>
+      <!-- Main content -->
+      <main class="flex-1 p-10">
+        <!-- Header -->
+        <header class="flex justify-between items-start mb-10">
+          <div>
+            <h2 class="text-4xl font-bold text-slate-950">Smart Greenhouse</h2>
+
+            <p class="text-xl text-slate-500 mt-1">
+              Manage architecture, detect IoT risks, and support collaboration.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <span
+              class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm"
+            >
+              📶 2 alerts
+            </span>
+
+            <span
+              class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm"
+            >
+              ⚙️ ESP32
+            </span>
+
+            <span
+              class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm"
+            >
+              🛡️ HTTP
+            </span>
+
+            <div
+              class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm flex items-center gap-3"
+            >
+              <span class="text-sm text-slate-500">Signed in as</span>
+              <span id="studentName" class="text-sm font-bold text-slate-950"
+                >Student</span
+              >
             </div>
 
-            <div class="bg-slate-800 rounded-3xl p-5">
-                <p class="text-sm text-slate-400">Signed in as</p>
-                <p id="studentName" class="font-bold text-base">Student</p>
-                <p class="text-sm text-slate-400 mb-4">Student</p>
+            <a
+              href="login.html"
+              class="bg-slate-950 text-white px-6 py-3 rounded-full shadow-sm font-bold text-sm hover:bg-slate-800"
+            >
+              Sign out
+            </a>
+          </div>
+        </header>
+        <!-- Main bot area -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <!-- Chat area -->
+          <div
+            class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
+          >
+            <div class="flex items-center gap-4 mb-6">
+              <div
+                class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl"
+              >
+                🤖
+              </div>
 
-                <a href="login.html"
-                   class="block bg-white text-slate-950 text-center py-3 rounded-2xl font-bold text-sm">
-                    Sign out
-                </a>
+              <div>
+                <h3 class="text-2xl font-bold text-slate-950">
+                  IoT troubleshooting chat
+                </h3>
+                <p class="text-slate-500">
+                  Select a problem and answer the bot questions.
+                </p>
+              </div>
             </div>
 
-        </aside>
+            <div class="mb-6">
+              <label class="block text-sm font-bold text-slate-700 mb-2">
+                Select problem type
+              </label>
 
-        <!-- Main content -->
-        <main class="flex-1 p-10">
+              <select
+                id="problemInput"
+                class="w-full border border-slate-300 rounded-2xl px-4 py-3"
+              >
+                <option>Component does not respond</option>
+                <option>No data in database</option>
+                <option>Device disconnects often</option>
+                <option>Slow response time</option>
+              </select>
+            </div>
 
-            <!-- Header -->
-            <header class="flex justify-between items-start mb-10">
+            <button
+              id="startButton"
+              class="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 mb-6"
+            >
+              Start investigation
+            </button>
 
-                <div>
-                    <h2 class="text-4xl font-bold text-slate-950">
-                        Socratic Bot
-                    </h2>
+            <div id="chatContainer" class="space-y-4 mb-6">
+              <!-- JS inserts chat messages -->
+            </div>
 
-                    <p class="text-xl text-slate-500 mt-1">
-                        The bot helps students find IoT problems by asking guiding questions.
-                    </p>
-                </div>
+            <form id="chatForm" class="flex gap-3">
+              <input
+                id="answerInput"
+                type="text"
+                class="flex-1 border border-slate-300 rounded-2xl px-4 py-3"
+                placeholder="Write your answer here"
+              />
 
-                <div class="flex gap-4">
-                    <span class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm">
-                        🤖 Guided
-                    </span>
+              <button
+                type="submit"
+                class="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800"
+              >
+                Send
+              </button>
+            </form>
 
-                    <span class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm">
-                        🔌 Hardware
-                    </span>
+            <p id="botMessage" class="text-sm mt-4"></p>
+          </div>
 
-                    <span class="bg-white border border-slate-200 px-5 py-3 rounded-full shadow-sm">
-                        🌐 Communication
-                    </span>
-                </div>
+          <!-- Current issue -->
+          <div
+            class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
+          >
+            <h3 class="text-2xl font-bold text-slate-950 mb-6">
+              Current diagnosis
+            </h3>
 
-            </header>
+            <div class="space-y-4">
+              <div class="border border-slate-200 rounded-2xl p-5">
+                <p class="text-sm text-slate-400 mb-1">Problem</p>
+                <p id="currentProblemText" class="font-bold text-slate-900">
+                  Not selected yet
+                </p>
+              </div>
 
-            <!-- Main bot area -->
-            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div class="border border-slate-200 rounded-2xl p-5">
+                <p class="text-sm text-slate-400 mb-1">Possible area</p>
+                <p id="areaText" class="font-bold text-slate-900">
+                  Waiting for answers
+                </p>
+              </div>
 
-                <!-- Chat area -->
-                <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+              <div class="border border-slate-200 rounded-2xl p-5">
+                <p class="text-sm text-slate-400 mb-1">Bot status</p>
+                <p id="statusText" class="font-bold text-slate-900">Ready</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                    <div class="flex items-center gap-4 mb-6">
-                        <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">
-                            🤖
-                        </div>
+        <!-- Questions + path -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Bot questions -->
+          <div
+            class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
+          >
+            <div class="flex items-center gap-4 mb-8">
+              <div
+                class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl"
+              >
+                ❓
+              </div>
 
-                        <div>
-                            <h3 class="text-2xl font-bold text-slate-950">
-                                IoT troubleshooting chat
-                            </h3>
-                            <p class="text-slate-500">
-                                Select a problem and answer the bot questions.
-                            </p>
-                        </div>
-                    </div>
+              <h3 class="text-2xl font-bold text-slate-950">Bot questions</h3>
+            </div>
 
-                    <div class="mb-6">
-                        <label class="block text-sm font-bold text-slate-700 mb-2">
-                            Select problem type
-                        </label>
+            <div id="questionsContainer" class="space-y-4">
+              <!-- JS inserts questions -->
+            </div>
+          </div>
 
-                        <select id="problemInput"
-                                class="w-full border border-slate-300 rounded-2xl px-4 py-3">
-                            <option>Component does not respond</option>
-                            <option>No data in database</option>
-                            <option>Device disconnects often</option>
-                            <option>Slow response time</option>
-                        </select>
-                    </div>
+          <!-- Investigation path -->
+          <div
+            class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7"
+          >
+            <div class="flex items-center gap-4 mb-8">
+              <div
+                class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl"
+              >
+                🧭
+              </div>
 
-                    <button id="startButton"
-                            class="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 mb-6">
-                        Start investigation
-                    </button>
+              <h3 class="text-2xl font-bold text-slate-950">
+                Suggested investigation path
+              </h3>
+            </div>
 
-                    <div id="chatContainer" class="space-y-4 mb-6">
-                        <!-- JS inserts chat messages -->
-                    </div>
-
-                    <form id="chatForm" class="flex gap-3">
-                        <input id="answerInput"
-                               type="text"
-                               class="flex-1 border border-slate-300 rounded-2xl px-4 py-3"
-                               placeholder="Write your answer here">
-
-                        <button type="submit"
-                                class="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800">
-                            Send
-                        </button>
-                    </form>
-
-                    <p id="botMessage" class="text-sm mt-4"></p>
-
-                </div>
-
-                <!-- Current issue -->
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-
-                    <h3 class="text-2xl font-bold text-slate-950 mb-6">
-                        Current diagnosis
-                    </h3>
-
-                    <div class="space-y-4">
-
-                        <div class="border border-slate-200 rounded-2xl p-5">
-                            <p class="text-sm text-slate-400 mb-1">Problem</p>
-                            <p id="currentProblemText" class="font-bold text-slate-900">
-                                Not selected yet
-                            </p>
-                        </div>
-
-                        <div class="border border-slate-200 rounded-2xl p-5">
-                            <p class="text-sm text-slate-400 mb-1">Possible area</p>
-                            <p id="areaText" class="font-bold text-slate-900">
-                                Waiting for answers
-                            </p>
-                        </div>
-
-                        <div class="border border-slate-200 rounded-2xl p-5">
-                            <p class="text-sm text-slate-400 mb-1">Bot status</p>
-                            <p id="statusText" class="font-bold text-slate-900">
-                                Ready
-                            </p>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-            <!-- Questions + path -->
-            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                <!-- Bot questions -->
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-
-                    <div class="flex items-center gap-4 mb-8">
-                        <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">
-                            ❓
-                        </div>
-
-                        <h3 class="text-2xl font-bold text-slate-950">
-                            Bot questions
-                        </h3>
-                    </div>
-
-                    <div id="questionsContainer" class="space-y-4">
-                        <!-- JS inserts questions -->
-                    </div>
-
-                </div>
-
-                <!-- Investigation path -->
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-
-                    <div class="flex items-center gap-4 mb-8">
-                        <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">
-                            🧭
-                        </div>
-
-                        <h3 class="text-2xl font-bold text-slate-950">
-                            Suggested investigation path
-                        </h3>
-                    </div>
-
-                    <ol id="pathContainer" class="space-y-4 text-slate-600 list-decimal list-inside">
-                        <!-- JS inserts path -->
-                    </ol>
-
-                </div>
-
-            </section>
-
-        </main>
-
+            <ol
+              id="pathContainer"
+              class="space-y-4 text-slate-600 list-decimal list-inside"
+            >
+              <!-- JS inserts path -->
+            </ol>
+          </div>
+        </section>
+      </main>
     </div>
 
-   <div id="scrollHint"
-     class="hidden fixed bottom-6 left-8 bg-slate-950 text-white px-5 py-3 rounded-full border-2 border-white shadow-lg text-sm font-bold z-50 animate-bounce cursor-pointer">
-    ↓ Scroll down
+    <div
+      id="scrollHint"
+      class="hidden fixed bottom-6 left-8 bg-slate-950 text-white px-5 py-3 rounded-full border-2 border-white shadow-lg text-sm font-bold z-50 animate-bounce cursor-pointer"
+    >
+      ↓ Scroll down
     </div>
 
     <script src="socratic-bot.js"></script>
-     <script src="./scroll-hint.js"></script>
-    
-
-</body>
+    <script src="./scroll-hint.js"></script>
+  </body>
 </html>
