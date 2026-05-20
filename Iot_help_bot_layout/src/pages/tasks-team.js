@@ -46,7 +46,7 @@ function loadTasksTeam() {
 
     var request = new XMLHttpRequest();
 
-    request.open("GET", "./fake-data.json", false);
+    request.open("GET", "../DataAccess/fake-data.json", false);
     request.send();
 
     if (request.status !== 200) {

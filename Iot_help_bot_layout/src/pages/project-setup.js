@@ -30,7 +30,7 @@ function showUsername() {
 function loadProjectSetup() {
     var request = new XMLHttpRequest();
 
-    request.open("GET", "fake-data.json", false);
+    request.open("GET", "../DataAccess/fake-data.json", false);
     request.send();
 
     var data = JSON.parse(request.responseText);

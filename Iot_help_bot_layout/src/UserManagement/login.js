@@ -18,7 +18,7 @@ loginForm.addEventListener("submit", function(event) {
             loginMessage.classList.remove("text-red-500");
             loginMessage.classList.add("text-green-500");
 
-            window.open("dashboard.html?username=" + user.username, "_self");
+            window.open("../pages/dashboard.html?username=" + user.username, "_self");
         } else {
             loginMessage.textContent = "Invalid username/email or password.";
             loginMessage.classList.remove("text-green-500");
