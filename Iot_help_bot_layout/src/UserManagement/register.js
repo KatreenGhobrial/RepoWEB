@@ -47,7 +47,7 @@ registerForm.addEventListener("submit", function(event) {
 
         localStorage.setItem("users", JSON.stringify(users));
         localStorage.setItem("currentUser", JSON.stringify(newUser));
-        window.location.href = "dashboard.html";
+        window.location.href = "../pages/dashboard.html";
 
         registerMessage.textContent = "Registration successful! User saved.";
         registerMessage.classList.remove("text-red-500");
