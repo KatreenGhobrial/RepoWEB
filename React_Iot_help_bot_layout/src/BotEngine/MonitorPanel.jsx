@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import fakeData from '../DataAccess/fake-data.json';
 
 export default function MonitorPanel() {
   const [monitorData, setMonitorData] = useState(null);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    setMonitorData(fakeData.monitorPanel);
+    setMonitorData({
+      summary: { devices: 0, health: "Unknown" },
+      sensors: [],
+      services: [],
+      alerts: [],
+      logs: []
+    });
   }, []);
 
   const handleRefresh = () => {

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import fakeData from '../DataAccess/fake-data.json';
 
 export default function SocraticBot() {
   const [botQuestions, setBotQuestions] = useState([]);
@@ -18,9 +17,16 @@ export default function SocraticBot() {
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
-    const data = fakeData.socraticBot;
-    setBotQuestions(data.questions);
-    setInvestigationPath(data.path);
+    setBotQuestions([
+      "Can you describe the problem in more detail?",
+      "When did you first notice this issue?",
+      "Have you made any recent changes to the system?"
+    ]);
+    setInvestigationPath([
+      "Check power supply",
+      "Verify network connection",
+      "Inspect server logs"
+    ]);
   }, []);
 
   const handleStart = () => {

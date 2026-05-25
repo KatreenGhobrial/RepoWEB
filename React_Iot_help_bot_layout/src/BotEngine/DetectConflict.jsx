@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import fakeData from '../DataAccess/fake-data.json';
 
 export default function DetectConflict() {
   const [existingConflicts, setExistingConflicts] = useState([]);
@@ -16,10 +15,9 @@ export default function DetectConflict() {
   const [requirement, setRequirement] = useState('Store sensor history');
 
   useEffect(() => {
-    const data = fakeData.detectConflict;
-    setExistingConflicts(data.conflicts);
-    setConflictCount(data.conflicts.length);
-    setHighestRisk(data.highestRisk);
+    setExistingConflicts([]);
+    setConflictCount(0);
+    setHighestRisk('None');
   }, []);
 
   const handleCheck = (e) => {
