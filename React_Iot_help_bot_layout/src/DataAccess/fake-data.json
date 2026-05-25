@@ -1,0 +1,348 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "username": "ester",
+            "email": "ester@gmail.com",
+            "password": "123456",
+            "dob": "2000-01-01",
+            "isAdmin": false
+        },
+        {
+            "id": 2,
+            "username": "Admin",
+            "email": "admin@test.com",
+            "password": "admin123",
+            "dob": "1999-05-10",
+            "isAdmin": true
+        }
+    ],
+    "library": [
+        {
+            "name": "MQTT",
+            "type": "Protocol",
+            "description": "Lightweight protocol for IoT devices."
+        },
+        {
+            "name": "HTTP",
+            "type": "Protocol",
+            "description": "Simple protocol for sending data to a server."
+        },
+        {
+            "name": "ESP32",
+            "type": "Hardware",
+            "description": "Common microcontroller with Wi-Fi and Bluetooth."
+        },
+        {
+            "name": "Node.js",
+            "type": "Software",
+            "description": "Used for backend servers and APIs."
+        },
+        {
+            "name": "MongoDB",
+            "type": "Database",
+            "description": "Stores users, telemetry, alerts and project data."
+        },
+        {
+            "name": "Power Supply",
+            "type": "Hardware",
+            "description": "Used to power sensors and IoT components."
+        }
+    ],
+    "dashboard": {
+        "roleCoverage": {
+            "value": "4/5",
+            "text": "Hardware, Backend, Frontend, AI"
+        },
+        "detectedIssues": 2,
+        "tasksCompleted": {
+            "value": 1,
+            "text": "3 total tasks"
+        },
+        "documentationStatus": "Updated",
+        "progress": [
+            {
+                "name": "Hardware",
+                "value": 80
+            },
+            {
+                "name": "Backend",
+                "value": 65
+            },
+            {
+                "name": "Frontend",
+                "value": 75
+            },
+            {
+                "name": "AI",
+                "value": 55
+            }
+        ],
+        "alerts": [
+            {
+                "title": "Battery-powered device using HTTP",
+                "category": "Power",
+                "level": "HIGH"
+            },
+            {
+                "title": "Low latency requirement with basic HTTP flow",
+                "category": "Latency",
+                "level": "MEDIUM"
+            }
+        ]
+    },
+    "projectSetup": {
+    "projectName": "Smart Greenhouse",
+    "device": "ESP32",
+    "protocol": "HTTP",
+    "database": "MongoDB",
+    "powerSource": "Battery",
+
+    "flow": [
+        {
+            "name": "Sensor",
+            "icon": "🌡️",
+            "description": "Reads temperature, humidity or light values."
+        },
+        {
+            "name": "ESP32",
+            "icon": "⚙️",
+            "description": "Collects sensor data and sends it forward."
+        },
+        {
+            "name": "Server",
+            "icon": "🖥️",
+            "description": "Receives data through API requests."
+        },
+        {
+            "name": "Database",
+            "icon": "🗄️",
+            "description": "Stores telemetry, users and alerts."
+        },
+        {
+            "name": "Dashboard",
+            "icon": "📊",
+            "description": "Displays project status and detected risks."
+        }
+    ],
+
+    "components": [
+        {
+            "name": "DHT22 Sensor",
+            "type": "Hardware",
+            "description": "Measures temperature and humidity in the greenhouse."
+        },
+        {
+            "name": "ESP32 Board",
+            "type": "Hardware",
+            "description": "Main microcontroller that sends data using Wi-Fi."
+        },
+        {
+            "name": "HTTP API",
+            "type": "Communication",
+            "description": "Transfers sensor data from the ESP32 to the server."
+        },
+        {
+            "name": "Node.js Server",
+            "type": "Backend",
+            "description": "Handles API requests and project logic."
+        },
+        {
+            "name": "MongoDB",
+            "type": "Database",
+            "description": "Stores sensor readings and project information."
+        },
+        {
+            "name": "IoT HelpBot",
+            "type": "AI Support",
+            "description": "Asks guiding questions when a problem is detected."
+        }
+    ]
+},
+"tasksTeam": {
+    "status": "Active",
+
+    "team": [
+        {
+            "name": "Hardware Student",
+            "role": "Hardware",
+            "icon": "🔌",
+            "responsibility": "Connects sensors, ESP32 and power components."
+        },
+        {
+            "name": "Backend Student",
+            "role": "Backend",
+            "icon": "🖥️",
+            "responsibility": "Builds the API and handles server communication."
+        },
+        {
+            "name": "Frontend Student",
+            "role": "Frontend",
+            "icon": "🎨",
+            "responsibility": "Builds the user interface and dashboard pages."
+        },
+        {
+            "name": "AI Student",
+            "role": "Socratic Bot",
+            "icon": "🤖",
+            "responsibility": "Defines bot questions and troubleshooting logic."
+        }
+    ],
+
+    "tasks": [
+        {
+            "title": "Connect DHT22 sensor to ESP32",
+            "owner": "Hardware Student",
+            "status": "Done"
+        },
+        {
+            "title": "Create API endpoint for sensor readings",
+            "owner": "Backend Student",
+            "status": "In Progress"
+        },
+        {
+            "title": "Design dashboard cards",
+            "owner": "Frontend Student",
+            "status": "Done"
+        },
+        {
+            "title": "Prepare Socratic troubleshooting questions",
+            "owner": "AI Student",
+            "status": "To Do"
+        }
+    ]
+},
+"detectConflict": {
+    "highestRisk": "HIGH",
+
+    "conflicts": [
+        {
+            "title": "Battery-powered device using HTTP",
+            "level": "HIGH",
+            "reason": "The device uses a battery but sends data using HTTP, which may increase power consumption.",
+            "suggestion": "Use MQTT or reduce the number of requests."
+        },
+        {
+            "title": "Low latency requirement with HTTP",
+            "level": "MEDIUM",
+            "reason": "The project needs fast updates, but HTTP may not be the best choice for frequent IoT messages.",
+            "suggestion": "Consider MQTT or WebSocket."
+        },
+        {
+            "title": "Sensor data without validation",
+            "level": "MEDIUM",
+            "reason": "Sensor values may be wrong or missing if the system does not validate the data.",
+            "suggestion": "Add validation before saving data to the database."
+        }
+    ]
+},
+"monitorPanel": {
+    "summary": {
+        "devices": 3,
+        "health": "OK"
+    },
+
+    "sensors": [
+        {
+            "name": "Temperature Sensor",
+            "location": "Greenhouse zone A",
+            "value": 26,
+            "unit": "°C",
+            "status": "Online",
+            "lastUpdate": "2 min ago"
+        },
+        {
+            "name": "Humidity Sensor",
+            "location": "Greenhouse zone A",
+            "value": 61,
+            "unit": "%",
+            "status": "Online",
+            "lastUpdate": "2 min ago"
+        },
+        {
+            "name": "Light Sensor",
+            "location": "Roof area",
+            "value": 740,
+            "unit": " lux",
+            "status": "Warning",
+            "lastUpdate": "5 min ago"
+        },
+        {
+            "name": "Soil Moisture Sensor",
+            "location": "Plant row 2",
+            "value": 34,
+            "unit": "%",
+            "status": "Online",
+            "lastUpdate": "1 min ago"
+        }
+    ],
+
+    "services": [
+        {
+            "name": "Backend API",
+            "status": "Online",
+            "description": "Receives sensor readings from the IoT device."
+        },
+        {
+            "name": "Database",
+            "status": "Online",
+            "description": "Stores sensor history and project data."
+        },
+        {
+            "name": "Wi-Fi Gateway",
+            "status": "Warning",
+            "description": "Device connection is unstable."
+        },
+        {
+            "name": "Socratic Bot Engine",
+            "status": "Online",
+            "description": "Provides troubleshooting questions to students."
+        }
+    ],
+
+    "alerts": [
+        {
+            "title": "Wi-Fi signal is unstable",
+            "level": "MEDIUM",
+            "description": "The ESP32 may disconnect if the signal remains weak."
+        },
+        {
+            "title": "Light value is higher than expected",
+            "level": "LOW",
+            "description": "Check if the light sensor is exposed to direct light."
+        }
+    ],
+
+    "logs": [
+        {
+            "title": "Temperature reading received",
+            "message": "ESP32 sent a new temperature value to the backend.",
+            "time": "10:20"
+        },
+        {
+            "title": "Database write completed",
+            "message": "Sensor reading was saved successfully.",
+            "time": "10:21"
+        },
+        {
+            "title": "Wi-Fi warning detected",
+            "message": "The system detected unstable communication with the gateway.",
+            "time": "10:23"
+        }
+    ]
+},
+"socraticBot": {
+    "questions": [
+        "Is the device connected to power and turned on?",
+        "Can you ping the device from your computer?",
+        "Does the serial monitor show any error messages?",
+        "Is the server address configured correctly in the code?"
+    ],
+    "path": [
+        "Check physical power connection",
+        "Verify Wi-Fi credentials",
+        "Test local network communication",
+        "Check API endpoints on the server"
+    ]
+}
+}
