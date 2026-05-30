@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
 
-export default function Navbar() {
+export default function Navbar({ currentUser, setCurrentUser }) {
   const location = useLocation();
   const params = new URLSearchParams(window.location.search);
-  const username = 'ester' || 'Student';
+  const username = currentUser?.username || 'Student';
 
   const getLinkClass = (path) => {
     const baseClass = "px-4 py-2 rounded-full text-sm font-bold transition-colors whitespace-nowrap ";
@@ -32,6 +32,9 @@ export default function Navbar() {
         <Link to="/socratic-bot" className={getLinkClass('/socratic-bot')}>Socratic Bot</Link>
         <Link to="/detect-conflict" className={getLinkClass('/detect-conflict')}>Detect Conflict</Link>
         <Link to="/monitor-panel" className={getLinkClass('/monitor-panel')}>Mentor Panel</Link>
+        {currentUser?.role === 'Admin' && (
+          <Link to="/manage-users" className={getLinkClass('/manage-users')}>Manager Users</Link>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
