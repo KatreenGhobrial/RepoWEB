@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { find } from '../users';
+import {login,register} from '../UserManagement/usersService'
 
-export default function Login() {
+export default function Login({ setCurrentUser }) {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -12,19 +12,12 @@ export default function Login() {
   const handleLogin = (e) => {
     e.preventDefault();
     setMessage('');
-
-    let user = "ester@gmail.com"
-    let userPassword = 123456
-
-    if (user !== undefined) {
-      if (password == userPassword) {
+    const user = login(usernameOrEmail, password);
+    if (user) {
         setMessage('Login successful!');
         setIsError(false);
-        navigate(`/dashboard`);
-      } else {
-        setMessage('Invalid username/email or password.');
-        setIsError(true);
-      }
+        setCurrentUser(user);
+        navigate(user.role === 'Admin' ? '/home' : '/dashboard');
     } else {
       setMessage('Invalid username/email or password.');
       setIsError(true);
