@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 
 export default function SocraticBot() {
@@ -15,6 +15,8 @@ export default function SocraticBot() {
   const [answerCounter, setAnswerCounter] = useState(0);
   const [botMessage, setBotMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const chatEndRef = useRef(null);
 
   useEffect(() => {
     setBotQuestions([
@@ -29,23 +31,32 @@ export default function SocraticBot() {
     ]);
   }, []);
 
-  const handleStart = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+
+  // Auto-scroll chat to bottom when messages change
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory, isLoading]);
+
+  const handleStart = async () => {
     setChatHistory([]);
     setAnswerCounter(0);
     setCurrentProblem(problem);
     setAreaText('Checking hardware, communication and server');
     setStatusText('Investigation started');
+    setSessionId(`session_${Date.now()}`);
 
     const newChat = [
-      { sender: 'bot', text: 'I will not give a direct answer yet. I will ask guiding questions to help you find the source of the problem.' },
-      { sender: 'bot', text: botQuestions[0] }
+      { sender: 'bot', text: 'I am the real Socratic AI. I will not give a direct answer yet. I will ask guiding questions to help you find the source of the problem.' }
     ];
     setChatHistory(newChat);
-    setBotMessage('Investigation started.');
+    setBotMessage('Investigation started. Send your first message to begin.');
     setIsError(false);
+    setHasStarted(true);
   };
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!answerInput) {
       setBotMessage('Please write an answer.');
@@ -53,23 +64,49 @@ export default function SocraticBot() {
       return;
     }
 
-    const newChat = [...chatHistory, { sender: 'user', text: answerInput }];
-    const nextCounter = answerCounter + 1;
-    
-    if (nextCounter < botQuestions.length) {
-      newChat.push({ sender: 'bot', text: botQuestions[nextCounter] });
-      setStatusText('Asking guiding questions');
-    } else {
-      newChat.push({ sender: 'bot', text: "Based on your answers, start by checking power, then communication, then server and database connection." });
-      setAreaText('Power / Communication / Server');
-      setStatusText('Initial diagnosis ready');
-    }
-
+    const userMessage = { sender: 'user', text: answerInput };
+    const newChat = [...chatHistory, userMessage];
     setChatHistory(newChat);
-    setAnswerCounter(nextCounter);
     setAnswerInput('');
-    setBotMessage('Answer saved in demo chat.');
+    setIsLoading(true);
+    setStatusText('Thinking...');
+    setBotMessage('');
     setIsError(false);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/bot/chat', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ 
+          message: `The problem I am having is: ${currentProblem}. ${answerInput}`, 
+          sessionId 
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setBotMessage(data.message || 'Error communicating with AI.');
+        setIsError(true);
+        setIsLoading(false);
+        return;
+      }
+
+      setChatHistory([...newChat, { sender: 'bot', text: data.reply }]);
+      setStatusText('Waiting for your response');
+      setAreaText(data.phase || 'Investigation');
+      setSessionId(data.sessionId);
+    } catch (error) {
+      console.error('Chat error:', error);
+      setBotMessage('Server error. Is the backend running?');
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -96,22 +133,42 @@ export default function SocraticBot() {
             </select>
           </div>
           
-          <button onClick={handleStart} className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 mb-6">
-            Start investigation
+          <button onClick={handleStart} disabled={isLoading} className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed mb-6">
+            {hasStarted ? 'Restart investigation' : 'Start investigation'}
           </button>
 
-          <div className="space-y-4 mb-6">
+          <div className="space-y-4 mb-6 max-h-96 overflow-y-auto pr-2">
             {chatHistory.map((msg, idx) => (
               <div key={idx} className={msg.sender === 'bot' ? 'bg-slate-100 border border-slate-200 rounded-2xl p-5 max-w-xl' : 'bg-slate-950 text-white rounded-2xl p-5 max-w-xl ml-auto'}>
-                <p className={`text-sm mb-1 ${msg.sender === 'bot' ? 'text-slate-400' : 'text-slate-400'}`}>{msg.sender === 'bot' ? 'IoT HelpBot' : 'Student'}</p>
-                <p className={`font-bold ${msg.sender === 'bot' ? 'text-slate-900' : ''}`}>{msg.text}</p>
+                <p className={`text-sm mb-1 ${msg.sender === 'bot' ? 'text-slate-400' : 'text-slate-300'}`}>{msg.sender === 'bot' ? '🤖 IoT HelpBot' : '👤 Student'}</p>
+                <p className={`font-bold ${msg.sender === 'bot' ? 'text-slate-900' : 'text-white'}`}>{msg.text}</p>
               </div>
             ))}
+            {isLoading && (
+              <div className="bg-slate-100 border border-slate-200 rounded-2xl p-5 max-w-xl">
+                <p className="text-sm mb-1 text-slate-400">🤖 IoT HelpBot</p>
+                <p className="font-bold text-slate-500 animate-pulse">Thinking...</p>
+              </div>
+            )}
+            <div ref={chatEndRef} />
           </div>
 
           <form onSubmit={handleSend} className="flex gap-3">
-            <input type="text" className="flex-1 border border-slate-300 rounded-2xl px-4 py-3" placeholder="Write your answer here" value={answerInput} onChange={e => setAnswerInput(e.target.value)} />
-            <button type="submit" className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800">Send</button>
+            <input 
+              type="text" 
+              className="flex-1 border border-slate-300 rounded-2xl px-4 py-3" 
+              placeholder={!hasStarted ? 'Click "Start investigation" first' : isLoading ? 'Waiting for bot response...' : 'Write your answer here'} 
+              value={answerInput} 
+              onChange={e => setAnswerInput(e.target.value)} 
+              disabled={isLoading || !hasStarted}
+            />
+            <button 
+              type="submit" 
+              disabled={isLoading || !hasStarted || !answerInput.trim()}
+              className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? '⏳' : 'Send'}
+            </button>
           </form>
           {botMessage && <p className={`text-sm mt-4 ${isError ? 'text-red-500' : 'text-green-500'}`}>{botMessage}</p>}
         </div>

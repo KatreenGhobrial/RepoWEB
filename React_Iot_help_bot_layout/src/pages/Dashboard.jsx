@@ -4,12 +4,81 @@ import fakeData from '../DataAccess/fake-data.json';
 
 export default function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setDashboard(fakeData.dashboard);
+    const fetchDashboard = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          // No token = use fake data
+          setDashboard(fakeData.dashboard);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch projects from backend
+        const projRes = await fetch('http://localhost:5000/api/projects', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!projRes.ok) {
+          setDashboard(fakeData.dashboard);
+          setLoading(false);
+          return;
+        }
+
+        const projects = await projRes.json();
+        
+        // Build dashboard from real data
+        const totalProjects = projects.length;
+        const memberCount = projects.reduce((acc, p) => {
+          const members = p.members || [];
+          members.forEach(m => acc.add(m._id || m));
+          return acc;
+        }, new Set()).size;
+
+        // Fetch tasks for the first project if exists
+        let totalTasks = 0;
+        let completedTasks = 0;
+        if (projects.length > 0) {
+          const taskRes = await fetch(`http://localhost:5000/api/tasks/${projects[0]._id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (taskRes.ok) {
+            const tasks = await taskRes.json();
+            totalTasks = tasks.length;
+            completedTasks = tasks.filter(t => t.status === 'done').length;
+          }
+        }
+
+        // Build live dashboard object matching the fake data shape
+        setDashboard({
+          roleCoverage: {
+            value: `${memberCount}/${Math.max(memberCount + 1, 5)}`,
+            text: totalProjects > 0 ? `${totalProjects} active project(s)` : 'No projects yet'
+          },
+          detectedIssues: fakeData.dashboard.detectedIssues, // Keep from fake until conflict detection runs
+          tasksCompleted: {
+            value: completedTasks,
+            text: `${totalTasks} total tasks`
+          },
+          documentationStatus: totalProjects > 0 ? 'Active' : 'No projects',
+          progress: fakeData.dashboard.progress, // Progress bars from fake data as baseline
+          alerts: fakeData.dashboard.alerts // Alerts from fake data as baseline
+        });
+      } catch (err) {
+        console.error('Dashboard fetch error:', err);
+        setDashboard(fakeData.dashboard);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
   }, []);
 
-  if (!dashboard) return <div>Loading...</div>;
+  if (loading || !dashboard) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading dashboard...</p></div>;
 
   return (
     <>

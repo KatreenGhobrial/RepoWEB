@@ -11,7 +11,7 @@ export default function Register() {
   const [isError, setIsError] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setMessage('');
 
@@ -22,38 +22,34 @@ export default function Register() {
     }
 
     try {
-      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, role: 'student' })
+      });
 
-      const userExists = users.some(user => user.username === username || user.email === email);
+      const data = await response.json();
 
-      if (userExists) {
-        setMessage('Username or email already exists.');
+      if (!response.ok) {
+        setMessage(data.message || 'Registration failed.');
         setIsError(true);
         return;
       }
 
-      const isAdmin = users.length === 0;
-
-      const newUser = {
-        username,
-        email,
-        password,
-        dob,
-        isAdmin
-      };
-
-      users.push(newUser);
-
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
+      // Save token and user info
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
       
-      setMessage('Registration successful! User saved.');
+      setMessage('Registration successful! Redirecting...');
       setIsError(false);
       
       // Navigate to dashboard
-      navigate(`/dashboard?username=${username}`);
+      setTimeout(() => {
+        navigate(`/dashboard?username=${data.user.username}`);
+      }, 1000);
     } catch (error) {
-      setMessage('An error occurred during registration.');
+      console.error('Registration error:', error);
+      setMessage('Server error. Make sure the backend is running.');
       setIsError(true);
     }
   };

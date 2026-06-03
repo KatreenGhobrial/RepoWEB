@@ -4,6 +4,7 @@ import fakeData from '../DataAccess/fake-data.json';
 
 export default function ProjectSetup() {
   const [setup, setSetup] = useState(null);
+  const [projectId, setProjectId] = useState(null);
   const [formData, setFormData] = useState({
     projectName: '',
     device: '',
@@ -13,33 +14,130 @@ export default function ProjectSetup() {
   });
   const [summaryData, setSummaryData] = useState({ ...formData });
   const [message, setMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const data = fakeData.projectSetup;
-    setSetup(data);
-    setFormData({
-      projectName: data.projectName,
-      device: data.device,
-      protocol: data.protocol,
-      database: data.database,
-      powerSource: data.powerSource
-    });
-    setSummaryData({
-      projectName: data.projectName,
-      device: data.device,
-      protocol: data.protocol,
-      database: data.database,
-      powerSource: data.powerSource
-    });
+    const fetchProject = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const res = await fetch('http://localhost:5000/api/projects', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const projects = await res.json();
+            if (projects.length > 0) {
+              const proj = projects[0];
+              setProjectId(proj._id);
+              const data = {
+                projectName: proj.name || fakeData.projectSetup.projectName,
+                device: proj.device || fakeData.projectSetup.device,
+                protocol: proj.protocol || fakeData.projectSetup.protocol,
+                database: proj.database || fakeData.projectSetup.database,
+                powerSource: proj.powerSource || fakeData.projectSetup.powerSource
+              };
+              setFormData(data);
+              setSummaryData(data);
+              setSetup({ ...fakeData.projectSetup, ...data });
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching project:', err);
+      }
+      // Fallback to fake data
+      const data = fakeData.projectSetup;
+      setSetup(data);
+      setFormData({
+        projectName: data.projectName,
+        device: data.device,
+        protocol: data.protocol,
+        database: data.database,
+        powerSource: data.powerSource
+      });
+      setSummaryData({
+        projectName: data.projectName,
+        device: data.device,
+        protocol: data.protocol,
+        database: data.database,
+        powerSource: data.powerSource
+      });
+    };
+    fetchProject();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSummaryData(formData);
-    setMessage('Project setup updated for demo.');
+    setIsSaving(true);
+    setMessage('');
+
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        if (projectId) {
+          // Update existing project
+          const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+            method: 'PUT',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({
+              name: formData.projectName,
+              device: formData.device,
+              protocol: formData.protocol,
+              database: formData.database,
+              powerSource: formData.powerSource
+            })
+          });
+          if (res.ok) {
+            setSummaryData(formData);
+            setMessage('✅ Project updated and saved to database!');
+            setIsSaving(false);
+            return;
+          }
+        } else {
+          // Create new project
+          const res = await fetch('http://localhost:5000/api/projects', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({
+              name: formData.projectName,
+              device: formData.device,
+              protocol: formData.protocol,
+              database: formData.database,
+              powerSource: formData.powerSource,
+              sensors: ['DHT22'],
+              description: `IoT project using ${formData.device} with ${formData.protocol}`
+            })
+          });
+          if (res.ok) {
+            const newProj = await res.json();
+            setProjectId(newProj._id);
+            setSummaryData(formData);
+            setMessage('✅ New project created and saved to database!');
+            setIsSaving(false);
+            return;
+          }
+        }
+      }
+      // Fallback: local only
+      setSummaryData(formData);
+      setMessage('Project setup saved locally (not connected to server).');
+    } catch (err) {
+      console.error('Save project error:', err);
+      setSummaryData(formData);
+      setMessage('Project updated locally (server error).');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  if (!setup) return <div>Loading...</div>;
+  if (!setup) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading project...</p></div>;
 
   return (
     <>
@@ -108,8 +206,8 @@ export default function ProjectSetup() {
               </select>
             </div>
             {message && <p className="text-sm text-green-500">{message}</p>}
-            <button type="submit" className="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800">
-              Save setup
+            <button type="submit" disabled={isSaving} className="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50">
+              {isSaving ? '⏳ Saving...' : projectId ? 'Update project' : 'Create project'}
             </button>
           </form>
         </div>
@@ -139,6 +237,9 @@ export default function ProjectSetup() {
                 <p className="font-bold text-slate-900">{summaryData.powerSource}</p>
               </div>
             </div>
+            {projectId && (
+              <p className="text-xs text-green-500 text-center mt-2">🔗 Connected to MongoDB</p>
+            )}
           </div>
         </div>
       </section>

@@ -9,23 +9,39 @@ export default function Login() {
   const [isError, setIsError] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setMessage('');
 
-    let user = find(usernameOrEmail);
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usernameOrEmail, password })
+      });
 
-    if (user !== undefined) {
-      if (password === user.password) {
-        setMessage('Login successful!');
-        setIsError(false);
-        navigate(`/dashboard?username=${user.username}`);
-      } else {
-        setMessage('Invalid username/email or password.');
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.message || 'Invalid username/email or password.');
         setIsError(true);
+        return;
       }
-    } else {
-      setMessage('Invalid username/email or password.');
+
+      // Save token and user info
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      
+      setMessage('Login successful!');
+      setIsError(false);
+      
+      // Navigate to dashboard
+      setTimeout(() => {
+        navigate(`/dashboard?username=${data.user.username}`);
+      }, 500);
+    } catch (error) {
+      console.error('Login error:', error);
+      setMessage('Server error. Make sure the backend is running.');
       setIsError(true);
     }
   };

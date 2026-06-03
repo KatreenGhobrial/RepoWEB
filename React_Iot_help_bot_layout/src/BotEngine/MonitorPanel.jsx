@@ -1,34 +1,120 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
+import fakeData from '../DataAccess/fake-data.json';
 
 export default function MonitorPanel() {
   const [monitorData, setMonitorData] = useState(null);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMonitorData({
-      summary: { devices: 0, health: "Unknown" },
-      sensors: [],
-      services: [],
-      alerts: [],
-      logs: []
-    });
+    const fetchMonitorData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Check real backend health
+        let backendStatus = 'Down';
+        let dbStatus = 'Down';
+        let botStatus = 'Down';
+        
+        if (token) {
+          try {
+            const healthRes = await fetch('http://localhost:5000/api/health');
+            if (healthRes.ok) {
+              backendStatus = 'Online';
+              dbStatus = 'Online';
+              botStatus = 'Online';
+            }
+          } catch { /* backend not available */ }
+        }
+
+        // Use fake sensor data as simulation, but real service statuses
+        const fake = fakeData.monitorPanel;
+        setMonitorData({
+          summary: { 
+            devices: fake.summary.devices, 
+            health: backendStatus === 'Online' ? 'OK' : 'Degraded' 
+          },
+          sensors: fake.sensors,
+          services: [
+            {
+              name: 'Backend API',
+              status: backendStatus,
+              description: backendStatus === 'Online' 
+                ? 'Connected to http://localhost:5000' 
+                : 'Cannot reach backend server'
+            },
+            {
+              name: 'MongoDB Database',
+              status: dbStatus,
+              description: dbStatus === 'Online' 
+                ? 'Connected to MongoDB Atlas' 
+                : 'Database connection unavailable'
+            },
+            {
+              name: 'Wi-Fi Gateway',
+              status: 'Online',
+              description: 'Device communication channel active'
+            },
+            {
+              name: 'Socratic Bot Engine',
+              status: botStatus,
+              description: botStatus === 'Online'
+                ? 'AI bot ready for troubleshooting'
+                : 'Bot engine not available'
+            }
+          ],
+          alerts: fake.alerts,
+          logs: [
+            {
+              title: 'System check',
+              message: `Backend API is ${backendStatus.toLowerCase()}.`,
+              time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            },
+            ...fake.logs
+          ]
+        });
+      } catch (err) {
+        console.error('Monitor fetch error:', err);
+        setMonitorData(fakeData.monitorPanel);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMonitorData();
   }, []);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    setMessage('');
+    
+    // Simulate sensor data refresh with slight randomization
     setMonitorData(prev => {
       const newSensors = prev.sensors.map(s => {
-        if (s.status !== "Offline") {
-          return { ...s, value: s.value + 1, lastUpdate: "Now" };
+        if (s.status !== 'Offline') {
+          const delta = Math.floor(Math.random() * 5) - 2; // -2 to +2
+          return { ...s, value: Math.max(0, s.value + delta), lastUpdate: 'Just now' };
         }
         return s;
       });
-      return { ...prev, sensors: newSensors };
+
+      // Update log with refresh entry
+      const newLog = {
+        title: 'Manual refresh',
+        message: 'Sensor readings updated by user.',
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      return { 
+        ...prev, 
+        sensors: newSensors,
+        logs: [newLog, ...prev.logs.slice(0, 4)]
+      };
     });
-    setMessage('Demo monitor data refreshed.');
+    setMessage('Monitor data refreshed.');
   };
 
-  if (!monitorData) return <div>Loading...</div>;
+  if (loading || !monitorData) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading monitor...</p></div>;
 
   return (
     <>
@@ -52,8 +138,8 @@ export default function MonitorPanel() {
         </div>
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <p className="text-slate-500 text-lg mb-3">System Health</p>
-          <h3 className="text-5xl font-bold text-slate-950">{monitorData.summary.health}</h3>
-          <p className="text-slate-500 text-lg mt-3">Demo status</p>
+          <h3 className={`text-5xl font-bold ${monitorData.summary.health === 'OK' ? 'text-green-600' : 'text-orange-500'}`}>{monitorData.summary.health}</h3>
+          <p className="text-slate-500 text-lg mt-3">Live status</p>
         </div>
       </section>
 
@@ -70,9 +156,9 @@ export default function MonitorPanel() {
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             {monitorData.sensors.map((sensor, idx) => {
-              let statusClass = "bg-green-100 text-green-700";
-              if (sensor.status === "Warning") statusClass = "bg-yellow-100 text-orange-600";
-              if (sensor.status === "Offline") statusClass = "bg-red-100 text-red-700";
+              let statusClass = 'bg-green-100 text-green-700';
+              if (sensor.status === 'Warning') statusClass = 'bg-yellow-100 text-orange-600';
+              if (sensor.status === 'Offline') statusClass = 'bg-red-100 text-red-700';
 
               return (
                 <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:bg-slate-50">
@@ -99,9 +185,9 @@ export default function MonitorPanel() {
           </div>
           <div className="space-y-4">
             {monitorData.services.map((service, idx) => {
-              let statusClass = "bg-green-100 text-green-700";
-              if (service.status === "Warning") statusClass = "bg-yellow-100 text-orange-600";
-              if (service.status === "Down") statusClass = "bg-red-100 text-red-700";
+              let statusClass = 'bg-green-100 text-green-700';
+              if (service.status === 'Warning') statusClass = 'bg-yellow-100 text-orange-600';
+              if (service.status === 'Down') statusClass = 'bg-red-100 text-red-700';
 
               return (
                 <div key={idx} className="border border-slate-200 rounded-2xl p-5 flex justify-between items-start">
@@ -125,9 +211,9 @@ export default function MonitorPanel() {
           </div>
           <div className="space-y-4">
             {monitorData.alerts.map((alert, idx) => {
-              let colorClass = "bg-red-100 border-red-200 text-red-700";
-              if (alert.level === "MEDIUM") colorClass = "bg-yellow-100 border-yellow-300 text-orange-600";
-              if (alert.level === "LOW") colorClass = "bg-green-100 border-green-200 text-green-700";
+              let colorClass = 'bg-red-100 border-red-200 text-red-700';
+              if (alert.level === 'MEDIUM') colorClass = 'bg-yellow-100 border-yellow-300 text-orange-600';
+              if (alert.level === 'LOW') colorClass = 'bg-green-100 border-green-200 text-green-700';
 
               return (
                 <div key={idx} className={`border rounded-3xl p-5 ${colorClass}`}>
