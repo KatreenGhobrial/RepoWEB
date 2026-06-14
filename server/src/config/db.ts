@@ -1,4 +1,8 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Force use of Google DNS to prevent SRV resolution errors on strict networks
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 /**
  * Connect to MongoDB Atlas.
