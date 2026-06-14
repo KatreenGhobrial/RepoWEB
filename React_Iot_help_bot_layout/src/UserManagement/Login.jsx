@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { find } from '../users';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
@@ -8,40 +8,24 @@ export default function Login() {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usernameOrEmail, password })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(data.message || 'Invalid username/email or password.');
-        setIsError(true);
-        return;
-      }
-
-      // Save token and user info
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      await login(usernameOrEmail, password);
       
       setMessage('Login successful!');
       setIsError(false);
       
-      // Navigate to dashboard
       setTimeout(() => {
-        navigate(`/dashboard?username=${data.user.username}`);
+        navigate('/dashboard');
       }, 500);
     } catch (error) {
       console.error('Login error:', error);
-      setMessage('Server error. Make sure the backend is running.');
+      setMessage(error.message || 'Server error. Make sure the backend is running.');
       setIsError(true);
     }
   };

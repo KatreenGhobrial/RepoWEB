@@ -1,17 +1,19 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
+import Layout from './UIComponents/Layout';
 import Login from './UserManagement/Login';
 import Register from './UserManagement/Register';
-import Dashboard from './pages/Dashboard';
-import ProjectSetup from './pages/ProjectSetup';
-import TasksTeam from './pages/TasksTeam';
-import DetectConflict from './BotEngine/DetectConflict';
-import MonitorPanel from './BotEngine/MonitorPanel';
+import Dashboard from './UIComponents/Dashboard';
+import ProjectSetup from './ProjectManagement/ProjectSetup';
+import TasksTeam from './ProjectManagement/TasksTeam';
+import DetectConflict from './IoTManagement/DetectConflict';
+import MonitorPanel from './IoTManagement/MonitorPanel';
 import SocraticBot from './BotEngine/SocraticBot';
-import Home from './pages/Home';
-import About from './pages/About';
-import Profile from './pages/Profile';
-
+import Home from './UIComponents/Home';
+import About from './UIComponents/About';
+import Profile from './UserManagement/Profile';
+import IoTSolutionLibrary from './IoTManagement/IoTSolutionLibrary';
+import MentorDashboard from './IoTManagement/MentorDashboard';
+import KnowledgeSharing from './Community/KnowledgeSharing';
 //Including all routes in the app
 function App() {
   return (
@@ -31,6 +33,9 @@ function App() {
           <Route path="/detect-conflict" element={<DetectConflict />} />
           <Route path="/monitor-panel" element={<MonitorPanel />} />
           <Route path="/socratic-bot" element={<SocraticBot />} />
+          <Route path="/solution-library" element={<IoTSolutionLibrary />} />
+          <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+          <Route path="/knowledge-sharing" element={<KnowledgeSharing />} />
         </Route>
       </Routes>
     </Router>

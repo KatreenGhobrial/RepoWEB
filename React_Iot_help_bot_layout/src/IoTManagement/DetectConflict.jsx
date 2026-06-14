@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Header from '../components/Header';
+import Header from '../UIComponents/Header';
 
 export default function DetectConflict() {
   const [results, setResults] = useState([]);

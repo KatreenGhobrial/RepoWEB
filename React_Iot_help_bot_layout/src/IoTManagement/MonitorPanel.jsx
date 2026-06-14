@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import Header from '../components/Header';
-import fakeData from '../DataAccess/fake-data.json';
+import Header from '../UIComponents/Header';
 
 export default function MonitorPanel() {
   const [monitorData, setMonitorData] = useState(null);
@@ -28,14 +27,13 @@ export default function MonitorPanel() {
           } catch { /* backend not available */ }
         }
 
-        // Use fake sensor data as simulation, but real service statuses
-        const fake = fakeData.monitorPanel;
+        // Initialize empty state without fake data
         setMonitorData({
           summary: { 
-            devices: fake.summary.devices, 
+            devices: 0, 
             health: backendStatus === 'Online' ? 'OK' : 'Degraded' 
           },
-          sensors: fake.sensors,
+          sensors: [], // Empty without real sensor telemetry
           services: [
             {
               name: 'Backend API',
@@ -52,11 +50,6 @@ export default function MonitorPanel() {
                 : 'Database connection unavailable'
             },
             {
-              name: 'Wi-Fi Gateway',
-              status: 'Online',
-              description: 'Device communication channel active'
-            },
-            {
               name: 'Socratic Bot Engine',
               status: botStatus,
               description: botStatus === 'Online'
@@ -64,19 +57,24 @@ export default function MonitorPanel() {
                 : 'Bot engine not available'
             }
           ],
-          alerts: fake.alerts,
+          alerts: [],
           logs: [
             {
               title: 'System check',
               message: `Backend API is ${backendStatus.toLowerCase()}.`,
               time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-            },
-            ...fake.logs
+            }
           ]
         });
       } catch (err) {
         console.error('Monitor fetch error:', err);
-        setMonitorData(fakeData.monitorPanel);
+        setMonitorData({
+          summary: { devices: 0, health: 'Down' },
+          sensors: [],
+          services: [],
+          alerts: [],
+          logs: []
+        });
       } finally {
         setLoading(false);
       }

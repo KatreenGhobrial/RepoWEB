@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import Header from '../components/Header';
+import Header from '../UIComponents/Header';
 
 export default function SocraticBot() {
   const [botQuestions, setBotQuestions] = useState([]);

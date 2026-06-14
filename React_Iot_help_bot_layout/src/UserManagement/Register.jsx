@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -10,6 +11,7 @@ export default function Register() {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -22,34 +24,16 @@ export default function Register() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, role: 'student' })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(data.message || 'Registration failed.');
-        setIsError(true);
-        return;
-      }
-
-      // Save token and user info
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('currentUser', JSON.stringify(data.user));
-      
+      await register({ username, email, password, role: 'student' });
       setMessage('Registration successful! Redirecting...');
       setIsError(false);
       
-      // Navigate to dashboard
       setTimeout(() => {
-        navigate(`/dashboard?username=${data.user.username}`);
+        navigate('/dashboard');
       }, 1000);
     } catch (error) {
       console.error('Registration error:', error);
-      setMessage('Server error. Make sure the backend is running.');
+      setMessage(error.message || 'Server error. Make sure the backend is running.');
       setIsError(true);
     }
   };
