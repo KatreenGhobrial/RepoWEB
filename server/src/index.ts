@@ -9,6 +9,7 @@ import botRoutes from './routes/bot';
 import mentorRoutes from './routes/mentor';
 import libraryRoutes from './routes/library';
 import forumRoutes from './routes/forum';
+import userRoutes from './routes/users';
 
 // Load environment variables
 dotenv.config();
@@ -35,6 +36,7 @@ app.use('/api/bot', botRoutes);
 app.use('/api/mentor', mentorRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
