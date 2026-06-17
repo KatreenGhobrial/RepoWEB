@@ -3,38 +3,38 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [dob, setDob] = useState('');
-  const [message, setMessage] = useState('');
-  const [isError, setIsError] = useState(false);
+  const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '', dob: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
   const navigate = useNavigate();
   const { register } = useAuth();
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setMessage('');
+  const set = field => e => setForm(prev => ({ ...prev, [field]: e.target.value }));
 
+  const handleRegister = async () => {
+    setError('');
+    setSuccess('');
+
+    const { username, email, password, confirmPassword, dob } = form;
+
+    if (!username || !email || !password || !dob) {
+      return setError('All fields are required.');
+    }
     if (password !== confirmPassword) {
-      setMessage('Passwords do not match.');
-      setIsError(true);
-      return;
+      return setError('Passwords do not match.');
     }
 
     try {
-      await register({ username, email, password, role: 'student' });
-      setMessage('Registration successful! Redirecting...');
-      setIsError(false);
+      await register({ username, email, password, dob, role: 'student' });
+      setSuccess('Registration successful! Redirecting...');
       
       setTimeout(() => {
         navigate('/dashboard');
       }, 1000);
-    } catch (error) {
-      console.error('Registration error:', error);
-      setMessage(error.message || 'Server error. Make sure the backend is running.');
-      setIsError(true);
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Server error. Make sure the backend is running.');
     }
   };
 
@@ -44,30 +44,62 @@ export default function Register() {
         <div className="text-center mb-6">
           <img src="/src/assets/IoTPic.png" className="w-56 mx-auto mb-4" alt="IoT HelpBot Logo" />
           <h1 className="text-3xl font-bold text-slate-900">Register</h1>
-          <p className="text-slate-500 mt-2">Create a demo account</p>
+          <p className="text-slate-500 mt-2">Create an account</p>
         </div>
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form id="registerForm" onSubmit={e => { e.preventDefault(); handleRegister(); }} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-1">Username</label>
-            <input type="text" required value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter username" className="w-full border border-slate-300 rounded-xl px-4 py-3" />
+            <input 
+                type="text" 
+                value={form.username} 
+                onChange={set('username')} 
+                placeholder="Enter username" 
+                className="w-full border border-slate-300 rounded-xl px-4 py-3" 
+            />
           </div>
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-1">Email</label>
-            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter email" className="w-full border border-slate-300 rounded-xl px-4 py-3" />
+            <input 
+                type="email" 
+                value={form.email} 
+                onChange={set('email')} 
+                placeholder="Enter email" 
+                className="w-full border border-slate-300 rounded-xl px-4 py-3" 
+            />
           </div>
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-1">Password</label>
-            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" className="w-full border border-slate-300 rounded-xl px-4 py-3" />
+            <input 
+                type="password" 
+                value={form.password} 
+                onChange={set('password')} 
+                placeholder="Enter password" 
+                className="w-full border border-slate-300 rounded-xl px-4 py-3" 
+            />
           </div>
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-1">Confirm Password</label>
-            <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm password" className="w-full border border-slate-300 rounded-xl px-4 py-3" />
+            <input 
+                type="password" 
+                value={form.confirmPassword} 
+                onChange={set('confirmPassword')} 
+                placeholder="Confirm password" 
+                className="w-full border border-slate-300 rounded-xl px-4 py-3" 
+            />
           </div>
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-1">Date of Birth</label>
-            <input type="date" required value={dob} onChange={e => setDob(e.target.value)} className="w-full border border-slate-300 rounded-xl px-4 py-3" />
+            <input 
+                type="date" 
+                value={form.dob} 
+                onChange={set('dob')} 
+                className="w-full border border-slate-300 rounded-xl px-4 py-3" 
+            />
           </div>
-          {message && <p className={`text-sm ${isError ? 'text-red-500' : 'text-green-500'}`}>{message}</p>}
+          
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          {success && <p className="text-sm text-green-500">{success}</p>}
+          
           <button type="submit" className="w-full bg-slate-950 text-white py-3 rounded-xl font-bold hover:bg-slate-800">
             Register
           </button>

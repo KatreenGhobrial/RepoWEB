@@ -3,7 +3,7 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
 import Header from "../UIComponents/Header";
 import { useAuth } from "../context/AuthContext";
-import { mentorService } from "./iotService";
+import * as mentorService from "./iotService";
 export default function MentorDashboard() {
   const { user } = useAuth();
   const [dashData, setDashData] = useState(null);
@@ -207,3 +207,4 @@ export default function MentorDashboard() {
     ] })
   ] });
 }
+

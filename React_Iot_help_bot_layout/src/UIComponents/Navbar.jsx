@@ -26,6 +26,7 @@ export default function Navbar() {
         <Link to="/home" className={getLinkClass('/home')}>Home</Link>
         <Link to="/about" className={getLinkClass('/about')}>About</Link>
         <Link to="/profile" className={getLinkClass('/profile')}>Profile</Link>
+        <Link to="/manage-users" className={getLinkClass('/manage-users')}>Manage Users</Link>
         <Link to="/dashboard" className={getLinkClass('/dashboard')}>Dashboard</Link>
         <Link to="/project-setup" className={getLinkClass('/project-setup')}>Project Setup</Link>
         <Link to="/tasks-team" className={getLinkClass('/tasks-team')}>Tasks & Team</Link>

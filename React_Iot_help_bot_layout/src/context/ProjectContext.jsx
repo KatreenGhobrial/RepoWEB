@@ -1,7 +1,7 @@
 "use strict";
 import { jsx } from "react/jsx-runtime";
 import { createContext, useContext, useState, useEffect } from "react";
-import { projectService } from "../ProjectManagement/projectService";
+import * as projectService from "../ProjectManagement/projectService";
 import { useAuth } from "./AuthContext";
 const ProjectContext = createContext(void 0);
 export function ProjectProvider({ children }) {
@@ -91,3 +91,4 @@ export function useProject() {
   }
   return context;
 }
+

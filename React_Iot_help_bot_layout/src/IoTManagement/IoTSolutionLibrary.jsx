@@ -2,7 +2,7 @@
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
 import Header from "../UIComponents/Header";
-import { libraryService } from "./iotService";
+import * as libraryService from "./iotService";
 const TABS = [
   { key: "protocols", label: "Protocols", icon: "\u{1F4E1}" },
   { key: "hardware", label: "Hardware", icon: "\u{1F527}" },
@@ -186,3 +186,4 @@ export default function IoTSolutionLibrary() {
     ] })
   ] });
 }
+

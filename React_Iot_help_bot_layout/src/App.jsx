@@ -14,6 +14,7 @@ import Profile from './UserManagement/Profile';
 import IoTSolutionLibrary from './IoTManagement/IoTSolutionLibrary';
 import MentorDashboard from './IoTManagement/MentorDashboard';
 import KnowledgeSharing from './Community/KnowledgeSharing';
+import ManageUsers from './UserManagement/ManageUsers';
 //Including all routes in the app
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           <Route path="/solution-library" element={<IoTSolutionLibrary />} />
           <Route path="/mentor-dashboard" element={<MentorDashboard />} />
           <Route path="/knowledge-sharing" element={<KnowledgeSharing />} />
+          <Route path="/manage-users" element={<ManageUsers />} />
         </Route>
       </Routes>
     </Router>

@@ -3,30 +3,29 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [usernameOrEmail, setUsernameOrEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setMessage('');
+    if (e) e.preventDefault();
+    setError('');
+
+    if (!username || !password) {
+        return setError('Username and password are required.');
+    }
 
     try {
-      await login(usernameOrEmail, password);
-      
-      setMessage('Login successful!');
-      setIsError(false);
-      
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 500);
-    } catch (error) {
-      console.error('Login error:', error);
-      setMessage(error.message || 'Server error. Make sure the backend is running.');
-      setIsError(true);
+      const user = await login(username, password);
+      if (user) {
+          setError('');
+          navigate(user.role === 'admin' ? '/manage-users' : '/profile');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'Invalid username or password.');
     }
   };
 
@@ -38,14 +37,13 @@ export default function Login() {
           <h1 className="text-3xl font-bold text-slate-900">Login</h1>
           <p className="text-slate-500 mt-2">Login to IoT HelpBot</p>
         </div>
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form id="loginForm" method="post" onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-1">Username or Email</label>
             <input 
               type="text" 
-              required 
-              value={usernameOrEmail}
-              onChange={(e) => setUsernameOrEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter username or email" 
               className="w-full border border-slate-300 rounded-xl px-4 py-3" 
             />
@@ -54,22 +52,21 @@ export default function Login() {
             <label className="block text-sm font-bold text-slate-800 mb-1">Password</label>
             <input 
               type="password" 
-              required 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password" 
               className="w-full border border-slate-300 rounded-xl px-4 py-3" 
             />
           </div>
-          {message && (
-            <p className={`text-sm ${isError ? 'text-red-500' : 'text-green-500'}`}>{message}</p>
+          {error && (
+            <p className="text-sm text-red-500">{error}</p>
           )}
-          <button type="submit" className="w-full bg-slate-950 text-white py-3 rounded-xl font-bold hover:bg-slate-800">
+          <button type="submit" className="w-full bg-slate-950 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors">
             Login
           </button>
         </form>
         <p className="text-center mt-6 text-slate-500">
-          Don’t have an account? <Link to="/register" className="text-blue-600 font-bold">Register</Link>
+          Don’t have an account? <Link to="/register" className="text-blue-600 font-bold hover:underline">Register</Link>
         </p>
       </div>
     </div>

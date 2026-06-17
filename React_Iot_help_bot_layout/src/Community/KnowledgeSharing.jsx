@@ -3,7 +3,7 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
 import Header from "../UIComponents/Header";
 import { useAuth } from "../context/AuthContext";
-import { forumService } from "./forumService";
+import * as forumService from "./forumService";
 const TAG_COLORS = {
   mqtt: "bg-cyan-500/10 text-cyan-400",
   hardware: "bg-purple-500/10 text-purple-400",
@@ -274,3 +274,4 @@ export default function KnowledgeSharing() {
     ] })
   ] });
 }
+

@@ -1,7 +1,7 @@
 "use strict";
 import { jsx } from "react/jsx-runtime";
 import { createContext, useContext, useState, useEffect } from "react";
-import { authService } from "../UserManagement/authService";
+import * as usersService from "../UserManagement/usersService";
 const AuthContext = createContext(void 0);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
     const initAuth = async () => {
       if (token) {
         try {
-          const userData = await authService.getMe();
+          const userData = await usersService.getMe();
           setUser(userData);
         } catch {
           localStorage.removeItem("token");
@@ -24,13 +24,14 @@ export function AuthProvider({ children }) {
     initAuth();
   }, [token]);
   const login = async (usernameOrEmail, password) => {
-    const res = await authService.login(usernameOrEmail, password);
+    const res = await usersService.login(usernameOrEmail, password);
     localStorage.setItem("token", res.token);
     setToken(res.token);
     setUser(res.user);
+    return res.user;
   };
   const register = async (data) => {
-    const res = await authService.register(data);
+    const res = await usersService.register(data);
     localStorage.setItem("token", res.token);
     setToken(res.token);
     setUser(res.user);
@@ -41,7 +42,7 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
   const updateUser = async (data) => {
-    const updated = await authService.updateProfile(data);
+    const updated = await usersService.updateProfile(data);
     setUser(updated);
   };
   return /* @__PURE__ */ jsx(AuthContext.Provider, { value: { user, token, loading, login, register, logout, updateUser }, children });

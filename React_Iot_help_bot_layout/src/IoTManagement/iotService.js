@@ -1,18 +1,47 @@
 import api from '../apiClient';
 
-export const mentorService = {
-  getProjects: () => api.get("/mentor/projects"),
-  getDashboard: () => api.get("/mentor/dashboard"),
-  giveFeedback: (data) => api.post("/mentor/feedback", data),
-  getFeedback: (projectId) => api.get(`/mentor/feedback/${projectId}`),
-  broadcast: (message) => api.post("/mentor/broadcast", { message })
-};
+// Mentor Endpoints
+export async function getProjects() {
+  return await api.get("/mentor/projects");
+}
 
-export const libraryService = {
-  getAll: () => api.get("/library"),
-  getProtocols: () => api.get("/library/protocols"),
-  getHardware: () => api.get("/library/hardware"),
-  getCloud: () => api.get("/library/cloud"),
-  getSensors: () => api.get("/library/sensors"),
-  search: (q) => api.get(`/library/search`, { params: { q } })
-};
+export async function getDashboard() {
+  return await api.get("/mentor/dashboard");
+}
+
+export async function giveFeedback(data) {
+  return await api.post("/mentor/feedback", data);
+}
+
+export async function getFeedback(projectId) {
+  return await api.get(`/mentor/feedback/${projectId}`);
+}
+
+export async function broadcast(message) {
+  return await api.post("/mentor/broadcast", { message });
+}
+
+// Library Endpoints
+export async function getAll() {
+  return await api.get("/library");
+}
+
+export async function getProtocols() {
+  return await api.get("/library/protocols");
+}
+
+export async function getHardware() {
+  return await api.get("/library/hardware");
+}
+
+export async function getCloud() {
+  return await api.get("/library/cloud");
+}
+
+export async function getSensors() {
+  return await api.get("/library/sensors");
+}
+
+export async function search(q) {
+  return await api.get(`/library/search`, { params: { q } });
+}

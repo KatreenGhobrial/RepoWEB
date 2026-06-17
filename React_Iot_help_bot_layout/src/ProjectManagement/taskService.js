@@ -1,8 +1,17 @@
 import api from '../apiClient';
 
-export const taskService = {
-  create: (data) => api.post("/tasks", data),
-  listByProject: (projectId) => api.get(`/tasks/${projectId}`),
-  update: (id, data) => api.put(`/tasks/${id}`, data),
-  delete: (id) => api.delete(`/tasks/${id}`)
-};
+export async function create(data) {
+  return await api.post("/tasks", data);
+}
+
+export async function listByProject(projectId) {
+  return await api.get(`/tasks/${projectId}`);
+}
+
+export async function update(id, data) {
+  return await api.put(`/tasks/${id}`, data);
+}
+
+export async function deleteTask(id) {
+  return await api.delete(`/tasks/${id}`);
+}

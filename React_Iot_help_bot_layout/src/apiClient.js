@@ -1,37 +1,51 @@
-"use strict";
 import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-function getToken() {
-  return localStorage.getItem("token");
+// Helper to grab token and format headers
+function getHeaders() {
+    const token = localStorage.getItem("token");
+    return {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    };
 }
 
-const api = axios.create({
-  baseURL: API_BASE,
-  headers: {
-    "Content-Type": "application/json"
-  }
-});
+// Helper to keep error messages clean
+function handleError(error) {
+    const message = error.response?.data?.message || error.message || 'Server Error';
+    throw new Error(message);
+}
 
-// Request interceptor to attach token
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
-  }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
-
-// Response interceptor to extract data and handle errors cleanly
-api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    const message = error.response?.data?.message || error.message || `HTTP ${error.response?.status || 'Error'}`;
-    return Promise.reject(new Error(message));
-  }
-);
+// Export a simple object with clear get/post/put/delete methods
+const api = {
+    async get(url, config = {}) {
+        try {
+            const res = await axios.get(API_BASE + url, { ...config, headers: getHeaders() });
+            return res.data;
+        } catch (err) { handleError(err); }
+    },
+    
+    async post(url, data = {}, config = {}) {
+        try {
+            const res = await axios.post(API_BASE + url, data, { ...config, headers: getHeaders() });
+            return res.data;
+        } catch (err) { handleError(err); }
+    },
+    
+    async put(url, data = {}, config = {}) {
+        try {
+            const res = await axios.put(API_BASE + url, data, { ...config, headers: getHeaders() });
+            return res.data;
+        } catch (err) { handleError(err); }
+    },
+    
+    async delete(url, config = {}) {
+        try {
+            const res = await axios.delete(API_BASE + url, { ...config, headers: getHeaders() });
+            return res.data;
+        } catch (err) { handleError(err); }
+    }
+};
 
 export default api;

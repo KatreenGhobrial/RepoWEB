@@ -1,9 +1,21 @@
 import api from '../apiClient';
 
-export const forumService = {
-  create: (data) => api.post("/forum", data),
-  list: (tag, search) => api.get("/forum", { params: { tag, search } }),
-  get: (id) => api.get(`/forum/${id}`),
-  reply: (id, content) => api.post(`/forum/${id}/reply`, { content }),
-  upvote: (id) => api.post(`/forum/${id}/upvote`)
-};
+export async function create(data) {
+  return await api.post("/forum", data);
+}
+
+export async function list(tag, search) {
+  return await api.get("/forum", { params: { tag, search } });
+}
+
+export async function get(id) {
+  return await api.get(`/forum/${id}`);
+}
+
+export async function reply(id, content) {
+  return await api.post(`/forum/${id}/reply`, { content });
+}
+
+export async function upvote(id) {
+  return await api.post(`/forum/${id}/upvote`);
+}
