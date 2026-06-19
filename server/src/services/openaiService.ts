@@ -325,12 +325,20 @@ export async function detectConflictsAI(architecture: {
   } catch (error: any) {
     console.warn('⚠️  OpenAI API error in conflict detection, using rule-based fallback:', error?.code || error?.message);
     
-    // Rule-based conflict detection fallback
+    // ═══════════════════════════════════════════════════════════════════════
+    // Rule-based conflict detection fallback (expanded)
+    // Covers 12+ common IoT architecture conflicts
+    // ═══════════════════════════════════════════════════════════════════════
     const conflicts: Array<{ title: string; level: string; reason: string; suggestion: string }> = [];
-    const { device, protocol, powerSource, sensors } = architecture;
+    const { device, protocol, database, powerSource, sensors, cloudPlatform } = architecture;
+    const deviceLower = (device || '').toLowerCase();
+    const protocolLower = (protocol || '').toLowerCase();
+    const powerLower = (powerSource || '').toLowerCase();
+    const dbLower = (database || '').toLowerCase();
+    const cloudLower = (cloudPlatform || '').toLowerCase();
 
-    // HTTP + Battery = high power consumption
-    if (protocol === 'HTTP' && powerSource === 'Battery') {
+    // Rule 1: HTTP + Battery = high power consumption
+    if (protocolLower === 'http' && powerLower.includes('battery')) {
       conflicts.push({
         title: 'High Power Consumption: HTTP over Battery',
         level: 'HIGH',
@@ -339,8 +347,8 @@ export async function detectConflictsAI(architecture: {
       });
     }
 
-    // ESP32/Arduino with many sensors
-    if ((device === 'ESP32' || device === 'Arduino Uno') && sensors && sensors.length > 3) {
+    // Rule 2: ESP32/Arduino with many sensors
+    if ((deviceLower.includes('esp32') || deviceLower.includes('arduino')) && sensors && sensors.length > 3) {
       conflicts.push({
         title: 'Resource Constraints: Multiple Sensors on MCU',
         level: 'MEDIUM',
@@ -349,23 +357,105 @@ export async function detectConflictsAI(architecture: {
       });
     }
 
-    // Arduino Uno + WiFi (no built-in WiFi)
-    if (device === 'Arduino Uno' && (protocol === 'MQTT' || protocol === 'HTTP')) {
+    // Rule 3: Arduino Uno + WiFi (no built-in WiFi)
+    if (deviceLower.includes('arduino') && (protocolLower === 'mqtt' || protocolLower === 'http' || protocolLower === 'coap')) {
       conflicts.push({
-        title: 'Missing WiFi Module: Arduino Uno',
+        title: 'Missing WiFi Module: Arduino',
         level: 'HIGH',
-        reason: 'Arduino Uno does not have built-in WiFi. Using network protocols requires an additional WiFi shield or module (ESP8266, etc.).',
+        reason: `${device} does not have built-in WiFi. Using ${protocol} requires an additional WiFi shield or module (ESP8266, etc.), adding hardware complexity.`,
         suggestion: 'What WiFi module are you planning to use with the Arduino? Have you considered using an ESP32 instead, which has built-in WiFi and Bluetooth?',
       });
     }
 
-    // Battery + no mention of deep sleep
-    if (powerSource === 'Battery') {
+    // Rule 4: Battery + general power management
+    if (powerLower.includes('battery')) {
       conflicts.push({
         title: 'Battery Management Strategy',
         level: 'MEDIUM',
         reason: 'Battery-powered IoT devices require careful power management including sleep modes, optimized transmission schedules, and efficient sensor polling.',
         suggestion: 'What is your deep sleep strategy? How often does the device wake up, sample sensors, transmit data, and go back to sleep?',
+      });
+    }
+
+    // Rule 5: Raspberry Pi + Battery = impractical
+    if (deviceLower.includes('raspberry') && powerLower.includes('battery')) {
+      conflicts.push({
+        title: 'Raspberry Pi on Battery Power',
+        level: 'HIGH',
+        reason: 'Raspberry Pi consumes 2.5-5W continuously. Unlike MCUs, it cannot enter deep sleep. Battery operation is impractical for most deployments.',
+        suggestion: 'Have you measured the actual power draw of your Raspberry Pi with all peripherals connected? How many hours would a typical battery last?',
+      });
+    }
+
+    // Rule 6: CoAP + MongoDB = mismatch
+    if (protocolLower === 'coap' && dbLower.includes('mongo')) {
+      conflicts.push({
+        title: 'CoAP Protocol with MongoDB Storage',
+        level: 'MEDIUM',
+        reason: 'CoAP is designed for constrained devices and typically pairs with time-series databases (InfluxDB, TimescaleDB). MongoDB document structure adds unnecessary overhead for simple sensor readings.',
+        suggestion: 'What data format are your CoAP messages using? Have you considered how many writes per second MongoDB needs to handle from your CoAP devices?',
+      });
+    }
+
+    // Rule 7: WebSocket on constrained MCU
+    if (protocolLower === 'websocket' && (deviceLower.includes('esp32') || deviceLower.includes('esp8266') || deviceLower.includes('arduino'))) {
+      conflicts.push({
+        title: 'WebSocket on Memory-Constrained MCU',
+        level: 'MEDIUM',
+        reason: `WebSocket requires a persistent TCP connection with receive buffers. On ${device}, this consumes significant RAM that may conflict with sensor data processing.`,
+        suggestion: `How much free RAM do you have after opening the WebSocket connection on ${device}? Would a stateless protocol (HTTP/CoAP) be more memory-efficient?`,
+      });
+    }
+
+    // Rule 8: Firebase + MQTT = incompatible
+    if (cloudLower.includes('firebase') && protocolLower === 'mqtt') {
+      conflicts.push({
+        title: 'Firebase Does Not Support MQTT Natively',
+        level: 'MEDIUM',
+        reason: 'Firebase uses WebSocket/HTTP-based protocols. MQTT messages need a bridge service (like a Node.js server) to forward data to Firebase.',
+        suggestion: 'Are you planning to build a bridge between MQTT and Firebase? Or would switching to Firebase\'s native REST API or WebSocket be simpler for your architecture?',
+      });
+    }
+
+    // Rule 9: No TLS with cloud platform = security risk
+    if (cloudPlatform && (protocolLower === 'mqtt' || protocolLower === 'http') && !protocolLower.includes('tls') && !protocolLower.includes('ssl')) {
+      conflicts.push({
+        title: 'Data Transmission Security to Cloud',
+        level: 'MEDIUM',
+        reason: `Sending data from ${device} to ${cloudPlatform} via ${protocol} without TLS encryption exposes sensor data to potential interception on the network.`,
+        suggestion: `Is your ${protocol} connection using TLS/SSL encryption? What would be the impact if someone intercepted your sensor data?`,
+      });
+    }
+
+    // Rule 10: Multiple sensors + battery + network = triple drain
+    if (sensors && sensors.length >= 3 && powerLower.includes('battery') && (protocolLower === 'mqtt' || protocolLower === 'http' || protocolLower === 'websocket')) {
+      conflicts.push({
+        title: 'Triple Power Drain: Sensors + Network + Battery',
+        level: 'HIGH',
+        reason: `Running ${sensors.length} sensors and transmitting via ${protocol} on battery creates competing demands: sensors need frequent reads for accuracy, but each network transmission drains significant energy.`,
+        suggestion: 'Could you batch multiple sensor readings into a single transmission? What is the minimum acceptable data freshness for your use case?',
+      });
+    }
+
+    // Rule 11: I2C sensor address conflicts
+    const I2C_SENSORS = ['bmp280', 'bmp180', 'bme280', 'sht30', 'sht31', 'mpu6050', 'oled', 'ads1115'];
+    const i2cFound = (sensors || []).filter(s => I2C_SENSORS.some(ic => s.toLowerCase().includes(ic)));
+    if (i2cFound.length >= 2) {
+      conflicts.push({
+        title: `Potential I2C Address Conflict: ${i2cFound.join(', ')}`,
+        level: 'MEDIUM',
+        reason: `${i2cFound.length} sensors share the I2C bus. If two sensors have the same default address, they cannot coexist without address modification or a multiplexer.`,
+        suggestion: `Have you checked the default I2C addresses of ${i2cFound.join(' and ')}? Do any of them conflict? Would you need a TCA9548A multiplexer?`,
+      });
+    }
+
+    // Rule 12: STM32 + high-level cloud = steep learning curve
+    if (deviceLower.includes('stm32') && cloudPlatform) {
+      conflicts.push({
+        title: 'STM32 Cloud Integration Complexity',
+        level: 'LOW',
+        reason: `STM32 development typically uses lower-level C/HAL libraries. Integrating with ${cloudPlatform} requires TLS, JSON parsing, and network stack — all of which need significant flash and RAM.`,
+        suggestion: `Does your STM32 variant have enough flash and RAM for a TLS stack + ${protocol} client + JSON library? Have you evaluated the available SDKs?`,
       });
     }
 
