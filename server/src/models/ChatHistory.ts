@@ -14,7 +14,7 @@ export interface IChatMessage {
 // ---------------------------------------------------------------------------
 export interface IChatHistory extends Document {
   project: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
+  user: string;
   sessionId: string;             // groups messages into a conversation session
   messages: IChatMessage[];
   detectedPhase: string;         // auto-detected project phase
@@ -54,9 +54,8 @@ const chatHistorySchema = new Schema<IChatHistory>(
       required: false,
     },
     user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
+      type: String,
+      required: false,
     },
     sessionId: {
       type: String,

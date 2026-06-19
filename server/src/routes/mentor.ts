@@ -1,19 +1,15 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import Project from '../models/Project';
 import Task from '../models/Task';
 import ChatHistory from '../models/ChatHistory';
 import Feedback from '../models/Feedback';
 import User from '../models/User';
-import { authMiddleware, requireRole, AuthRequest } from '../middleware/auth';
-
 const router = Router();
-router.use(authMiddleware);
-router.use(requireRole('mentor', 'admin'));
 
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/mentor/projects — View ALL projects (mentor overview)
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/projects', async (_req: AuthRequest, res: Response): Promise<void> => {
+router.get('/projects', async (_req: Request, res: Response): Promise<void> => {
   try {
     const projects = await Project.find()
       .populate('owner', 'username email')
@@ -30,7 +26,7 @@ router.get('/projects', async (_req: AuthRequest, res: Response): Promise<void> 
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/mentor/dashboard — Aggregated dashboard data for mentor
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/dashboard', async (_req: AuthRequest, res: Response): Promise<void> => {
+router.get('/dashboard', async (_req: Request, res: Response): Promise<void> => {
   try {
     const [projects, tasks, chatSessions, students] = await Promise.all([
       Project.find().populate('members', 'username role expertise'),
@@ -87,13 +83,13 @@ router.get('/dashboard', async (_req: AuthRequest, res: Response): Promise<void>
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/mentor/feedback — Give feedback on a project
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/feedback', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/feedback', async (req: Request, res: Response): Promise<void> => {
   try {
     const { projectId, content, category, rating } = req.body;
 
     const feedback = await Feedback.create({
       project: projectId,
-      mentor: req.user!.userId,
+      mentor: null,
       content,
       category: category || 'general',
       rating: rating || 3,
@@ -109,7 +105,7 @@ router.post('/feedback', async (req: AuthRequest, res: Response): Promise<void> 
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/mentor/feedback/:projectId — Get feedback for a project
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/feedback/:projectId', async (_req: AuthRequest, res: Response): Promise<void> => {
+router.get('/feedback/:projectId', async (_req: Request, res: Response): Promise<void> => {
   try {
     const feedback = await Feedback.find({ project: _req.params.projectId })
       .populate('mentor', 'username')
@@ -125,7 +121,7 @@ router.get('/feedback/:projectId', async (_req: AuthRequest, res: Response): Pro
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/mentor/broadcast — Send a broadcast prompt to all teams
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/broadcast', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/broadcast', async (req: Request, res: Response): Promise<void> => {
   try {
     const { message } = req.body;
 
@@ -143,7 +139,7 @@ router.post('/broadcast', async (req: AuthRequest, res: Response): Promise<void>
         if (!session) {
           session = await ChatHistory.create({
             project: project._id,
-            user: req.user!.userId,
+            user: 'anonymous_user',
             sessionId: `broadcast_${project._id}`,
             messages: [],
           });

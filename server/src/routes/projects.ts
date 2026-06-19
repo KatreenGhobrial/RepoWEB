@@ -1,16 +1,11 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import Project from '../models/Project';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
-
 const router = Router();
-
-// All project routes require authentication
-router.use(authMiddleware);
 
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/projects — Create a new IoT project
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const {
       name, description, device, protocol, database,
@@ -20,8 +15,8 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     const project = await Project.create({
       name,
       description,
-      owner: req.user!.userId,
-      members: [req.user!.userId],
+      owner: null,
+      members: [],
       device, protocol, database, powerSource,
       cloudPlatform, sensors, components, flow,
     });
@@ -36,12 +31,9 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/projects — List projects the user owns or is a member of
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user!.userId;
-    const projects = await Project.find({
-      $or: [{ owner: userId }, { members: userId }],
-    })
+    const projects = await Project.find()
       .populate('owner', 'username email')
       .populate('members', 'username email role expertise')
       .sort({ updatedAt: -1 });
@@ -56,7 +48,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/projects/:id — Get single project by ID
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('owner', 'username email')
@@ -77,7 +69,7 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // PUT /api/projects/:id — Update project
 // ───────────────────────────────────────────────────────────────────────────
-router.put('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const project = await Project.findByIdAndUpdate(
       req.params.id,
@@ -100,11 +92,10 @@ router.put('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // DELETE /api/projects/:id
 // ───────────────────────────────────────────────────────────────────────────
-router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const project = await Project.findOneAndDelete({
       _id: req.params.id,
-      owner: req.user!.userId,
     });
 
     if (!project) {
@@ -122,7 +113,7 @@ router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => 
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/projects/:id/members — Add a member to the project
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/:id/members', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/:id/members', async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.body;
 

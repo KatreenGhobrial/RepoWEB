@@ -2,19 +2,41 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
-import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 import taskRoutes from './routes/tasks';
 import botRoutes from './routes/bot';
 import mentorRoutes from './routes/mentor';
 import libraryRoutes from './routes/library';
-import forumRoutes from './routes/forum';
+import communityRoutes from './routes/community';
 import userRoutes from './routes/users';
+import { initMqttService } from './services/mqttService';
 
 // Load environment variables
 dotenv.config();
 
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
 const app = express();
+const httpServer = createServer(app);
+export const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log(`[Socket] Client connected: ${socket.id}`);
+  socket.on('disconnect', () => {
+    console.log(`[Socket] Client disconnected: ${socket.id}`);
+  });
+});
+
+// Initialize MQTT Service (This bridges MQTT and WebSocket!)
+initMqttService(io);
+
 const PORT = process.env.PORT || 5000;
 
 // ---------------------------------------------------------------------------
@@ -29,13 +51,12 @@ app.use(express.json({ limit: '10mb' }));
 // ---------------------------------------------------------------------------
 // API Routes
 // ---------------------------------------------------------------------------
-app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/bot', botRoutes);
 app.use('/api/mentor', mentorRoutes);
 app.use('/api/library', libraryRoutes);
-app.use('/api/forum', forumRoutes);
+app.use('/api/community', communityRoutes);
 app.use('/api/users', userRoutes);
 
 // Health check
@@ -50,8 +71,8 @@ const startServer = async () => {
   // Try connecting to DB, but don't block server start
   await connectDB();
 
-  app.listen(PORT, () => {
-    console.log(`🚀 BridgeBot server running on port ${PORT}`);
+  httpServer.listen(PORT, () => {
+    console.log(`🚀 BridgeBot server & WebSocket running on port ${PORT}`);
     console.log(`   API: http://localhost:${PORT}/api`);
     console.log(`   Health: http://localhost:${PORT}/api/health`);
   });

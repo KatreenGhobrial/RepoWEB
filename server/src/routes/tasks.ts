@@ -1,14 +1,11 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import Task from '../models/Task';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
-
 const router = Router();
-router.use(authMiddleware);
 
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/tasks — Create a new task
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { project, title, description, assignedTo, status, priority, discipline, dueDate } = req.body;
 
@@ -16,7 +13,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
       project,
       title,
       description,
-      owner: req.user!.userId,
+      owner: null,
       assignedTo,
       status: status || 'todo',
       priority: priority || 'medium',
@@ -34,7 +31,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/tasks/:projectId — Get all tasks for a project
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/:projectId', async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:projectId', async (req: Request, res: Response): Promise<void> => {
   try {
     const tasks = await Task.find({ project: req.params.projectId })
       .populate('owner', 'username email')
@@ -50,7 +47,7 @@ router.get('/:projectId', async (req: AuthRequest, res: Response): Promise<void>
 // ───────────────────────────────────────────────────────────────────────────
 // PUT /api/tasks/:id — Update a task
 // ───────────────────────────────────────────────────────────────────────────
-router.put('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const task = await Task.findByIdAndUpdate(
       req.params.id,
@@ -73,7 +70,7 @@ router.put('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // DELETE /api/tasks/:id
 // ───────────────────────────────────────────────────────────────────────────
-router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);
     if (!task) {
