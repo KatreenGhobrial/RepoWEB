@@ -3,70 +3,54 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
   const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    if (e) e.preventDefault();
-    setError('');
-
-    if (!username || !password) {
-        return setError('Username and password are required.');
-    }
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const user = await login(username, password);
-      if (user) {
-          setError('');
-          navigate(user.role === 'admin' ? '/manage-users' : '/profile');
-      }
+      await login(email, password);
+      navigate('/dashboard');
     } catch (err) {
-      console.error('Login error:', err);
-      setError(err.message || 'Invalid username or password.');
+      setError(err.message || 'Login failed');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-lg p-8">
-        <div className="text-center mb-6">
-          <img src="/src/assets/IoTPic.png" className="w-56 mx-auto mb-4" alt="IoT HelpBot Logo" />
-          <h1 className="text-3xl font-bold text-slate-900">Login</h1>
-          <p className="text-slate-500 mt-2">Login to IoT HelpBot</p>
-        </div>
-        <form id="loginForm" method="post" onSubmit={handleLogin} className="space-y-4">
+    <div className="flex-1 flex items-center justify-center p-6 bg-slate-100 dark:bg-zinc-950">
+      <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-zinc-800">
+        <h2 className="text-2xl font-bold text-center text-slate-800 dark:text-white mb-6">Welcome Back</h2>
+        {error && <div className="mb-4 text-red-500 text-sm text-center">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-slate-800 mb-1">Username or Email</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
             <input 
-              type="text" 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username or email" 
-              className="w-full border border-slate-300 rounded-xl px-4 py-3" 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white"
+              required 
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-slate-800 mb-1">Password</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
             <input 
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password" 
-              className="w-full border border-slate-300 rounded-xl px-4 py-3" 
+              className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white"
+              required 
             />
           </div>
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
-          <button type="submit" className="w-full bg-slate-950 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors">
-            Login
+          <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+            Log In
           </button>
         </form>
-        <p className="text-center mt-6 text-slate-500">
-          Don’t have an account? <Link to="/register" className="text-blue-600 font-bold hover:underline">Register</Link>
+        <p className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
+          Don't have an account? <Link to="/register" className="text-cyan-600 hover:underline">Register here</Link>
         </p>
       </div>
     </div>

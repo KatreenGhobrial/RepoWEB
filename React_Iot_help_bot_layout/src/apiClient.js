@@ -1,13 +1,11 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE =  "http://localhost:5000/api";
 
 // Helper to grab token and format headers
 function getHeaders() {
-    const token = localStorage.getItem("token");
     return {
-        "Content-Type": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        "Content-Type": "application/json"
     };
 }
 

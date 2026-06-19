@@ -2,22 +2,15 @@
 import { jsx } from "react/jsx-runtime";
 import { createContext, useContext, useState, useEffect } from "react";
 import * as projectService from "../ProjectManagement/projectService";
-import { useAuth } from "./AuthContext";
 const ProjectContext = createContext(void 0);
 export function ProjectProvider({ children }) {
-  const { user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   useEffect(() => {
-    if (user) {
-      fetchProjects();
-    } else {
-      setProjects([]);
-      setCurrentProject(null);
-    }
-  }, [user]);
+    fetchProjects();
+  }, []);
   const fetchProjects = async () => {
     setLoading(true);
     setError(null);

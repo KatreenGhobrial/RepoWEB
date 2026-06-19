@@ -1,56 +1,40 @@
-"use strict";
-import { jsx } from "react/jsx-runtime";
-import { createContext, useContext, useState, useEffect } from "react";
-import * as usersService from "../UserManagement/usersService";
-const AuthContext = createContext(void 0);
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as authService from '../UserManagement/authService';
+
+const AuthContext = createContext();
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const initAuth = async () => {
-      if (token) {
-        try {
-          const userData = await usersService.getMe();
-          setUser(userData);
-        } catch {
-          localStorage.removeItem("token");
-          setToken(null);
-          setUser(null);
-        }
-      }
-      setLoading(false);
-    };
-    initAuth();
-  }, [token]);
-  const login = async (usernameOrEmail, password) => {
-    const res = await usersService.login(usernameOrEmail, password);
-    localStorage.setItem("token", res.token);
-    setToken(res.token);
-    setUser(res.user);
-    return res.user;
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('currentUser');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const login = async (email, password) => {
+    const user = await authService.login({ email, password });
+    setCurrentUser(user);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    return user;
   };
-  const register = async (data) => {
-    const res = await usersService.register(data);
-    localStorage.setItem("token", res.token);
-    setToken(res.token);
-    setUser(res.user);
+
+  const register = async (userData) => {
+    const user = await authService.register(userData);
+    setCurrentUser(user);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    return user;
   };
+
   const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
+    setCurrentUser(null);
+    localStorage.removeItem('currentUser');
   };
-  const updateUser = async (data) => {
-    const updated = await usersService.updateProfile(data);
-    setUser(updated);
-  };
-  return /* @__PURE__ */ jsx(AuthContext.Provider, { value: { user, token, loading, login, register, logout, updateUser }, children });
+
+  return (
+    <AuthContext.Provider value={{ currentUser, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
+
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  return useContext(AuthContext);
 }
