@@ -2,10 +2,8 @@
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
 import Header from "../UIComponents/Header";
-import { useAuth } from "../context/AuthContext";
 import * as mentorService from "./iotService";
 export default function MentorDashboard() {
-  const { user } = useAuth();
   const [dashData, setDashData] = useState(null);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
@@ -75,16 +73,6 @@ export default function MentorDashboard() {
       setError(err.message || "Broadcast failed");
     }
   };
-  if (user?.role !== "mentor" && user?.role !== "admin") {
-    return /* @__PURE__ */ jsxs(Fragment, { children: [
-      /* @__PURE__ */ jsx(Header, { title: "\u{1F393} Mentor Dashboard", subtitle: "Access restricted" }),
-      /* @__PURE__ */ jsxs("div", { className: "bg-red-500/10 border border-red-500/20 rounded-2xl p-12 text-center", children: [
-        /* @__PURE__ */ jsx("span", { className: "text-4xl", children: "\u{1F512}" }),
-        /* @__PURE__ */ jsx("h3", { className: "text-lg font-semibold text-red-400 mt-4", children: "Access Denied" }),
-        /* @__PURE__ */ jsx("p", { className: "text-sm text-slate-400 mt-2", children: "Only mentors and admins can access this page." })
-      ] })
-    ] });
-  }
   return /* @__PURE__ */ jsxs(Fragment, { children: [
     /* @__PURE__ */ jsx(Header, { title: "\u{1F393} Mentor Dashboard", subtitle: "Oversee student projects and provide guidance" }),
     error && /* @__PURE__ */ jsxs("div", { className: "bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm mb-6", children: [

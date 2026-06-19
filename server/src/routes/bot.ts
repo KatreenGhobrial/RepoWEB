@@ -1,7 +1,6 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import ChatHistory from '../models/ChatHistory';
 import Project from '../models/Project';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
 import {
   socraticChat,
   detectConflictsAI,
@@ -9,12 +8,11 @@ import {
 } from '../services/openaiService';
 
 const router = Router();
-router.use(authMiddleware);
 
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/bot/chat — Send a message to the Socratic bot
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/chat', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/chat', async (req: Request, res: Response): Promise<void> => {
   try {
     const { projectId, message, sessionId } = req.body;
 
@@ -27,13 +25,13 @@ router.post('/chat', async (req: AuthRequest, res: Response): Promise<void> => {
     const sid = sessionId || `session_${Date.now()}`;
     let chatHistory = await ChatHistory.findOne({
       sessionId: sid,
-      user: req.user!.userId,
+      user: 'anonymous_user',
     });
 
     if (!chatHistory) {
       chatHistory = await ChatHistory.create({
         project: projectId,
-        user: req.user!.userId,
+        user: 'anonymous_user',
         sessionId: sid,
         messages: [],
         detectedPhase: 'ideation',
@@ -92,7 +90,7 @@ router.post('/chat', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/bot/analyze — Analyze IoT architecture
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/analyze', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/analyze', async (req: Request, res: Response): Promise<void> => {
   try {
     const { projectId } = req.body;
 
@@ -122,7 +120,7 @@ router.post('/analyze', async (req: AuthRequest, res: Response): Promise<void> =
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/bot/detect-conflicts — AI-powered conflict detection
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/detect-conflicts', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/detect-conflicts', async (req: Request, res: Response): Promise<void> => {
   try {
     const { device, protocol, database, powerSource, sensors, cloudPlatform } = req.body;
 
@@ -145,11 +143,11 @@ router.post('/detect-conflicts', async (req: AuthRequest, res: Response): Promis
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/bot/history/:projectId — Get chat history for a project
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/history/:projectId', async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/history/:projectId', async (req: Request, res: Response): Promise<void> => {
   try {
     const sessions = await ChatHistory.find({
       project: req.params.projectId,
-      user: req.user!.userId,
+      user: 'anonymous_user',
     })
       .sort({ updatedAt: -1 })
       .limit(20);
@@ -164,11 +162,11 @@ router.get('/history/:projectId', async (req: AuthRequest, res: Response): Promi
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/bot/session/:sessionId — Get specific session
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/session/:sessionId', async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/session/:sessionId', async (req: Request, res: Response): Promise<void> => {
   try {
     const session = await ChatHistory.findOne({
       sessionId: req.params.sessionId,
-      user: req.user!.userId,
+      user: 'anonymous_user',
     });
 
     if (!session) {
