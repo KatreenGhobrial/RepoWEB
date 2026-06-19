@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 // ---------------------------------------------------------------------------
 // Interface
 // ---------------------------------------------------------------------------
-export interface IForumPost extends Document {
+export interface ICommunityPost extends Document {
   author: mongoose.Types.ObjectId;
   title: string;
   content: string;
@@ -23,19 +23,19 @@ export interface IForumPost extends Document {
 // ---------------------------------------------------------------------------
 const replySchema = new Schema(
   {
-    author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    author: { type: Schema.Types.ObjectId, ref: 'User', required: false },
     content: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
   },
   { _id: true }
 );
 
-const forumPostSchema = new Schema<IForumPost>(
+const communityPostSchema = new Schema<ICommunityPost>(
   {
     author: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
     },
     title: {
       type: String,
@@ -64,4 +64,4 @@ const forumPostSchema = new Schema<IForumPost>(
   { timestamps: true }
 );
 
-export default mongoose.model<IForumPost>('ForumPost', forumPostSchema);
+export default mongoose.model<ICommunityPost>('CommunityPost', communityPostSchema);

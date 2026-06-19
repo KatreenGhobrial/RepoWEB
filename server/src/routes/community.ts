@@ -1,26 +1,26 @@
-import { Router, Response } from 'express';
-import ForumPost from '../models/ForumPost';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
-
+import { Router, Response, Request } from 'express';
+import CommunityPost from '../models/CommunityPost';
+import { io } from '../index';
 const router = Router();
-router.use(authMiddleware);
 
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/forum — Create a forum post
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { title, content, tags } = req.body;
 
-    const post = await ForumPost.create({
-      author: req.user!.userId,
+    const post = await CommunityPost.create({
+      author: null, // No longer tracked
       title,
       content,
       tags: tags || [],
     });
 
-    const populated = await post.populate('author', 'username avatar role');
-    res.status(201).json(populated);
+    const populatedPost = await post.populate('author', 'username avatar role');
+    io.emit('new_post', populatedPost);
+
+    res.status(201).json(populatedPost);
   } catch (error) {
     console.error('Create post error:', error);
     res.status(500).json({ message: 'Server error creating post' });
@@ -30,20 +30,20 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/forum — List all forum posts (with optional tag filter)
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { tag, search } = req.query;
 
-    const filter: Record<string, unknown> = {};
-    if (tag) filter.tags = tag;
+    const query: Record<string, unknown> = {};
+    if (tag) query.tags = tag;
     if (search) {
-      filter.$or = [
+      query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { content: { $regex: search, $options: 'i' } },
       ];
     }
 
-    const posts = await ForumPost.find(filter)
+    const posts = await CommunityPost.find(query)
       .populate('author', 'username avatar role')
       .sort({ createdAt: -1 })
       .limit(50);
@@ -58,9 +58,9 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/forum/:id — Get a single post with replies
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const post = await ForumPost.findById(req.params.id)
+    const post = await CommunityPost.findById(req.params.id)
       .populate('author', 'username avatar role')
       .populate('replies.author', 'username avatar role');
 
@@ -79,16 +79,16 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/forum/:id/reply — Add a reply to a post
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/:id/reply', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/:id/reply', async (req: Request, res: Response): Promise<void> => {
   try {
     const { content } = req.body;
 
-    const post = await ForumPost.findByIdAndUpdate(
+    const post = await CommunityPost.findByIdAndUpdate(
       req.params.id,
       {
         $push: {
           replies: {
-            author: req.user!.userId,
+            author: null,
             content,
             createdAt: new Date(),
           },
@@ -104,6 +104,8 @@ router.post('/:id/reply', async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
+    io.emit('post_updated', post);
+
     res.json(post);
   } catch (error) {
     console.error('Reply error:', error);
@@ -114,15 +116,15 @@ router.post('/:id/reply', async (req: AuthRequest, res: Response): Promise<void>
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/forum/:id/upvote — Toggle upvote on a post
 // ───────────────────────────────────────────────────────────────────────────
-router.post('/:id/upvote', async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/:id/upvote', async (req: Request, res: Response): Promise<void> => {
   try {
-    const post = await ForumPost.findById(req.params.id);
+    const post = await CommunityPost.findById(req.params.id);
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
       return;
     }
 
-    const userId = req.user!.userId;
+    const userId = "anonymous";
     const alreadyUpvoted = post.upvotes.some(
       (id) => id.toString() === userId
     );
@@ -136,6 +138,11 @@ router.post('/:id/upvote', async (req: AuthRequest, res: Response): Promise<void
     }
 
     await post.save();
+    
+    // We emit post_updated with the entire post populated (optional, or clients can refetch)
+    // To keep it simple, just emit the basic upvote event
+    io.emit('upvote_update', { postId: post._id, upvotes: post.upvotes.length });
+
     res.json({ upvotes: post.upvotes.length, upvoted: !alreadyUpvoted });
   } catch (error) {
     console.error('Upvote error:', error);

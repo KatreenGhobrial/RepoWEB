@@ -1,9 +1,9 @@
 "use strict";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 import Header from "../UIComponents/Header";
-import { useAuth } from "../context/AuthContext";
-import * as forumService from "./forumService";
+import * as communityService from "./communityService";
 const TAG_COLORS = {
   mqtt: "bg-cyan-500/10 text-cyan-400",
   hardware: "bg-purple-500/10 text-purple-400",
@@ -14,8 +14,7 @@ const TAG_COLORS = {
   sensor: "bg-pink-500/10 text-pink-400",
   integration: "bg-orange-500/10 text-orange-400"
 };
-export default function KnowledgeSharing() {
-  const { user } = useAuth();
+export default function CommunityBoard() {
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -31,11 +30,39 @@ export default function KnowledgeSharing() {
   const [replying, setReplying] = useState(false);
   useEffect(() => {
     loadPosts();
+
+    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
+      withCredentials: true,
+    });
+
+    socket.on('new_post', (post) => {
+      setPosts((prev) => [post, ...prev]);
+    });
+
+    socket.on('post_updated', (updatedPost) => {
+      setPosts((prev) => prev.map((p) => p._id === updatedPost._id ? updatedPost : p));
+      setSelectedPost((prevSelected) => prevSelected?._id === updatedPost._id ? updatedPost : prevSelected);
+    });
+
+    socket.on('upvote_update', ({ postId, upvotes }) => {
+      setPosts((prev) => prev.map((p) => {
+        if (p._id === postId) {
+          // We can just update the array length safely or re-fetch.
+          // Since the server doesn't send the user array back in this basic event,
+          // it's easier to handle via `post_updated` or we can just fetch.
+        }
+        return p;
+      }));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [tagFilter, searchQuery]);
   const loadPosts = async () => {
     setLoading(true);
     try {
-      const data = await forumService.list(tagFilter || void 0, searchQuery || void 0);
+      const data = await communityService.list(tagFilter || void 0, searchQuery || void 0);
       setPosts(data);
     } catch (err) {
       setError(err.message || "Failed to load posts");
@@ -47,12 +74,13 @@ export default function KnowledgeSharing() {
     e.preventDefault();
     setSaving(true);
     try {
-      const post = await forumService.create({
+      const post = await communityService.create({
         title,
         content,
         tags: tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
       });
-      setPosts((prev) => [post, ...prev]);
+      // setPosts is handled by socket 'new_post' event
+      // setPosts((prev) => [post, ...prev]);
       setShowForm(false);
       setTitle("");
       setContent("");
@@ -68,9 +96,10 @@ export default function KnowledgeSharing() {
     if (!selectedPost || !replyContent.trim()) return;
     setReplying(true);
     try {
-      const updated = await forumService.reply(selectedPost._id, replyContent);
-      setSelectedPost(updated);
-      setPosts((prev) => prev.map((p) => p._id === updated._id ? updated : p));
+      const updated = await communityService.reply(selectedPost._id, replyContent);
+      // handled by socket
+      // setSelectedPost(updated);
+      // setPosts((prev) => prev.map((p) => p._id === updated._id ? updated : p));
       setReplyContent("");
     } catch (err) {
       setError(err.message || "Failed to post reply");
@@ -80,10 +109,10 @@ export default function KnowledgeSharing() {
   };
   const handleUpvote = async (postId) => {
     try {
-      const res = await forumService.upvote(postId);
+      const res = await communityService.upvote(postId);
       setPosts(
         (prev) => prev.map(
-          (p) => p._id === postId ? { ...p, upvotes: res.upvoted ? [...p.upvotes, user?.id || ""] : p.upvotes.filter((id) => id !== user?.id) } : p
+          (p) => p._id === postId ? { ...p, upvotes: res.upvoted ? [...p.upvotes, "anonymous"] : p.upvotes.filter((id) => id !== "anonymous") } : p
         )
       );
     } catch {
@@ -94,7 +123,7 @@ export default function KnowledgeSharing() {
     /* @__PURE__ */ jsx(
       Header,
       {
-        title: "\u{1F4AC} Knowledge Forum",
+        title: "\u{1F4AC} Community Board",
         subtitle: "Share solutions, ask questions, and collaborate with the IoT community"
       }
     ),
@@ -223,7 +252,7 @@ export default function KnowledgeSharing() {
               "button",
               {
                 onClick: () => handleUpvote(selectedPost._id),
-                className: `flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-all ${selectedPost.upvotes.includes(user?.id || "") ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-slate-400 hover:bg-white/10"}`,
+                className: `flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-all ${selectedPost.upvotes.includes("anonymous") ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-slate-400 hover:bg-white/10"}`,
                 children: [
                   "\u25B2 ",
                   selectedPost.upvotes.length
