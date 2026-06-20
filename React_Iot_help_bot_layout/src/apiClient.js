@@ -4,8 +4,14 @@ const API_BASE =  "http://localhost:5000/api";
 
 // Helper to grab token and format headers
 function getHeaders() {
+    const userStr = localStorage.getItem('currentUser');
+    let userId = null;
+    if (userStr) {
+        try { userId = JSON.parse(userStr)._id; } catch (e) {}
+    }
     return {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(userId && { "x-user-id": userId })
     };
 }
 
