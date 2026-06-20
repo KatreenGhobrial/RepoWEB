@@ -9,9 +9,12 @@ const router = Router();
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/mentor/projects — View ALL projects (mentor overview)
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/projects', async (_req: Request, res: Response): Promise<void> => {
+router.get('/projects', async (req: Request, res: Response): Promise<void> => {
   try {
-    const projects = await Project.find()
+    const userId = req.headers['x-user-id'];
+    const query = userId ? { $or: [{ owner: userId }, { members: userId }] } : {};
+
+    const projects = await Project.find(query)
       .populate('owner', 'username email')
       .populate('members', 'username email role expertise')
       .sort({ updatedAt: -1 });
@@ -26,11 +29,14 @@ router.get('/projects', async (_req: Request, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 // GET /api/mentor/dashboard — Aggregated dashboard data for mentor
 // ───────────────────────────────────────────────────────────────────────────
-router.get('/dashboard', async (_req: Request, res: Response): Promise<void> => {
+router.get('/dashboard', async (req: Request, res: Response): Promise<void> => {
   try {
+    const userId = req.headers['x-user-id'];
+    const query = userId ? { $or: [{ owner: userId }, { members: userId }] } : {};
+
     const [projects, tasks, chatSessions, students] = await Promise.all([
-      Project.find().populate('members', 'username role expertise'),
-      Task.find(),
+      Project.find(query).populate('members', 'username role expertise'),
+      Task.find(), // We could filter tasks by the found projects too, but keeping simple for now
       ChatHistory.find(),
       User.find({ role: 'student' }).select('username expertise discipline'),
     ]);
@@ -163,6 +169,31 @@ router.post('/broadcast', async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     console.error('Broadcast error:', error);
     res.status(500).json({ message: 'Server error broadcasting' });
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// PUT /api/mentor/projects/:projectId/phase — Update project phase
+// ───────────────────────────────────────────────────────────────────────────
+router.put('/projects/:projectId/phase', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { phase } = req.body;
+    
+    const project = await Project.findByIdAndUpdate(
+      req.params.projectId,
+      { phase },
+      { new: true }
+    );
+
+    if (!project) {
+      res.status(404).json({ message: 'Project not found' });
+      return;
+    }
+
+    res.json(project);
+  } catch (error) {
+    console.error('Phase update error:', error);
+    res.status(500).json({ message: 'Server error updating phase' });
   }
 });
 

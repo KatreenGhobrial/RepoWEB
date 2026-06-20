@@ -1,5 +1,6 @@
 import { Router, Response, Request } from 'express';
 import Project from '../models/Project';
+import User from '../models/User';
 const router = Router();
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -10,13 +11,31 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     const {
       name, description, device, protocol, database,
       powerSource, cloudPlatform, sensors, components, flow,
+      ownerEmail, memberEmails
     } = req.body;
+
+    let ownerId = null;
+    if (ownerEmail) {
+      const ownerUser = await User.findOne({ email: ownerEmail });
+      if (ownerUser) ownerId = ownerUser._id;
+    }
+
+    let memberIds: any[] = [];
+    if (memberEmails && Array.isArray(memberEmails)) {
+      const users = await User.find({
+        $or: [
+          { email: { $in: memberEmails } },
+          { username: { $in: memberEmails } }
+        ]
+      });
+      memberIds = users.map(u => u._id);
+    }
 
     const project = await Project.create({
       name,
       description,
-      owner: null,
-      members: [],
+      owner: ownerId,
+      members: memberIds,
       device, protocol, database, powerSource,
       cloudPlatform, sensors, components, flow,
     });
@@ -33,7 +52,10 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const projects = await Project.find()
+    const userId = req.headers['x-user-id'];
+    const query = userId ? { $or: [{ owner: userId }, { members: userId }] } : {};
+
+    const projects = await Project.find(query)
       .populate('owner', 'username email')
       .populate('members', 'username email role expertise')
       .sort({ updatedAt: -1 });
@@ -71,9 +93,36 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 // ───────────────────────────────────────────────────────────────────────────
 router.put('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
+    const { ownerEmail, memberEmails, ...restBody } = req.body;
+    let setOperators: any = { ...restBody };
+
+    if (ownerEmail) {
+      const ownerUser = await User.findOne({ email: ownerEmail });
+      if (ownerUser) setOperators.owner = ownerUser._id;
+    }
+
+    let addToSetOperators: any = {};
+
+    if (memberEmails && Array.isArray(memberEmails) && memberEmails.length > 0) {
+      const users = await User.find({
+        $or: [
+          { email: { $in: memberEmails } },
+          { username: { $in: memberEmails } }
+        ]
+      });
+      if (users.length > 0) {
+        addToSetOperators.members = { $each: users.map(u => u._id) };
+      }
+    }
+
+    const updateQuery: any = { $set: setOperators };
+    if (Object.keys(addToSetOperators).length > 0) {
+      updateQuery.$addToSet = addToSetOperators;
+    }
+
     const project = await Project.findByIdAndUpdate(
       req.params.id,
-      { ...req.body },
+      updateQuery,
       { new: true, runValidators: true }
     );
 

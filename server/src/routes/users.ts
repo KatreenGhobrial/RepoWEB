@@ -10,7 +10,7 @@ const router = Router();
 // ───────────────────────────────────────────────────────────────────────────
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, expertise } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
@@ -28,6 +28,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       username,
       email,
       password: hashedPassword,
+      expertise: expertise || [],
     });
 
     // Don't send back password
