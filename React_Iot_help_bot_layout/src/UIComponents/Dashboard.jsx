@@ -8,24 +8,28 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          // No token = return empty dashboard
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) {
+          // No user = return empty dashboard
           setDashboard({
             roleCoverage: { value: '0/0', text: 'Please log in' },
             detectedIssues: 0,
             tasksCompleted: { value: 0, text: '0 total tasks' },
             documentationStatus: 'No data',
             progress: [],
-            alerts: []
+            alerts: [],
+            feedbacks: []
           });
           setLoading(false);
           return;
         }
 
+        const user = JSON.parse(userStr);
+        const userId = user._id;
+
         // Fetch projects from backend
         const projRes = await fetch('http://localhost:5000/api/projects', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'x-user-id': userId }
         });
 
         if (!projRes.ok) {
@@ -35,7 +39,8 @@ export default function Dashboard() {
             tasksCompleted: { value: 0, text: '0 total tasks' },
             documentationStatus: 'Error',
             progress: [],
-            alerts: []
+            alerts: [],
+            feedbacks: []
           });
           setLoading(false);
           return;
@@ -51,17 +56,24 @@ export default function Dashboard() {
           return acc;
         }, new Set()).size;
 
-        // Fetch tasks for the first project if exists
+        // Fetch tasks and feedback for the first project if exists
         let totalTasks = 0;
         let completedTasks = 0;
+        let feedbacks = [];
+
         if (projects.length > 0) {
           const taskRes = await fetch(`http://localhost:5000/api/tasks/${projects[0]._id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'x-user-id': userId }
           });
           if (taskRes.ok) {
             const tasks = await taskRes.json();
             totalTasks = tasks.length;
             completedTasks = tasks.filter(t => t.status === 'done').length;
+          }
+
+          const fbRes = await fetch(`http://localhost:5000/api/mentor/feedback/${projects[0]._id}`);
+          if (fbRes.ok) {
+            feedbacks = await fbRes.json();
           }
         }
 
@@ -71,14 +83,15 @@ export default function Dashboard() {
             value: `${memberCount}/${Math.max(memberCount + 1, 5)}`,
             text: totalProjects > 0 ? `${totalProjects} active project(s)` : 'No projects yet'
           },
-          detectedIssues: 0, // Default to 0 without fake data
+          detectedIssues: 0,
           tasksCompleted: {
             value: completedTasks,
             text: `${totalTasks} total tasks`
           },
           documentationStatus: totalProjects > 0 ? 'Active' : 'No projects',
-          progress: [], // Empty progress bars without fake data
-          alerts: [] // Empty alerts without fake data
+          progress: [],
+          alerts: [],
+          feedbacks: feedbacks
         });
       } catch (err) {
         console.error('Dashboard fetch error:', err);
@@ -88,7 +101,8 @@ export default function Dashboard() {
           tasksCompleted: { value: 0, text: '0 total tasks' },
           documentationStatus: 'Error',
           progress: [],
-          alerts: []
+          alerts: [],
+          feedbacks: []
         });
       } finally {
         setLoading(false);
@@ -150,50 +164,63 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 mb-8">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">📈</div>
-          <h3 className="text-2xl font-bold text-slate-950">Progress by area</h3>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-end">
-          {dashboard.progress.map((item, index) => (
-            <div key={index} className="flex flex-col items-center">
-              <div className="h-56 w-full flex items-end justify-center">
-                <div className="w-24 bg-black rounded-t-2xl" style={{ height: `${item.value}%` }}></div>
-              </div>
-              <p className="mt-4 font-bold text-slate-800">{item.name}</p>
-              <p className="text-slate-500">{item.value}%</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🔔</div>
-          <h3 className="text-2xl font-bold text-slate-950">Live alerts</h3>
-        </div>
-        <div className="space-y-4">
-          {dashboard.alerts.map((alert, index) => {
-            const isMedium = alert.level === 'MEDIUM';
-            const alertClass = isMedium 
-              ? 'bg-yellow-100 border-yellow-300 text-orange-600' 
-              : 'bg-red-100 border-red-200 text-red-700';
-              
-            return (
-              <div key={index} className={`border rounded-3xl p-5 ${alertClass}`}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="text-xl font-bold mb-2">{alert.title}</h4>
-                    <p>{alert.category}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">💬</div>
+            <h3 className="text-2xl font-bold text-slate-950">Mentor Feedback</h3>
+          </div>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            {dashboard.feedbacks && dashboard.feedbacks.length > 0 ? (
+              dashboard.feedbacks.map((fb, index) => (
+                <div key={index} className="border border-slate-100 bg-slate-50 rounded-3xl p-5">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-sm font-bold text-cyan-600 capitalize">{fb.category}</span>
+                    <span className="text-xs text-slate-500">{new Date(fb.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <span className="font-bold">{alert.level}</span>
+                  <p className="text-slate-700 text-sm">{fb.content}</p>
+                  <div className="flex gap-1 mt-3">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <span key={n} className={`text-sm ${n <= fb.rating ? "text-amber-400" : "text-slate-300"}`}>★</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              ))
+            ) : (
+              <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-2xl">No feedback received yet.</p>
+            )}
+          </div>
+        </section>
+
+        <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🔔</div>
+            <h3 className="text-2xl font-bold text-slate-950">Live alerts</h3>
+          </div>
+          <div className="space-y-4">
+            {dashboard.alerts && dashboard.alerts.length > 0 ? dashboard.alerts.map((alert, index) => {
+              const isMedium = alert.level === 'MEDIUM';
+              const alertClass = isMedium 
+                ? 'bg-yellow-100 border-yellow-300 text-orange-600' 
+                : 'bg-red-100 border-red-200 text-red-700';
+                
+              return (
+                <div key={index} className={`border rounded-3xl p-5 ${alertClass}`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-xl font-bold mb-2">{alert.title}</h4>
+                      <p>{alert.category}</p>
+                    </div>
+                    <span className="font-bold">{alert.level}</span>
+                  </div>
+                </div>
+              );
+            }) : (
+              <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-2xl">No active alerts.</p>
+            )}
+          </div>
+        </section>
+      </div>
     </>
   );
 }

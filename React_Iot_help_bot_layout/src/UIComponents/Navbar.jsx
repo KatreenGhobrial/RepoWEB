@@ -1,27 +1,52 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LuSun, LuMoon } from "react-icons/lu";
-import { useTheme } from "../context/ThemeContext";
-import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
-  const { theme, toggleTheme } = useTheme();
-  const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  
+  const currentUserStr = localStorage.getItem('currentUser');
+  const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const menuItems = [
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    window.location.href = '/login';
+  };
+
+  let menuItems = [
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Project Setup', path: '/project-setup' },
     { label: 'Tasks & Team', path: '/tasks-team' },
     { label: 'Community', path: '/community' },
+    { label: 'Solution Library', path: '/solution-library' },
     { label: 'Socratic Bot', path: '/socratic-bot' },
     { label: 'Device Playground', path: '/device-playground' },
-    { label: 'Mentor Panel', path: '/monitor-panel' },
+    { label: 'Monitor Panel', path: '/monitor-panel' },
   ];
+
+  if (currentUser?.role === 'mentor') {
+    menuItems = menuItems.filter(item => item.label !== 'Tasks & Team');
+    menuItems.push({ label: 'Mentor Dashboard', path: '/mentor-dashboard' });
+  }
+
+  if (currentUser?.role === 'admin') {
+    menuItems.push({ label: 'Manage Users', path: '/manage-users' });
+  }
 
   return (
     <header className="fixed w-full top-0 py-4 px-6 drop-shadow-md bg-white dark:bg-zinc-900 dark:border-b dark:border-zinc-700 z-50">
@@ -34,7 +59,7 @@ export default function Navbar() {
         </div>
 
         <ul className="hidden lg:flex items-center gap-4 font-semibold text-sm text-slate-700 dark:text-slate-200">
-          {menuItems.map((item) => (
+          {currentUser && menuItems.map((item) => (
             <Link key={item.path} to={item.path}>
               <li className="p-2 hover:bg-sky-400 hover:text-white rounded-md transition-all cursor-pointer">
                 {item.label}

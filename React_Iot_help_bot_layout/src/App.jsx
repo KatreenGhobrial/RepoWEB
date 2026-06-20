@@ -16,6 +16,7 @@ import ManageUsers from './UserManagement/ManageUsers';
 import Login from './UserManagement/Login';
 import Register from './UserManagement/Register';
 import DevicePlayground from './IoTManagement/DevicePlayground';
+import ProtectedRoute from './UIComponents/ProtectedRoute';
 //Including all routes in the app
 function App() {
   return (
@@ -28,18 +29,18 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/project-setup" element={<ProjectSetup />} />
-          <Route path="/tasks-team" element={<TasksTeam />} />
-          <Route path="/detect-conflict" element={<DetectConflict />} />
-          <Route path="/monitor-panel" element={<MonitorPanel />} />
-          <Route path="/socratic-bot" element={<SocraticBot />} />
-          <Route path="/device-playground" element={<DevicePlayground />} />
-          <Route path="/solution-library" element={<IoTSolutionLibrary />} />
-          <Route path="/mentor-dashboard" element={<MentorDashboard />} />
-          <Route path="/community" element={<CommunityBoard />} />
-          <Route path="/manage-users" element={<ManageUsers />} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/project-setup" element={<ProtectedRoute><ProjectSetup /></ProtectedRoute>} />
+          <Route path="/tasks-team" element={<ProtectedRoute><TasksTeam /></ProtectedRoute>} />
+          <Route path="/detect-conflict" element={<ProtectedRoute><DetectConflict /></ProtectedRoute>} />
+          <Route path="/monitor-panel" element={<ProtectedRoute><MonitorPanel /></ProtectedRoute>} />
+          <Route path="/socratic-bot" element={<ProtectedRoute><SocraticBot /></ProtectedRoute>} />
+          <Route path="/device-playground" element={<ProtectedRoute><DevicePlayground /></ProtectedRoute>} />
+          <Route path="/solution-library" element={<ProtectedRoute><IoTSolutionLibrary /></ProtectedRoute>} />
+          <Route path="/mentor-dashboard" element={<ProtectedRoute><MentorDashboard /></ProtectedRoute>} />
+          <Route path="/community" element={<ProtectedRoute><CommunityBoard /></ProtectedRoute>} />
+          <Route path="/manage-users" element={<ProtectedRoute><ManageUsers /></ProtectedRoute>} />
         </Route>
       </Routes>
     </Router>
