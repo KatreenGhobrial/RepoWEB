@@ -5,8 +5,16 @@ export async function getProjects() {
   return await api.get("/mentor/projects");
 }
 
+export async function updateProjectPhase(projectId, phase) {
+  return await api.put(`/mentor/projects/${projectId}/phase`, { phase });
+}
+
 export async function getDashboard() {
   return await api.get("/mentor/dashboard");
+}
+
+export async function getTasks(projectId) {
+  return await api.get(`/tasks/${projectId}`);
 }
 
 export async function giveFeedback(data) {
