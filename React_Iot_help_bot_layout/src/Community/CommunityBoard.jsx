@@ -1,19 +1,19 @@
-"use strict";
-import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import Header from "../UIComponents/Header";
 import * as communityService from "./communityService";
+
 const TAG_COLORS = {
-  mqtt: "bg-cyan-500/10 text-cyan-400",
-  hardware: "bg-purple-500/10 text-purple-400",
-  security: "bg-red-500/10 text-red-400",
-  power: "bg-amber-500/10 text-amber-400",
-  cloud: "bg-blue-500/10 text-blue-400",
-  protocol: "bg-emerald-500/10 text-emerald-400",
-  sensor: "bg-pink-500/10 text-pink-400",
-  integration: "bg-orange-500/10 text-orange-400"
+  mqtt: "bg-cyan-100 text-cyan-700",
+  hardware: "bg-purple-100 text-purple-700",
+  security: "bg-red-100 text-red-700",
+  power: "bg-amber-100 text-amber-700",
+  cloud: "bg-blue-100 text-blue-700",
+  protocol: "bg-emerald-100 text-emerald-700",
+  sensor: "bg-pink-100 text-pink-700",
+  integration: "bg-orange-100 text-orange-700"
 };
+
 export default function CommunityBoard() {
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -28,6 +28,7 @@ export default function CommunityBoard() {
   const [saving, setSaving] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   const [replying, setReplying] = useState(false);
+
   useEffect(() => {
     loadPosts();
 
@@ -47,9 +48,7 @@ export default function CommunityBoard() {
     socket.on('upvote_update', ({ postId, upvotes }) => {
       setPosts((prev) => prev.map((p) => {
         if (p._id === postId) {
-          // We can just update the array length safely or re-fetch.
-          // Since the server doesn't send the user array back in this basic event,
-          // it's easier to handle via `post_updated` or we can just fetch.
+          // Handled elsewhere if full object is sent, or just updating visually
         }
         return p;
       }));
@@ -59,10 +58,11 @@ export default function CommunityBoard() {
       socket.disconnect();
     };
   }, [tagFilter, searchQuery]);
+
   const loadPosts = async () => {
     setLoading(true);
     try {
-      const data = await communityService.list(tagFilter || void 0, searchQuery || void 0);
+      const data = await communityService.list(tagFilter || undefined, searchQuery || undefined);
       setPosts(data);
     } catch (err) {
       setError(err.message || "Failed to load posts");
@@ -70,17 +70,16 @@ export default function CommunityBoard() {
       setLoading(false);
     }
   };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const post = await communityService.create({
+      await communityService.create({
         title,
         content,
         tags: tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
       });
-      // setPosts is handled by socket 'new_post' event
-      // setPosts((prev) => [post, ...prev]);
       setShowForm(false);
       setTitle("");
       setContent("");
@@ -91,15 +90,13 @@ export default function CommunityBoard() {
       setSaving(false);
     }
   };
+
   const handleReply = async (e) => {
     e.preventDefault();
     if (!selectedPost || !replyContent.trim()) return;
     setReplying(true);
     try {
-      const updated = await communityService.reply(selectedPost._id, replyContent);
-      // handled by socket
-      // setSelectedPost(updated);
-      // setPosts((prev) => prev.map((p) => p._id === updated._id ? updated : p));
+      await communityService.reply(selectedPost._id, replyContent);
       setReplyContent("");
     } catch (err) {
       setError(err.message || "Failed to post reply");
@@ -107,6 +104,7 @@ export default function CommunityBoard() {
       setReplying(false);
     }
   };
+
   const handleUpvote = async (postId) => {
     try {
       const res = await communityService.upvote(postId);
@@ -118,189 +116,198 @@ export default function CommunityBoard() {
     } catch {
     }
   };
-  const getTagColor = (tag) => TAG_COLORS[tag] || "bg-slate-700/50 text-slate-400";
-  return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx(
-      Header,
-      {
-        title: "\u{1F4AC} Community Board",
-        subtitle: "Share solutions, ask questions, and collaborate with the IoT community"
-      }
-    ),
-    /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap items-center gap-3 mb-6", children: [
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => {
-            setShowForm(!showForm);
-            setSelectedPost(null);
-          },
-          className: "bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-5 py-2.5 rounded-xl font-medium text-sm hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg shadow-cyan-500/20",
-          children: showForm ? "\u2715 Cancel" : "+ New Post"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "input",
-        {
-          type: "text",
-          value: searchQuery,
-          onChange: (e) => setSearchQuery(e.target.value),
-          placeholder: "\u{1F50D} Search posts...",
-          className: "bg-slate-700/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 w-48"
-        }
-      ),
-      /* @__PURE__ */ jsxs("select", { value: tagFilter, onChange: (e) => setTagFilter(e.target.value), className: "bg-slate-700/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white", children: [
-        /* @__PURE__ */ jsx("option", { value: "", children: "All Tags" }),
-        Object.keys(TAG_COLORS).map((tag) => /* @__PURE__ */ jsx("option", { value: tag, children: tag }, tag))
-      ] }),
-      /* @__PURE__ */ jsxs("span", { className: "text-xs text-slate-500 ml-auto", children: [
-        posts.length,
-        " posts"
-      ] })
-    ] }),
-    error && /* @__PURE__ */ jsxs("div", { className: "bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm mb-4", children: [
-      "\u26A0\uFE0F ",
-      error
-    ] }),
-    showForm && /* @__PURE__ */ jsxs("form", { onSubmit: handleCreate, className: "bg-slate-800/30 border border-white/5 rounded-2xl p-6 mb-6 space-y-4", children: [
-      /* @__PURE__ */ jsx("h3", { className: "text-base font-semibold text-white", children: "Create New Post" }),
-      /* @__PURE__ */ jsxs("div", { children: [
-        /* @__PURE__ */ jsx("label", { className: "block text-xs text-slate-400 mb-1.5", children: "Title *" }),
-        /* @__PURE__ */ jsx("input", { type: "text", value: title, onChange: (e) => setTitle(e.target.value), placeholder: "e.g. How to reduce latency in MQTT?", className: "w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50", required: true })
-      ] }),
-      /* @__PURE__ */ jsxs("div", { children: [
-        /* @__PURE__ */ jsx("label", { className: "block text-xs text-slate-400 mb-1.5", children: "Content *" }),
-        /* @__PURE__ */ jsx("textarea", { value: content, onChange: (e) => setContent(e.target.value), rows: 4, placeholder: "Describe your question, solution, or insight...", className: "w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 resize-none", required: true })
-      ] }),
-      /* @__PURE__ */ jsxs("div", { children: [
-        /* @__PURE__ */ jsx("label", { className: "block text-xs text-slate-400 mb-1.5", children: "Tags (comma-separated)" }),
-        /* @__PURE__ */ jsx("input", { type: "text", value: tags, onChange: (e) => setTags(e.target.value), placeholder: "mqtt, hardware, security", className: "w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50" })
-      ] }),
-      /* @__PURE__ */ jsx("button", { type: "submit", disabled: saving || !title.trim() || !content.trim(), className: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-semibold text-sm disabled:opacity-50", children: saving ? "Posting..." : "\u{1F4E2} Publish Post" })
-    ] }),
-    /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 lg:grid-cols-3 gap-6", children: [
-      /* @__PURE__ */ jsxs("div", { className: `${selectedPost ? "lg:col-span-1" : "lg:col-span-3"} space-y-3`, children: [
-        loading && /* @__PURE__ */ jsx("div", { className: "text-center py-8", children: /* @__PURE__ */ jsx("div", { className: "w-6 h-6 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto" }) }),
-        !loading && posts.length === 0 && /* @__PURE__ */ jsxs("div", { className: "bg-slate-800/30 border border-white/5 rounded-2xl p-12 text-center", children: [
-          /* @__PURE__ */ jsx("span", { className: "text-4xl", children: "\u{1F4ED}" }),
-          /* @__PURE__ */ jsx("h3", { className: "text-lg font-semibold text-slate-300 mt-4", children: "No Posts Yet" }),
-          /* @__PURE__ */ jsx("p", { className: "text-sm text-slate-500 mt-2", children: "Be the first to share knowledge!" })
-        ] }),
-        posts.map((post) => /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: () => {
-              setSelectedPost(post);
-              setShowForm(false);
-            },
-            className: `w-full text-left bg-slate-800/30 border rounded-xl p-4 transition-all hover:bg-slate-800/60 ${selectedPost?._id === post._id ? "border-cyan-500/50 ring-1 ring-cyan-500/20" : "border-white/5"}`,
-            children: [
-              /* @__PURE__ */ jsx("h4", { className: "text-sm font-medium text-white mb-2 line-clamp-1", children: post.title }),
-              /* @__PURE__ */ jsx("p", { className: "text-xs text-slate-400 mb-3 line-clamp-2", children: post.content }),
-              /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ jsx("div", { className: "flex flex-wrap gap-1", children: post.tags.slice(0, 3).map((tag) => /* @__PURE__ */ jsx("span", { className: `text-xs px-2 py-0.5 rounded-full ${getTagColor(tag)}`, children: tag }, tag)) }),
-                /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 text-xs text-slate-500", children: [
-                  /* @__PURE__ */ jsxs("span", { children: [
-                    "\u25B2 ",
-                    post.upvotes.length
-                  ] }),
-                  /* @__PURE__ */ jsxs("span", { children: [
-                    "\u{1F4AC} ",
-                    post.replies.length
-                  ] })
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 mt-2 text-xs text-slate-500", children: [
-                /* @__PURE__ */ jsxs("span", { children: [
-                  "by ",
-                  typeof post.author === "object" ? post.author.username : "Unknown"
-                ] }),
-                /* @__PURE__ */ jsx("span", { children: "\u2022" }),
-                /* @__PURE__ */ jsx("span", { children: new Date(post.createdAt).toLocaleDateString() })
-              ] })
-            ]
-          },
-          post._id
-        ))
-      ] }),
-      selectedPost && /* @__PURE__ */ jsx("div", { className: "lg:col-span-2", children: /* @__PURE__ */ jsxs("div", { className: "bg-slate-800/30 border border-white/5 rounded-2xl overflow-hidden", children: [
-        /* @__PURE__ */ jsxs("div", { className: "px-6 py-5 border-b border-white/5", children: [
-          /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between", children: [
-            /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-white", children: selectedPost.title }),
-            /* @__PURE__ */ jsx(
-              "button",
-              {
-                onClick: () => setSelectedPost(null),
-                className: "text-slate-500 hover:text-white text-sm",
-                children: "\u2715"
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 mt-2", children: [
-            /* @__PURE__ */ jsxs("span", { className: "text-xs text-slate-400", children: [
-              "by ",
-              /* @__PURE__ */ jsx("strong", { className: "text-cyan-400", children: typeof selectedPost.author === "object" ? selectedPost.author.username : "Unknown" })
-            ] }),
-            /* @__PURE__ */ jsx("span", { className: "text-xs text-slate-500", children: new Date(selectedPost.createdAt).toLocaleString() })
-          ] }),
-          /* @__PURE__ */ jsx("div", { className: "flex flex-wrap gap-1.5 mt-3", children: selectedPost.tags.map((tag) => /* @__PURE__ */ jsx("span", { className: `text-xs px-2.5 py-1 rounded-full ${getTagColor(tag)}`, children: tag }, tag)) })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "px-6 py-5 border-b border-white/5", children: [
-          /* @__PURE__ */ jsx("p", { className: "text-sm text-slate-300 whitespace-pre-wrap leading-relaxed", children: selectedPost.content }),
-          /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4 mt-4", children: [
-            /* @__PURE__ */ jsxs(
-              "button",
-              {
-                onClick: () => handleUpvote(selectedPost._id),
-                className: `flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-all ${selectedPost.upvotes.includes("anonymous") ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-slate-400 hover:bg-white/10"}`,
-                children: [
-                  "\u25B2 ",
-                  selectedPost.upvotes.length
-                ]
-              }
-            ),
-            /* @__PURE__ */ jsxs("span", { className: "text-xs text-slate-500", children: [
-              selectedPost.replies.length,
-              " replies"
-            ] })
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "px-6 py-5 space-y-4 max-h-60 overflow-y-auto", children: [
-          selectedPost.replies.map((reply) => /* @__PURE__ */ jsxs("div", { className: "flex gap-3", children: [
-            /* @__PURE__ */ jsx("div", { className: "w-7 h-7 bg-slate-700 rounded-full flex items-center justify-center text-xs flex-shrink-0", children: typeof reply.author === "object" ? reply.author.username?.charAt(0).toUpperCase() : "?" }),
-            /* @__PURE__ */ jsxs("div", { className: "flex-1", children: [
-              /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 mb-1", children: [
-                /* @__PURE__ */ jsx("span", { className: "text-xs font-medium text-white", children: typeof reply.author === "object" ? reply.author.username : "Unknown" }),
-                /* @__PURE__ */ jsx("span", { className: "text-xs text-slate-500", children: new Date(reply.createdAt).toLocaleString() })
-              ] }),
-              /* @__PURE__ */ jsx("p", { className: "text-sm text-slate-300", children: reply.content })
-            ] })
-          ] }, reply._id)),
-          selectedPost.replies.length === 0 && /* @__PURE__ */ jsx("p", { className: "text-sm text-slate-500 text-center py-4", children: "No replies yet. Be the first!" })
-        ] }),
-        /* @__PURE__ */ jsxs("form", { onSubmit: handleReply, className: "px-6 py-4 border-t border-white/5 flex gap-3", children: [
-          /* @__PURE__ */ jsx(
-            "input",
-            {
-              type: "text",
-              value: replyContent,
-              onChange: (e) => setReplyContent(e.target.value),
-              placeholder: "Write a reply...",
-              className: "flex-1 bg-slate-700/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
-            }
-          ),
-          /* @__PURE__ */ jsx(
-            "button",
-            {
-              type: "submit",
-              disabled: replying || !replyContent.trim(),
-              className: "bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-5 py-2.5 rounded-xl font-medium text-sm disabled:opacity-50",
-              children: replying ? "..." : "Reply"
-            }
-          )
-        ] })
-      ] }) })
-    ] })
-  ] });
-}
 
+  const getTagColor = (tag) => TAG_COLORS[tag] || "bg-slate-100 text-slate-500";
+
+  return (
+    <>
+      <Header
+        title="💬 Community Board"
+        subtitle="Share solutions, ask questions, and collaborate with the IoT community"
+      />
+      
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <button
+          onClick={() => {
+            setShowForm(!showForm);
+            if (!showForm) setSelectedPost(null);
+          }}
+          className="bg-sky-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-sky-700 transition-all shadow-sm"
+        >
+          {showForm ? "✕ Cancel" : "+ New Post"}
+        </button>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="🔍 Search posts..."
+          className="bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 w-48 shadow-sm"
+        />
+        <select 
+          value={tagFilter} 
+          onChange={(e) => setTagFilter(e.target.value)} 
+          className="bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm text-slate-900 shadow-sm"
+        >
+          <option value="">All Tags</option>
+          {Object.keys(TAG_COLORS).map((tag) => (
+            <option key={tag} value={tag}>{tag}</option>
+          ))}
+        </select>
+        <span className="text-sm font-medium text-slate-500 ml-auto">
+          {posts.length} posts
+        </span>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600 text-sm mb-4 font-medium">
+          ⚠️ {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className={`${(selectedPost || showForm) ? "lg:col-span-1" : "lg:col-span-3"} space-y-4`}>
+          {loading && (
+            <div className="text-center py-8">
+              <div className="w-8 h-8 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin mx-auto"></div>
+            </div>
+          )}
+          {!loading && posts.length === 0 && (
+            <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-12 text-center">
+              <span className="text-5xl">📫</span>
+              <h3 className="text-xl font-bold text-slate-800 mt-4">No Posts Yet</h3>
+              <p className="text-sm text-slate-500 mt-2 font-medium">Be the first to share knowledge!</p>
+            </div>
+          )}
+          {posts.map((post) => (
+            <button
+              key={post._id}
+              onClick={() => {
+                setSelectedPost(post);
+                setShowForm(false);
+              }}
+              className={`w-full text-left bg-white border shadow-sm rounded-2xl p-5 transition-all hover:border-sky-300 hover:shadow-md ${selectedPost?._id === post._id ? "border-sky-500 ring-2 ring-sky-100" : "border-slate-200"}`}
+            >
+              <h4 className="text-base font-bold text-slate-900 mb-2 line-clamp-1">{post.title}</h4>
+              <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed">{post.content}</p>
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap gap-1.5">
+                  {post.tags.slice(0, 3).map((tag) => (
+                    <span key={tag} className={`text-xs font-semibold px-2.5 py-1 rounded-full ${getTagColor(tag)}`}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center gap-3 text-xs font-bold text-slate-400">
+                  <span className="flex items-center gap-1">▲ {post.upvotes.length}</span>
+                  <span className="flex items-center gap-1">💬 {post.replies.length}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-4 text-xs font-medium text-slate-400">
+                <span>by {post.author?.username || "Unknown"}</span>
+                <span>•</span>
+                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {(selectedPost || showForm) && (
+          <div className="lg:col-span-2">
+            {showForm ? (
+              <form onSubmit={handleCreate} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 space-y-6 sticky top-6">
+                <h3 className="text-2xl font-bold text-slate-900">Create New Post</h3>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Title *</label>
+                  <input 
+                    type="text" 
+                    value={title} 
+                    onChange={(e) => setTitle(e.target.value)} 
+                    placeholder="e.g. How to reduce latency in MQTT?" 
+                    className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Content *</label>
+                  <textarea 
+                    value={content} 
+                    onChange={(e) => setContent(e.target.value)} 
+                    rows={6} 
+                    placeholder="Describe your question, solution, or insight..." 
+                    className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none" 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Tags (comma-separated)</label>
+                  <input 
+                    type="text" 
+                    value={tags} 
+                    onChange={(e) => setTags(e.target.value)} 
+                    placeholder="mqtt, hardware, security" 
+                    className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                  />
+                </div>
+                <button type="submit" disabled={saving || !title.trim() || !content.trim()} className="bg-slate-950 text-white px-8 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors">
+                  {saving ? "⏳ Posting..." : "📢 Publish Post"}
+                </button>
+              </form>
+            ) : (
+              <div className="bg-white border border-slate-200 shadow-sm rounded-3xl overflow-hidden sticky top-6">
+                <div className="px-8 py-6 border-b border-slate-100">
+                  <div className="flex items-start justify-between">
+                    <h2 className="text-2xl font-bold text-slate-900">{selectedPost.title}</h2>
+                    <button onClick={() => setSelectedPost(null)} className="text-slate-400 hover:text-slate-600 p-2 bg-slate-50 rounded-full transition-colors">✕</button>
+                  </div>
+                  <div className="flex items-center gap-3 mt-4">
+                    <span className="text-sm text-slate-500 font-medium">by <strong className="text-sky-600">{selectedPost.author?.username || "Unknown"}</strong></span>
+                    <span className="text-sm text-slate-400">{new Date(selectedPost.createdAt).toLocaleString()}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {selectedPost.tags.map((tag) => (
+                      <span key={tag} className={`text-xs font-bold px-3 py-1.5 rounded-full ${getTagColor(tag)}`}>{tag}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+                  <p className="text-base text-slate-700 whitespace-pre-wrap leading-relaxed">{selectedPost.content}</p>
+                  <div className="flex items-center gap-4 mt-6">
+                    <button onClick={() => handleUpvote(selectedPost._id)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm ${selectedPost.upvotes.includes("anonymous") ? "bg-sky-100 text-sky-700 border border-sky-200" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+                      ▲ {selectedPost.upvotes.length}
+                    </button>
+                    <span className="text-sm font-medium text-slate-500">{selectedPost.replies.length} replies</span>
+                  </div>
+                </div>
+                <div className="px-8 py-6 space-y-6 max-h-[400px] overflow-y-auto">
+                  {selectedPost.replies.map((reply) => (
+                    <div key={reply._id} className="flex gap-4">
+                      <div className="w-10 h-10 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                        {reply.author?.username?.charAt(0).toUpperCase() || "?"}
+                      </div>
+                      <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-bold text-slate-900">{reply.author?.username || "Unknown"}</span>
+                          <span className="text-xs font-medium text-slate-400">{new Date(reply.createdAt).toLocaleString()}</span>
+                        </div>
+                        <p className="text-sm text-slate-700 leading-relaxed">{reply.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {selectedPost.replies.length === 0 && (
+                    <p className="text-sm font-medium text-slate-400 text-center py-6">No replies yet. Be the first to help out!</p>
+                  )}
+                </div>
+                <form onSubmit={handleReply} className="px-8 py-5 border-t border-slate-100 bg-white flex gap-4 items-center">
+                  <input type="text" value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="Write a helpful reply..." className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all" />
+                  <button type="submit" disabled={replying || !replyContent.trim()} className="bg-sky-600 text-white px-6 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-sky-700 shadow-sm transition-all">
+                    {replying ? "..." : "Reply"}
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

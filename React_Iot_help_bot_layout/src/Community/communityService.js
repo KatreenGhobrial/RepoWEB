@@ -11,13 +11,13 @@ export async function list(tag, search) {
 }
 
 export async function get(id) {
-  return await api.get(`/forum/${id}`);
+  return await api.get(`${BASE_URL}/${id}`);
 }
 
 export async function reply(id, content) {
-  return await api.post(`/forum/${id}/reply`, { content });
+  return await api.post(`${BASE_URL}/${id}/reply`, { content });
 }
 
 export async function upvote(id) {
-  return await api.post(`/forum/${id}/upvote`);
+  return await api.post(`${BASE_URL}/${id}/upvote`);
 }
