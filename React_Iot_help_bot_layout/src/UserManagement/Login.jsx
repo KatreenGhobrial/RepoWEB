@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import * as usersService from './usersService';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      const user = await usersService.login({ email, password });
+      localStorage.setItem('currentUser', JSON.stringify(user));
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Login failed');

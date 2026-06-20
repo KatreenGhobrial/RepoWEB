@@ -31,7 +31,7 @@ export default function ManageUsers() {
         setEditForm({ 
             name: user.bio || '', // Using bio as name in backend
             email: user.email || '',
-            role: user.role === 'student' ? 'User' : 'Admin' // Map roles
+            role: user.role === 'student' ? 'Student' : user.role === 'mentor' ? 'Mentor' : 'Admin'
         });
     };
 
@@ -40,7 +40,7 @@ export default function ManageUsers() {
             const payload = {
                 name: editForm.name,
                 email: editForm.email,
-                role: editForm.role === 'User' ? 'student' : 'admin'
+                role: editForm.role === 'Student' ? 'student' : editForm.role === 'Mentor' ? 'mentor' : 'admin'
             };
             
             // Optimistic update locally
@@ -125,7 +125,8 @@ export default function ManageUsers() {
                                                 className="border rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-zinc-800 dark:border-zinc-600 dark:text-white" 
                                                 value={editForm.role}
                                                 onChange={e => handleChange('role', e.target.value)}>
-                                                <option>User</option>
+                                                <option>Student</option>
+                                                <option>Mentor</option>
                                                 <option>Admin</option>
                                             </select>
                                         </td>
@@ -145,9 +146,11 @@ export default function ManageUsers() {
                                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                                 user.role === 'admin' 
                                                 ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' 
+                                                : user.role === 'mentor'
+                                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                                                 : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                                             }`}>
-                                                {user.role === 'admin' ? 'Admin' : 'User'}
+                                                {user.role === 'admin' ? 'Admin' : user.role === 'mentor' ? 'Mentor' : 'Student'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">

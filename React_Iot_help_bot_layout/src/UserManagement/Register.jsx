@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import * as usersService from './usersService';
 
 export default function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [expertise, setExpertise] = useState('Hardware');
   const [error, setError] = useState('');
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await register({ username, email, password });
+      const user = await usersService.register({ username, email, password, expertise: [expertise] });
+      localStorage.setItem('currentUser', JSON.stringify(user));
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Registration failed');
@@ -56,7 +57,22 @@ export default function Register() {
               required 
             />
           </div>
-          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Expertise</label>
+            <select 
+              value={expertise}
+              onChange={(e) => setExpertise(e.target.value)}
+              className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white appearance-none cursor-pointer"
+            >
+              <option value="Hardware">Hardware</option>
+              <option value="Firmware">Firmware</option>
+              <option value="Backend">Backend</option>
+              <option value="Frontend">Frontend</option>
+              <option value="Architecture">Architecture</option>
+              <option value="QA / Testing">QA / Testing</option>
+            </select>
+          </div>
+          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mt-2">
             Register
           </button>
         </form>
