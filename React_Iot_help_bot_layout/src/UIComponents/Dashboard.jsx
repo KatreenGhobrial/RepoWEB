@@ -12,13 +12,13 @@ export default function Dashboard() {
         if (!userStr) {
           // No user = return empty dashboard
           setDashboard({
-            roleCoverage: { value: '0/0', text: 'Please log in' },
             detectedIssues: 0,
-            tasksCompleted: { value: 0, text: '0 total tasks' },
             documentationStatus: 'No data',
             progress: [],
             alerts: [],
-            feedbacks: []
+            feedbacks: [],
+            tasksStats: { total: 0, done: 0, inProgress: 0, todo: 0, progressPercentage: 0 },
+            workload: []
           });
           setLoading(false);
           return;
@@ -34,13 +34,13 @@ export default function Dashboard() {
 
         if (!projRes.ok) {
           setDashboard({
-            roleCoverage: { value: '0/0', text: 'Error loading data' },
             detectedIssues: 0,
-            tasksCompleted: { value: 0, text: '0 total tasks' },
             documentationStatus: 'Error',
             progress: [],
             alerts: [],
-            feedbacks: []
+            feedbacks: [],
+            tasksStats: { total: 0, done: 0, inProgress: 0, todo: 0, progressPercentage: 0 },
+            workload: []
           });
           setLoading(false);
           return;
@@ -59,6 +59,9 @@ export default function Dashboard() {
         // Fetch tasks and feedback for the first project if exists
         let totalTasks = 0;
         let completedTasks = 0;
+        let inProgressTasks = 0;
+        let todoTasks = 0;
+        let memberWorkload = {};
         let feedbacks = [];
 
         if (projects.length > 0) {
@@ -68,7 +71,22 @@ export default function Dashboard() {
           if (taskRes.ok) {
             const tasks = await taskRes.json();
             totalTasks = tasks.length;
-            completedTasks = tasks.filter(t => t.status === 'done').length;
+            
+            tasks.forEach(t => {
+               const st = (t.status || 'todo').toLowerCase();
+               if (st === 'done') completedTasks++;
+               else if (st === 'in-progress' || st === 'in progress') inProgressTasks++;
+               else todoTasks++;
+
+               const owner = t.owner?.username || t.discipline || 'Unassigned';
+               if (!memberWorkload[owner]) {
+                 memberWorkload[owner] = { total: 0, done: 0, inProgress: 0, todo: 0 };
+               }
+               memberWorkload[owner].total++;
+               if (st === 'done') memberWorkload[owner].done++;
+               else if (st === 'in-progress' || st === 'in progress') memberWorkload[owner].inProgress++;
+               else memberWorkload[owner].todo++;
+            });
           }
 
           const fbRes = await fetch(`http://localhost:5000/api/mentor/feedback/${projects[0]._id}`);
@@ -77,17 +95,19 @@ export default function Dashboard() {
           }
         }
 
+        const progressPercentage = totalTasks === 0 ? 0 : Math.round(((completedTasks + (inProgressTasks * 0.5)) / totalTasks) * 100);
+
         // Build live dashboard object
         setDashboard({
-          roleCoverage: {
-            value: `${memberCount}/${Math.max(memberCount + 1, 5)}`,
-            text: totalProjects > 0 ? `${totalProjects} active project(s)` : 'No projects yet'
-          },
           detectedIssues: 0,
-          tasksCompleted: {
-            value: completedTasks,
-            text: `${totalTasks} total tasks`
+          tasksStats: {
+            total: totalTasks,
+            done: completedTasks,
+            inProgress: inProgressTasks,
+            todo: todoTasks,
+            progressPercentage
           },
+          workload: Object.entries(memberWorkload).map(([name, stats]) => ({ name, ...stats })),
           documentationStatus: totalProjects > 0 ? 'Active' : 'No projects',
           progress: [],
           alerts: [],
@@ -96,9 +116,9 @@ export default function Dashboard() {
       } catch (err) {
         console.error('Dashboard fetch error:', err);
         setDashboard({
-          roleCoverage: { value: '0/0', text: 'Connection error' },
           detectedIssues: 0,
-          tasksCompleted: { value: 0, text: '0 total tasks' },
+          tasksStats: { total: 0, done: 0, inProgress: 0, todo: 0, progressPercentage: 0 },
+          workload: [],
           documentationStatus: 'Error',
           progress: [],
           alerts: [],
@@ -118,18 +138,7 @@ export default function Dashboard() {
     <>
       <Header title="IoT Help Bot" subtitle="Manage architecture, detect IoT risks, and support collaboration." />
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-slate-500 text-lg mb-3">Project Role Coverage</p>
-              <h3 className="text-5xl font-bold text-slate-950">{dashboard.roleCoverage.value}</h3>
-              <p className="text-slate-500 text-lg mt-3">{dashboard.roleCoverage.text}</p>
-            </div>
-            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-2xl">👥</div>
-          </div>
-        </div>
-
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <div className="flex justify-between items-start">
             <div>
@@ -144,11 +153,16 @@ export default function Dashboard() {
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-slate-500 text-lg mb-3">Tasks Completed</p>
-              <h3 className="text-5xl font-bold text-slate-950">{dashboard.tasksCompleted.value}</h3>
-              <p className="text-slate-500 text-lg mt-3">{dashboard.tasksCompleted.text}</p>
+              <p className="text-slate-500 text-lg mb-3">Project Progress</p>
+              <h3 className="text-5xl font-bold text-slate-950">{dashboard.tasksStats?.progressPercentage || 0}%</h3>
+              <p className="text-slate-500 text-lg mt-3">{dashboard.tasksStats?.done || 0}/{dashboard.tasksStats?.total || 0} tasks done</p>
             </div>
-            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-2xl">✅</div>
+            <div className="relative w-16 h-16 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path className="text-slate-100" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path className="text-cyan-500 transition-all duration-1000 ease-out" strokeDasharray={`${dashboard.tasksStats?.progressPercentage || 0}, 100`} strokeWidth="4" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
           </div>
         </div>
 
@@ -164,6 +178,66 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Task Status Distribution */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">📊</div>
+            <h3 className="text-2xl font-bold text-slate-950">Task Distribution</h3>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between text-sm font-semibold">
+              <span className="text-slate-500">To Do</span>
+              <span>{dashboard.tasksStats?.todo || 0}</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-3">
+              <div className="bg-slate-300 h-3 rounded-full transition-all duration-1000" style={{ width: `${dashboard.tasksStats?.total ? (dashboard.tasksStats.todo / dashboard.tasksStats.total) * 100 : 0}%` }}></div>
+            </div>
+            
+            <div className="flex justify-between text-sm font-semibold">
+              <span className="text-yellow-600">In Progress</span>
+              <span>{dashboard.tasksStats?.inProgress || 0}</span>
+            </div>
+            <div className="w-full bg-yellow-50 rounded-full h-3">
+              <div className="bg-yellow-400 h-3 rounded-full transition-all duration-1000" style={{ width: `${dashboard.tasksStats?.total ? (dashboard.tasksStats.inProgress / dashboard.tasksStats.total) * 100 : 0}%` }}></div>
+            </div>
+
+            <div className="flex justify-between text-sm font-semibold">
+              <span className="text-green-600">Done</span>
+              <span>{dashboard.tasksStats?.done || 0}</span>
+            </div>
+            <div className="w-full bg-green-50 rounded-full h-3">
+              <div className="bg-green-500 h-3 rounded-full transition-all duration-1000" style={{ width: `${dashboard.tasksStats?.total ? (dashboard.tasksStats.done / dashboard.tasksStats.total) * 100 : 0}%` }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Workload by Member */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">👥</div>
+            <h3 className="text-2xl font-bold text-slate-950">Team Workload</h3>
+          </div>
+          <div className="space-y-6">
+            {dashboard.workload && dashboard.workload.length > 0 ? dashboard.workload.map((wl, idx) => (
+              <div key={idx}>
+                <div className="flex justify-between text-sm font-semibold mb-2">
+                  <span className="text-slate-900">{wl.name}</span>
+                  <span className="text-slate-500">{wl.total} tasks</span>
+                </div>
+                <div className="w-full flex h-4 rounded-full overflow-hidden bg-slate-100">
+                  <div className="bg-green-500 h-full transition-all duration-1000" style={{ width: `${wl.total ? (wl.done / wl.total) * 100 : 0}%` }} title={`Done: ${wl.done}`}></div>
+                  <div className="bg-yellow-400 h-full transition-all duration-1000" style={{ width: `${wl.total ? (wl.inProgress / wl.total) * 100 : 0}%` }} title={`In Progress: ${wl.inProgress}`}></div>
+                  <div className="bg-slate-300 h-full transition-all duration-1000" style={{ width: `${wl.total ? (wl.todo / wl.total) * 100 : 0}%` }} title={`To Do: ${wl.todo}`}></div>
+                </div>
+              </div>
+            )) : (
+              <p className="text-slate-500 text-center py-8">No tasks assigned yet.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">
@@ -172,20 +246,29 @@ export default function Dashboard() {
           </div>
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
             {dashboard.feedbacks && dashboard.feedbacks.length > 0 ? (
-              dashboard.feedbacks.map((fb, index) => (
+              dashboard.feedbacks.map((fb, index) => {
+                const match = fb.content.match(/^\[Task:\s*(.*?)\]\s*(.*)$/);
+                const relatedTaskTitle = match ? match[1] : fb.relatedTaskTitle;
+                const displayContent = match ? match[2] : fb.content;
+
+                return (
                 <div key={index} className="border border-slate-100 bg-slate-50 rounded-3xl p-5">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-bold text-cyan-600 capitalize">{fb.category}</span>
+                  <div className="flex items-center justify-end mb-1">
                     <span className="text-xs text-slate-500">{new Date(fb.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-slate-700 text-sm">{fb.content}</p>
-                  <div className="flex gap-1 mt-3">
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <span key={n} className={`text-sm ${n <= fb.rating ? "text-amber-400" : "text-slate-300"}`}>★</span>
-                    ))}
-                  </div>
+                  {relatedTaskTitle ? (
+                    <div className="text-xs font-semibold text-slate-600 mb-1">
+                      📌 Task: {relatedTaskTitle}
+                    </div>
+                  ) : (
+                    <div className="text-xs font-semibold text-slate-600 mb-1">
+                      📌 General Feedback
+                    </div>
+                  )}
+                  <p className="text-slate-700 text-sm">{displayContent}</p>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-2xl">No feedback received yet.</p>
             )}
