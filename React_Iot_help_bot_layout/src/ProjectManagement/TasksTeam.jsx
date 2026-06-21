@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import Header from '../UIComponents/Header';
-
+import { getUsers } from '../UserManagement/usersService';
 export default function TasksTeam() {
   const [team, setTeam] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -182,6 +182,16 @@ export default function TasksTeam() {
     if (!newMemberEmail) return;
 
     try {
+      // Check if user exists in DB
+      const allUsers = await getUsers();
+      const userExists = allUsers.find(u => u.username === newMemberEmail || u.email === newMemberEmail);
+      
+      if (!userExists) {
+        setMemberMessage('User not found in database.');
+        setTimeout(() => setMemberMessage(''), 3000);
+        return;
+      }
+
       const userStr = localStorage.getItem('currentUser');
       const user = userStr ? JSON.parse(userStr) : null;
       if (user && projectId) {
@@ -220,10 +230,7 @@ export default function TasksTeam() {
       }
     } catch (err) {
       console.error(err);
-      setTeam([...team, { username: newMemberEmail, email: newMemberEmail, role: 'Student' }]);
-      setMemberMessage('Member added locally (offline).');
-      setIsMemberError(false);
-      setNewMemberEmail('');
+      setMemberMessage('Failed to connect to database.');
       setTimeout(() => setMemberMessage(''), 3000);
     }
   };
