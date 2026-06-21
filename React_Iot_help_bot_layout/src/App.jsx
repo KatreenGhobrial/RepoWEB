@@ -34,9 +34,9 @@ function App() {
           <Route path="/project-setup" element={<ProtectedRoute><ProjectSetup /></ProtectedRoute>} />
           <Route path="/tasks-team" element={<ProtectedRoute><TasksTeam /></ProtectedRoute>} />
           <Route path="/detect-conflict" element={<ProtectedRoute><DetectConflict /></ProtectedRoute>} />
-          <Route path="/monitor-panel" element={<ProtectedRoute><MonitorPanel /></ProtectedRoute>} />
+          <Route path="/monitor-panel" element={<ProtectedRoute allowedRoles={['student']}><MonitorPanel /></ProtectedRoute>} />
           <Route path="/socratic-bot" element={<ProtectedRoute><SocraticBot /></ProtectedRoute>} />
-          <Route path="/device-playground" element={<ProtectedRoute><DevicePlayground /></ProtectedRoute>} />
+          <Route path="/device-playground" element={<ProtectedRoute allowedRoles={['student']}><DevicePlayground /></ProtectedRoute>} />
           <Route path="/solution-library" element={<ProtectedRoute><IoTSolutionLibrary /></ProtectedRoute>} />
           <Route path="/mentor-dashboard" element={<ProtectedRoute><MentorDashboard /></ProtectedRoute>} />
           <Route path="/community" element={<ProtectedRoute><CommunityBoard /></ProtectedRoute>} />

@@ -1,140 +1,200 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
 import Header from '../UIComponents/Header';
 
 export default function MonitorPanel() {
-  const [monitorData, setMonitorData] = useState(null);
-  const [message, setMessage] = useState('');
+  const [monitorData, setMonitorData] = useState({
+    summary: { health: 'Loading...' },
+    services: []
+  });
+  
+  const [activeDevices, setActiveDevices] = useState([]);
+  const [sensors, setSensors] = useState({});
+  const [alerts, setAlerts] = useState([]);
+  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+
+  // Use refs to prevent stale state in socket callbacks
+  const alertsRef = useRef(alerts);
+  const logsRef = useRef(logs);
+  const sensorsRef = useRef(sensors);
 
   useEffect(() => {
-    const fetchMonitorData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        
-        // Check real backend health
-        let backendStatus = 'Down';
-        let dbStatus = 'Down';
-        let botStatus = 'Down';
-        
-        if (token) {
-          try {
-            const healthRes = await fetch('http://localhost:5000/api/health');
-            if (healthRes.ok) {
-              backendStatus = 'Online';
-              dbStatus = 'Online';
-              botStatus = 'Online';
-            }
-          } catch { /* backend not available */ }
-        }
+    alertsRef.current = alerts;
+    logsRef.current = logs;
+    sensorsRef.current = sensors;
+  }, [alerts, logs, sensors]);
 
-        // Initialize empty state without fake data
-        setMonitorData({
-          summary: { 
-            devices: 0, 
-            health: backendStatus === 'Online' ? 'OK' : 'Degraded' 
-          },
-          sensors: [], // Empty without real sensor telemetry
+  const addLog = (title, msg) => {
+    const newLog = {
+      id: Date.now() + Math.random(),
+      title,
+      message: msg,
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
+    setLogs(prev => [newLog, ...prev].slice(0, 5)); // Keep last 5 logs
+  };
+
+  const checkAlerts = (deviceId, type, value) => {
+    let alertCreated = false;
+    const alertId = `${deviceId}-${type}-high`;
+    
+    // Check if alert already exists to prevent spam
+    const alertExists = alertsRef.current.some(a => a.id === alertId);
+
+    if (type === 'temperature' && parseFloat(value) > 30) {
+      if (!alertExists) {
+        const newAlert = {
+          id: alertId,
+          title: `High Temperature Alert`,
+          level: parseFloat(value) > 35 ? 'HIGH' : 'MEDIUM',
+          description: `Device ${deviceId} reported a high temperature of ${value}°C.`,
+          time: new Date().toLocaleTimeString()
+        };
+        setAlerts(prev => [newAlert, ...prev]);
+        addLog('Threshold Exceeded', `Device ${deviceId} temperature at ${value}°C`);
+      }
+    } else if (type === 'temperature' && parseFloat(value) <= 30 && alertExists) {
+      // Clear alert
+      setAlerts(prev => prev.filter(a => a.id !== alertId));
+      addLog('Alert Cleared', `Device ${deviceId} temperature normalized to ${value}°C`);
+    }
+  };
+
+  useEffect(() => {
+    const fetchHealth = async () => {
+      try {
+        const healthRes = await fetch('http://localhost:5000/api/health');
+        if (healthRes.ok) {
+          setMonitorData(prev => ({
+            ...prev,
+            summary: { health: 'OK' },
+            services: [
+              { name: 'Backend API', status: 'Online', description: 'Connected to backend server' },
+              { name: 'MongoDB Database', status: 'Online', description: 'Connected to database' },
+              { name: 'Socratic Bot Engine', status: 'Online', description: 'AI bot ready' }
+            ]
+          }));
+          addLog('System Start', 'Monitor Panel initialized and connected to services.');
+        }
+      } catch {
+        setMonitorData(prev => ({
+          ...prev,
+          summary: { health: 'Down' },
           services: [
-            {
-              name: 'Backend API',
-              status: backendStatus,
-              description: backendStatus === 'Online' 
-                ? 'Connected to http://localhost:5000' 
-                : 'Cannot reach backend server'
-            },
-            {
-              name: 'MongoDB Database',
-              status: dbStatus,
-              description: dbStatus === 'Online' 
-                ? 'Connected to MongoDB Atlas' 
-                : 'Database connection unavailable'
-            },
-            {
-              name: 'Socratic Bot Engine',
-              status: botStatus,
-              description: botStatus === 'Online'
-                ? 'AI bot ready for troubleshooting'
-                : 'Bot engine not available'
-            }
-          ],
-          alerts: [],
-          logs: [
-            {
-              title: 'System check',
-              message: `Backend API is ${backendStatus.toLowerCase()}.`,
-              time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-            }
+            { name: 'Backend API', status: 'Down', description: 'Cannot reach backend server' }
           ]
-        });
-      } catch (err) {
-        console.error('Monitor fetch error:', err);
-        setMonitorData({
-          summary: { devices: 0, health: 'Down' },
-          sensors: [],
-          services: [],
-          alerts: [],
-          logs: []
-        });
+        }));
       } finally {
         setLoading(false);
       }
     };
+    fetchHealth();
 
-    fetchMonitorData();
+    // Connect to WebSocket for real-time MQTT data
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+      withCredentials: true,
+    });
+
+    socket.on('device_status_update', (devicesArray) => {
+      setActiveDevices(devicesArray);
+    });
+
+    socket.on('mqtt_message', (data) => {
+      try {
+        const { topic, payload } = data;
+        const topicParts = topic.split('/');
+        
+        // Robust extraction: get the last two parts
+        // e.g. Braude/team8/MockDevice1/telemetry -> deviceId = MockDevice1, type = telemetry
+        // e.g. Braude/team8/test_sensors/MockDevice1/telemetry -> deviceId = MockDevice1, type = telemetry
+        if (topicParts.length >= 3) {
+          const messageType = topicParts[topicParts.length - 1]; // e.g. telemetry
+          const deviceId = topicParts[topicParts.length - 2];
+
+          if (messageType === 'telemetry') {
+            const parsedPayload = JSON.parse(payload);
+            
+            setSensors(prev => {
+              const updatedSensors = { ...prev };
+              
+              // Map temperature
+              if (parsedPayload.temperature !== undefined) {
+                const key = `${deviceId}-temperature`;
+                updatedSensors[key] = {
+                  id: key,
+                  name: `Temperature (${deviceId})`,
+                  location: deviceId,
+                  value: parsedPayload.temperature,
+                  unit: '°C',
+                  status: parseFloat(parsedPayload.temperature) > 30 ? 'Warning' : 'Online',
+                  lastUpdate: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                };
+                checkAlerts(deviceId, 'temperature', parsedPayload.temperature);
+              }
+              
+              // Map humidity
+              if (parsedPayload.humidity !== undefined) {
+                const key = `${deviceId}-humidity`;
+                updatedSensors[key] = {
+                  id: key,
+                  name: `Humidity (${deviceId})`,
+                  location: deviceId,
+                  value: parsedPayload.humidity,
+                  unit: '%',
+                  status: 'Online',
+                  lastUpdate: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                };
+              }
+              
+              return updatedSensors;
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error parsing MQTT message:', err);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
-  const handleRefresh = async () => {
+  const handleRefresh = () => {
     setMessage('');
-    
-    // Simulate sensor data refresh with slight randomization
-    setMonitorData(prev => {
-      const newSensors = prev.sensors.map(s => {
-        if (s.status !== 'Offline') {
-          const delta = Math.floor(Math.random() * 5) - 2; // -2 to +2
-          return { ...s, value: Math.max(0, s.value + delta), lastUpdate: 'Just now' };
-        }
-        return s;
-      });
-
-      // Update log with refresh entry
-      const newLog = {
-        title: 'Manual refresh',
-        message: 'Sensor readings updated by user.',
-        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-      };
-
-      return { 
-        ...prev, 
-        sensors: newSensors,
-        logs: [newLog, ...prev.logs.slice(0, 4)]
-      };
-    });
-    setMessage('Monitor data refreshed.');
+    addLog('Manual Action', 'User requested manual refresh. Real-time data will continue to flow.');
+    setMessage('Listening to real-time stream...');
+    setTimeout(() => setMessage(''), 3000);
   };
 
-  if (loading || !monitorData) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading monitor...</p></div>;
+  if (loading) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading monitor...</p></div>;
+
+  const sensorArray = Object.values(sensors);
+  const onlineDevicesCount = activeDevices.filter(d => d.status === 'online').length;
 
   return (
     <>
-      <Header title="IoT Help Bot" subtitle="Manage architecture, detect IoT risks, and support collaboration." />
+      <Header title="IoT Monitor Panel" subtitle="Manage architecture, detect IoT risks, and support collaboration in real-time." />
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 transition-all duration-300">
           <p className="text-slate-500 text-lg mb-3">Connected Devices</p>
-          <h3 className="text-5xl font-bold text-slate-950">{monitorData.summary.devices}</h3>
-          <p className="text-slate-500 text-lg mt-3">Active IoT devices</p>
+          <h3 className="text-5xl font-bold text-slate-950">{onlineDevicesCount}</h3>
+          <p className="text-slate-500 text-lg mt-3">Active MQTT devices</p>
         </div>
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 transition-all duration-300">
           <p className="text-slate-500 text-lg mb-3">Sensors</p>
-          <h3 className="text-5xl font-bold text-slate-950">{monitorData.sensors.length}</h3>
-          <p className="text-slate-500 text-lg mt-3">Reading values</p>
+          <h3 className="text-5xl font-bold text-slate-950">{sensorArray.length}</h3>
+          <p className="text-slate-500 text-lg mt-3">Active readings</p>
         </div>
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 transition-all duration-300">
           <p className="text-slate-500 text-lg mb-3">Open Alerts</p>
-          <h3 className="text-5xl font-bold text-slate-950">{monitorData.alerts.length}</h3>
+          <h3 className="text-5xl font-bold text-slate-950">{alerts.length}</h3>
           <p className="text-slate-500 text-lg mt-3">Need attention</p>
         </div>
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 transition-all duration-300">
           <p className="text-slate-500 text-lg mb-3">System Health</p>
           <h3 className={`text-5xl font-bold ${monitorData.summary.health === 'OK' ? 'text-green-600' : 'text-orange-500'}`}>{monitorData.summary.health}</h3>
           <p className="text-slate-500 text-lg mt-3">Live status</p>
@@ -148,32 +208,41 @@ export default function MonitorPanel() {
               <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🌡️</div>
               <h3 className="text-2xl font-bold text-slate-950">Sensor readings</h3>
             </div>
-            <button onClick={handleRefresh} className="bg-slate-950 text-white px-5 py-3 rounded-2xl font-bold hover:bg-slate-800">
-              Refresh
+            <button onClick={handleRefresh} className="bg-slate-950 text-white px-5 py-3 rounded-2xl font-bold hover:bg-slate-800 transition-colors">
+              Ping System
             </button>
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            {monitorData.sensors.map((sensor, idx) => {
-              let statusClass = 'bg-green-100 text-green-700';
-              if (sensor.status === 'Warning') statusClass = 'bg-yellow-100 text-orange-600';
-              if (sensor.status === 'Offline') statusClass = 'bg-red-100 text-red-700';
+          
+          {sensorArray.length === 0 ? (
+            <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+              <p className="text-slate-500 italic">Waiting for sensor data via MQTT...</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {sensorArray.map((sensor) => {
+                let statusClass = 'bg-green-100 text-green-700 border border-green-200';
+                if (sensor.status === 'Warning') statusClass = 'bg-yellow-100 text-orange-600 border border-yellow-300';
+                if (sensor.status === 'Offline') statusClass = 'bg-red-100 text-red-700 border border-red-200';
 
-              return (
-                <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:bg-slate-50">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-lg">{sensor.name}</h4>
-                      <p className="text-sm text-slate-500">{sensor.location}</p>
+                return (
+                  <div key={sensor.id} className="border border-slate-200 rounded-2xl p-5 hover:bg-slate-50 transition-all">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-lg">{sensor.name}</h4>
+                        <p className="text-sm text-slate-500">Device ID: {sensor.location}</p>
+                      </div>
+                      <span className={`text-xs px-3 py-1 rounded-full font-bold ${statusClass}`}>
+                        {sensor.status === 'Warning' ? '⚠️ ' : ''}{sensor.status}
+                      </span>
                     </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-bold ${statusClass}`}>{sensor.status}</span>
+                    <p className="text-4xl font-bold text-slate-950">{sensor.value}<span className="text-2xl text-slate-500">{sensor.unit}</span></p>
+                    <p className="text-sm text-slate-500 mt-2 font-mono bg-slate-100 inline-block px-2 py-1 rounded">Last seen: {sensor.lastUpdate}</p>
                   </div>
-                  <p className="text-4xl font-bold text-slate-950">{sensor.value}{sensor.unit}</p>
-                  <p className="text-sm text-slate-500 mt-2">Last update: {sensor.lastUpdate}</p>
-                </div>
-              );
-            })}
-          </div>
-          {message && <p className="text-sm mt-5 text-green-500">{message}</p>}
+                );
+              })}
+            </div>
+          )}
+          {message && <p className="text-sm mt-5 text-sky-600 font-bold animate-pulse">{message}</p>}
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
@@ -183,17 +252,16 @@ export default function MonitorPanel() {
           </div>
           <div className="space-y-4">
             {monitorData.services.map((service, idx) => {
-              let statusClass = 'bg-green-100 text-green-700';
-              if (service.status === 'Warning') statusClass = 'bg-yellow-100 text-orange-600';
-              if (service.status === 'Down') statusClass = 'bg-red-100 text-red-700';
+              let statusClass = 'bg-green-100 text-green-700 border-green-200';
+              if (service.status === 'Down') statusClass = 'bg-red-100 text-red-700 border-red-200';
 
               return (
-                <div key={idx} className="border border-slate-200 rounded-2xl p-5 flex justify-between items-start">
+                <div key={idx} className="border border-slate-200 rounded-2xl p-5 flex justify-between items-start hover:shadow-sm transition-all">
                   <div>
                     <h4 className="font-bold text-slate-900 text-lg">{service.name}</h4>
                     <p className="text-sm text-slate-500 mt-2">{service.description}</p>
                   </div>
-                  <span className={`text-xs px-3 py-1 rounded-full font-bold ${statusClass}`}>{service.status}</span>
+                  <span className={`text-xs px-3 py-1 rounded-full font-bold border ${statusClass}`}>{service.status}</span>
                 </div>
               );
             })}
@@ -204,45 +272,55 @@ export default function MonitorPanel() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🔔</div>
-            <h3 className="text-2xl font-bold text-slate-950">Monitor alerts</h3>
+            <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-xl">🔔</div>
+            <h3 className="text-2xl font-bold text-slate-950">Active Alerts</h3>
           </div>
           <div className="space-y-4">
-            {monitorData.alerts.map((alert, idx) => {
-              let colorClass = 'bg-red-100 border-red-200 text-red-700';
-              if (alert.level === 'MEDIUM') colorClass = 'bg-yellow-100 border-yellow-300 text-orange-600';
-              if (alert.level === 'LOW') colorClass = 'bg-green-100 border-green-200 text-green-700';
+            {alerts.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-slate-500 italic">✅ No active alerts. Everything looks good!</p>
+              </div>
+            ) : (
+              alerts.map((alert) => {
+                let colorClass = 'bg-red-50 border-red-200 text-red-700';
+                if (alert.level === 'MEDIUM') colorClass = 'bg-yellow-50 border-yellow-300 text-orange-600';
 
-              return (
-                <div key={idx} className={`border rounded-3xl p-5 ${colorClass}`}>
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-lg">{alert.title}</h4>
-                    <span className="font-bold text-sm">{alert.level}</span>
+                return (
+                  <div key={alert.id} className={`border rounded-2xl p-5 transition-all animate-pulse shadow-sm ${colorClass}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-bold text-lg flex items-center gap-2">⚠️ {alert.title}</h4>
+                      <span className="font-bold text-xs bg-white bg-opacity-50 px-2 py-1 rounded border">{alert.level}</span>
+                    </div>
+                    <p className="text-sm font-medium">{alert.description}</p>
+                    <p className="text-xs mt-2 opacity-75">{alert.time}</p>
                   </div>
-                  <p className="text-sm">{alert.description}</p>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">📋</div>
-            <h3 className="text-2xl font-bold text-slate-950">Recent system logs</h3>
+            <h3 className="text-2xl font-bold text-slate-950">System Logs</h3>
           </div>
-          <div className="space-y-4">
-            {monitorData.logs.map((log, idx) => (
-              <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:bg-slate-50">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-slate-900">{log.title}</h4>
-                    <p className="text-sm text-slate-500 mt-2">{log.message}</p>
+          <div className="space-y-3">
+            {logs.length === 0 ? (
+              <p className="text-slate-500 italic text-center py-6">No logs generated yet.</p>
+            ) : (
+              logs.map((log) => (
+                <div key={log.id} className="border border-slate-100 rounded-2xl p-4 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">{log.title}</h4>
+                      <p className="text-sm text-slate-600 mt-1">{log.message}</p>
+                    </div>
+                    <span className="text-xs font-mono text-slate-400 bg-white border border-slate-200 px-2 py-1 rounded">{log.time}</span>
                   </div>
-                  <span className="text-sm text-slate-400">{log.time}</span>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>

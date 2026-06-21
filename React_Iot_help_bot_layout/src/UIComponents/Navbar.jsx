@@ -35,9 +35,12 @@ export default function Navbar() {
     { label: 'Community', path: '/community' },
     { label: 'Solution Library', path: '/solution-library' },
     { label: 'Socratic Bot', path: '/socratic-bot' },
-    { label: 'Device Playground', path: '/device-playground' },
-    { label: 'Monitor Panel', path: '/monitor-panel' },
   ];
+
+  if (currentUser?.role === 'student') {
+    menuItems.push({ label: 'Device Playground', path: '/device-playground' });
+    menuItems.push({ label: 'Monitor Panel', path: '/monitor-panel' });
+  }
 
   if (currentUser?.role === 'mentor') {
     menuItems = menuItems.filter(item => item.label !== 'Tasks & Team');
