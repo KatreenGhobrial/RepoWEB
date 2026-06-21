@@ -14,11 +14,8 @@ export default function MentorDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fbContent, setFbContent] = useState("");
-  const [fbCategory, setFbCategory] = useState("general");
-  const [fbRating, setFbRating] = useState(5);
   const [fbSaving, setFbSaving] = useState(false);
-  const [broadcastMsg, setBroadcastMsg] = useState("");
-  const [broadcastResult, setBroadcastResult] = useState("");
+  const [fbTaskId, setFbTaskId] = useState("");
 
   if (!currentUser || currentUser.role !== 'mentor') {
     return <Navigate to="/dashboard" replace />;
@@ -66,30 +63,24 @@ export default function MentorDashboard() {
     if (!selectedProject) return;
     setFbSaving(true);
     try {
+      const selectedTask = projectTasks.find(t => t._id === fbTaskId);
+      
+      let payloadContent = fbContent;
+      if (selectedTask) {
+        payloadContent = `[Task: ${selectedTask.title}] ` + fbContent;
+      }
+
       await mentorService.giveFeedback({
         projectId: selectedProject,
-        content: fbContent,
-        category: fbCategory,
-        rating: fbRating
+        content: payloadContent
       });
       setFbContent("");
+      setFbTaskId("");
       await loadProjectDetails(selectedProject);
     } catch (err) {
       setError(err.message || "Failed to send feedback");
     } finally {
       setFbSaving(false);
-    }
-  };
-
-  const handleBroadcast = async () => {
-    if (!broadcastMsg.trim()) return;
-    try {
-      const res = await mentorService.broadcast(broadcastMsg);
-      const data = res.data || res;
-      setBroadcastResult(`Sent to ${data.sentTo?.length || 0} projects`);
-      setBroadcastMsg("");
-    } catch (err) {
-      setError(err.message || "Broadcast failed");
     }
   };
 
@@ -170,7 +161,8 @@ export default function MentorDashboard() {
             const team = [];
             if (proj.owner) team.push(proj.owner);
             if (proj.members) team.push(...proj.members);
-            const teamNames = team.map(s => s.username || s.name || s.email || s).join(', ') || 'No students assigned';
+            const teamNamesList = team.map(s => s.username || s.name || s.email || s).filter(Boolean);
+            const teamNames = [...new Set(teamNamesList)].join(', ') || 'No students assigned';
             const statusColor = proj.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-500/10 dark:text-slate-400';
 
             return (
@@ -224,41 +216,25 @@ export default function MentorDashboard() {
                 className="w-full bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 resize-none"
                 required
               />
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Category</label>
-                  <select 
-                    value={fbCategory} 
-                    onChange={(e) => setFbCategory(e.target.value)} 
-                    className="w-full bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                  >
-                    <option value="general">General</option>
-                    <option value="architecture">Architecture</option>
-                    <option value="collaboration">Collaboration</option>
-                    <option value="technical">Technical</option>
-                    <option value="milestone">Milestone</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Rating</label>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setFbRating(n)}
-                        className={`text-lg ${n <= fbRating ? "text-amber-400" : "text-slate-600"}`}
-                      >
-                        ★
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              
+              <div>
+                <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Feedback Type / Link to Task</label>
+                <select 
+                  value={fbTaskId} 
+                  onChange={(e) => setFbTaskId(e.target.value)} 
+                  className="w-full bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                >
+                  <option value="">📌 General Feedback</option>
+                  {projectTasks.map(task => (
+                    <option key={task._id} value={task._id}>📌 Task: {task.title}</option>
+                  ))}
+                </select>
               </div>
+
               <button 
                 type="submit" 
                 disabled={fbSaving} 
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg shadow-cyan-500/20"
+                className="mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg shadow-cyan-500/20"
               >
                 {fbSaving ? "Sending..." : "📤 Send Feedback"}
               </button>
@@ -301,45 +277,32 @@ export default function MentorDashboard() {
             <div className="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-none">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-300 mb-3">📋 Feedback History</h3>
               <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                {feedback.map((fb) => (
+                {feedback.map((fb) => {
+                  const match = fb.content.match(/^\[Task:\s*(.*?)\]\s*(.*)$/);
+                  const relatedTaskTitle = match ? match[1] : fb.relatedTaskTitle;
+                  const displayContent = match ? match[2] : fb.content;
+
+                  return (
                   <div key={fb._id} className="bg-slate-50 dark:bg-slate-700/30 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium text-cyan-600 dark:text-cyan-400 capitalize">{fb.category}</span>
+                    <div className="flex items-center justify-end mb-1">
                       <span className="text-xs text-slate-500">{new Date(fb.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">{fb.content}</p>
-                    <div className="flex gap-0.5 mt-1">
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <span key={n} className={`text-xs ${n <= fb.rating ? "text-amber-400" : "text-slate-300 dark:text-slate-700"}`}>★</span>
-                      ))}
-                    </div>
+                    {relatedTaskTitle ? (
+                      <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                        📌 Task: {relatedTaskTitle}
+                      </div>
+                    ) : (
+                      <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                        📌 General Feedback
+                      </div>
+                    )}
+                    <p className="text-sm text-slate-700 dark:text-slate-300">{displayContent}</p>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
-
-          <div className="bg-purple-50 dark:bg-gradient-to-br dark:from-purple-500/5 dark:to-pink-500/5 border border-purple-100 dark:border-purple-500/10 rounded-2xl p-6 shadow-sm dark:shadow-none">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>📢</span> Broadcast to All Teams
-            </h3>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={broadcastMsg}
-                onChange={(e) => setBroadcastMsg(e.target.value)}
-                placeholder="Type a message to send to all project teams..."
-                className="flex-1 bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-              />
-              <button 
-                onClick={handleBroadcast} 
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-md shadow-purple-500/20"
-              >
-                Send
-              </button>
-            </div>
-            {broadcastResult && <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">✅ {broadcastResult}</p>}
-          </div>
 
           {!selectedProject && (
             <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-white/5 rounded-2xl p-12 text-center shadow-sm dark:shadow-none">
