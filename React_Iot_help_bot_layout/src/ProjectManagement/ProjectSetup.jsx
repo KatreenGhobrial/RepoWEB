@@ -144,6 +144,13 @@ export default function ProjectSetup() {
         ? formData.membersText.split(',').map(n => n.trim()).filter(n => n)
         : [];
 
+      if (currentUser && (currentUser.email || currentUser.username)) {
+        const identifier = currentUser.email || currentUser.username;
+        if (!parsedMemberEmails.includes(identifier)) {
+          parsedMemberEmails.push(identifier);
+        }
+      }
+
       if (projectId) {
         // Update existing project
         await projectService.update(projectId, {
