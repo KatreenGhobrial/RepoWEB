@@ -9,9 +9,10 @@ const router = Router();
 router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { title, content, tags } = req.body;
+    const userId = req.headers['x-user-id'];
 
     const post = await CommunityPost.create({
-      author: null, // No longer tracked
+      author: userId || null,
       title,
       content,
       tags: tags || [],
@@ -82,13 +83,14 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 router.post('/:id/reply', async (req: Request, res: Response): Promise<void> => {
   try {
     const { content } = req.body;
+    const userId = req.headers['x-user-id'];
 
     const post = await CommunityPost.findByIdAndUpdate(
       req.params.id,
       {
         $push: {
           replies: {
-            author: null,
+            author: userId || null,
             content,
             createdAt: new Date(),
           },
@@ -124,9 +126,9 @@ router.post('/:id/upvote', async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const userId = "anonymous";
+    const userId = req.headers['x-user-id'] || "anonymous";
     const alreadyUpvoted = post.upvotes.some(
-      (id) => id.toString() === userId
+      (id) => id.toString() === userId.toString()
     );
 
     if (alreadyUpvoted) {

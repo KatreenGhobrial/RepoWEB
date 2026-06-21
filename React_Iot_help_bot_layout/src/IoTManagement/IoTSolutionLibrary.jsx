@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
-import LIBRARY from '../data/iotLibrary.json';
 
 const TABS = [
   { key: 'hardware', label: 'Hardware', icon: '🔧' },
@@ -18,16 +17,37 @@ const DIFFICULTY_COLOR = {
 export default function IoTSolutionLibrary() {
   const [activeTab, setActiveTab] = useState('hardware');
   const [search, setSearch] = useState('');
+  const [libraryData, setLibraryData] = useState({ hardware: [], protocols: [], cloud: [], software: [] });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLibrary = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/library');
+        if (res.ok) {
+          const data = await res.json();
+          setLibraryData(data);
+        }
+      } catch (err) {
+        console.error('Error fetching library:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLibrary();
+  }, []);
 
   const filter = (items) => {
-    if (!search.trim()) return items;
+    if (!items || !search.trim()) return items || [];
     const q = search.toLowerCase();
     return items.filter(item =>
       JSON.stringify(item).toLowerCase().includes(q)
     );
   };
 
-  const results = filter(LIBRARY[activeTab]);
+  const results = filter(libraryData[activeTab]);
+
+  if (loading) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading library...</p></div>;
 
   return (
     <>

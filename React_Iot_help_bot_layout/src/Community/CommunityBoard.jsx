@@ -15,6 +15,10 @@ const TAG_COLORS = {
 };
 
 export default function CommunityBoard() {
+  const userStr = localStorage.getItem('currentUser');
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+  const currentUserId = currentUser ? currentUser._id : "anonymous";
+
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -110,9 +114,15 @@ export default function CommunityBoard() {
       const res = await communityService.upvote(postId);
       setPosts(
         (prev) => prev.map(
-          (p) => p._id === postId ? { ...p, upvotes: res.upvoted ? [...p.upvotes, "anonymous"] : p.upvotes.filter((id) => id !== "anonymous") } : p
+          (p) => p._id === postId ? { ...p, upvotes: res.upvoted ? [...p.upvotes, currentUserId] : p.upvotes.filter((id) => id !== currentUserId) } : p
         )
       );
+      if (selectedPost && selectedPost._id === postId) {
+        setSelectedPost(prev => ({
+          ...prev,
+          upvotes: res.upvoted ? [...prev.upvotes, currentUserId] : prev.upvotes.filter((id) => id !== currentUserId)
+        }));
+      }
     } catch {
     }
   };
@@ -272,7 +282,7 @@ export default function CommunityBoard() {
                 <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
                   <p className="text-base text-slate-700 whitespace-pre-wrap leading-relaxed">{selectedPost.content}</p>
                   <div className="flex items-center gap-4 mt-6">
-                    <button onClick={() => handleUpvote(selectedPost._id)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm ${selectedPost.upvotes.includes("anonymous") ? "bg-sky-100 text-sky-700 border border-sky-200" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+                    <button onClick={() => handleUpvote(selectedPost._id)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm ${selectedPost.upvotes.includes(currentUserId) ? "bg-sky-100 text-sky-700 border border-sky-200" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
                       ▲ {selectedPost.upvotes.length}
                     </button>
                     <span className="text-sm font-medium text-slate-500">{selectedPost.replies.length} replies</span>

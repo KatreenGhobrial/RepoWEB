@@ -17,17 +17,29 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     let ownerId = null;
     if (ownerEmail) {
       const ownerUser = await User.findOne({ email: ownerEmail });
-      if (ownerUser) ownerId = ownerUser._id;
+      if (!ownerUser) {
+        res.status(404).json({ message: `Owner user not found: ${ownerEmail}` });
+        return;
+      }
+      ownerId = ownerUser._id;
     }
 
     let memberIds: any[] = [];
-    if (memberEmails && Array.isArray(memberEmails)) {
+    if (memberEmails && Array.isArray(memberEmails) && memberEmails.length > 0) {
       const users = await User.find({
         $or: [
           { email: { $in: memberEmails } },
           { username: { $in: memberEmails } }
         ]
       });
+      
+      if (users.length !== memberEmails.length) {
+        const foundIdentifiers = users.flatMap(u => [u.email, u.username]);
+        const missing = memberEmails.filter(email => !foundIdentifiers.includes(email));
+        res.status(404).json({ message: `One or more users not found: ${missing.join(', ')}` });
+        return;
+      }
+      
       memberIds = users.map(u => u._id);
     }
 
@@ -98,7 +110,11 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
 
     if (ownerEmail) {
       const ownerUser = await User.findOne({ email: ownerEmail });
-      if (ownerUser) setOperators.owner = ownerUser._id;
+      if (!ownerUser) {
+        res.status(404).json({ message: `Owner user not found: ${ownerEmail}` });
+        return;
+      }
+      setOperators.owner = ownerUser._id;
     }
 
     let addToSetOperators: any = {};
@@ -110,6 +126,14 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
           { username: { $in: memberEmails } }
         ]
       });
+
+      if (users.length !== memberEmails.length) {
+        const foundIdentifiers = users.flatMap(u => [u.email, u.username]);
+        const missing = memberEmails.filter(email => !foundIdentifiers.includes(email));
+        res.status(404).json({ message: `One or more users not found: ${missing.join(', ')}` });
+        return;
+      }
+
       if (users.length > 0) {
         addToSetOperators.members = { $each: users.map(u => u._id) };
       }
@@ -165,6 +189,12 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
 router.post('/:id/members', async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
 
     const project = await Project.findByIdAndUpdate(
       req.params.id,
