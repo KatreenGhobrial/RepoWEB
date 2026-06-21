@@ -351,7 +351,7 @@ export default function ProjectSetup() {
                 placeholder="student1@example.com, john_doe"
               />
             </div>
-            {message && <p className="text-sm text-green-500">{message}</p>}
+            {message && <p className={`text-sm ${message.includes('✅') ? 'text-green-500' : 'text-red-500'}`}>{message}</p>}
             <button type="submit" disabled={isSaving} className="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50">
               {isSaving ? '⏳ Saving...' : projectId ? 'Update project' : 'Create project'}
             </button>

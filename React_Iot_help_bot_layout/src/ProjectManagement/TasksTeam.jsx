@@ -15,6 +15,7 @@ export default function TasksTeam() {
   const [newStudent, setNewStudent] = useState('');
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [memberMessage, setMemberMessage] = useState('');
+  const [isMemberError, setIsMemberError] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -202,14 +203,18 @@ export default function TasksTeam() {
           // Keep existing populated team and append the new member
           setTeam([...team, { username: newMemberEmail, email: newMemberEmail, role: 'Student' }]);
           setMemberMessage('Member added successfully!');
+          setIsMemberError(false);
           setNewMemberEmail('');
           setTimeout(() => setMemberMessage(''), 3000);
         } else {
-          setMemberMessage('Failed to add member to database.');
+          const errorData = await res.json().catch(() => ({}));
+          setMemberMessage(errorData.message || 'Failed to add member to database.');
+          setIsMemberError(true);
         }
       } else {
         setTeam([...team, { username: newMemberEmail, email: newMemberEmail, role: 'Student' }]);
         setMemberMessage('Member added locally.');
+        setIsMemberError(false);
         setNewMemberEmail('');
         setTimeout(() => setMemberMessage(''), 3000);
       }
@@ -217,6 +222,7 @@ export default function TasksTeam() {
       console.error(err);
       setTeam([...team, { username: newMemberEmail, email: newMemberEmail, role: 'Student' }]);
       setMemberMessage('Member added locally (offline).');
+      setIsMemberError(false);
       setNewMemberEmail('');
       setTimeout(() => setMemberMessage(''), 3000);
     }
@@ -267,7 +273,7 @@ export default function TasksTeam() {
             </button>
           </form>
         </div>
-        {memberMessage && <p className={`mb-4 text-sm ${memberMessage.includes('Failed') ? 'text-red-500' : 'text-green-500'}`}>{memberMessage}</p>}
+        {memberMessage && <p className={`mb-4 text-sm ${isMemberError ? 'text-red-500' : 'text-green-500'}`}>{memberMessage}</p>}
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
           {team.map((member, idx) => (
             <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:bg-slate-50">
