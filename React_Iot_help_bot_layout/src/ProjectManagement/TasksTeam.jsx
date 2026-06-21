@@ -13,12 +13,12 @@ export default function TasksTeam() {
   const [taskStatus, setTaskStatus] = useState('todo');
   const [taskPriority, setTaskPriority] = useState('medium');
   const [newStudent, setNewStudent] = useState('');
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [memberMessage, setMemberMessage] = useState('');
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
-  const [requestSent, setRequestSent] = useState(false);
-
   const userStr = localStorage.getItem('currentUser');
   const currentUser = userStr ? JSON.parse(userStr) : null;
 
@@ -176,12 +176,53 @@ export default function TasksTeam() {
   };
 
 
-  if (loading) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading tasks...</p></div>;
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    if (!newMemberEmail) return;
 
-  const handleRequestFeedback = () => {
-    setRequestSent(true);
-    setTimeout(() => setRequestSent(false), 3000);
+    try {
+      const userStr = localStorage.getItem('currentUser');
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (user && projectId) {
+        const currentEmails = team.map(m => m.email || m.username || (typeof m === 'string' ? m : '')).filter(e => e);
+        if (!currentEmails.includes(newMemberEmail)) {
+          currentEmails.push(newMemberEmail);
+        }
+
+        const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user._id
+          },
+          body: JSON.stringify({ memberEmails: currentEmails })
+        });
+        
+        if (res.ok) {
+          // Keep existing populated team and append the new member
+          setTeam([...team, { username: newMemberEmail, email: newMemberEmail, role: 'Student' }]);
+          setMemberMessage('Member added successfully!');
+          setNewMemberEmail('');
+          setTimeout(() => setMemberMessage(''), 3000);
+        } else {
+          setMemberMessage('Failed to add member to database.');
+        }
+      } else {
+        setTeam([...team, { username: newMemberEmail, email: newMemberEmail, role: 'Student' }]);
+        setMemberMessage('Member added locally.');
+        setNewMemberEmail('');
+        setTimeout(() => setMemberMessage(''), 3000);
+      }
+    } catch (err) {
+      console.error(err);
+      setTeam([...team, { username: newMemberEmail, email: newMemberEmail, role: 'Student' }]);
+      setMemberMessage('Member added locally (offline).');
+      setNewMemberEmail('');
+      setTimeout(() => setMemberMessage(''), 3000);
+    }
   };
+
+  if (loading) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading tasks...</p></div>;
 
   const completedCount = tasks.filter(t => t.status === 'Done' || t.status === 'done').length;
 
@@ -208,10 +249,25 @@ export default function TasksTeam() {
       </section>
 
       <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 mb-8">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">👥</div>
-          <h3 className="text-2xl font-bold text-slate-950">Team members</h3>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">👥</div>
+            <h3 className="text-2xl font-bold text-slate-950">Team members</h3>
+          </div>
+          <form onSubmit={handleAddMember} className="flex gap-2 w-full md:w-auto">
+            <input
+              type="text"
+              placeholder="Student email or username"
+              className="border border-slate-300 rounded-xl px-4 py-2 flex-grow md:w-64 focus:ring-2 focus:ring-slate-950 outline-none"
+              value={newMemberEmail}
+              onChange={e => setNewMemberEmail(e.target.value)}
+            />
+            <button type="submit" className="bg-slate-950 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-colors">
+              Add Member
+            </button>
+          </form>
         </div>
+        {memberMessage && <p className={`mb-4 text-sm ${memberMessage.includes('Failed') ? 'text-red-500' : 'text-green-500'}`}>{memberMessage}</p>}
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
           {team.map((member, idx) => (
             <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:bg-slate-50">
@@ -328,29 +384,32 @@ export default function TasksTeam() {
             <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">💬</div>
             <h3 className="text-2xl font-bold text-slate-950">Mentor Feedback</h3>
           </div>
-          <button 
-            onClick={handleRequestFeedback}
-            className="bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100 font-bold py-2 px-4 rounded-xl transition-colors"
-          >
-            {requestSent ? '✅ Request Sent!' : '🔔 Request Feedback'}
-          </button>
         </div>
         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
           {feedbacks && feedbacks.length > 0 ? (
-            feedbacks.map((fb, index) => (
+            feedbacks.map((fb, index) => {
+              const match = fb.content.match(/^\[Task:\s*(.*?)\]\s*(.*)$/);
+              const relatedTaskTitle = match ? match[1] : fb.relatedTaskTitle;
+              const displayContent = match ? match[2] : fb.content;
+
+              return (
               <div key={index} className="border border-slate-100 bg-slate-50 rounded-3xl p-5">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-sm font-bold text-cyan-600 capitalize">{fb.category}</span>
+                <div className="flex items-center justify-end mb-1">
                   <span className="text-xs text-slate-500">{new Date(fb.createdAt).toLocaleDateString()}</span>
                 </div>
-                <p className="text-slate-700 text-sm">{fb.content}</p>
-                <div className="flex gap-1 mt-3">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <span key={n} className={`text-sm ${n <= fb.rating ? "text-amber-400" : "text-slate-300"}`}>★</span>
-                  ))}
-                </div>
+                {relatedTaskTitle ? (
+                  <div className="text-xs font-semibold text-slate-600 mb-1">
+                    📌 Task: {relatedTaskTitle}
+                  </div>
+                ) : (
+                  <div className="text-xs font-semibold text-slate-600 mb-1">
+                    📌 General Feedback
+                  </div>
+                )}
+                <p className="text-slate-700 text-sm">{displayContent}</p>
               </div>
-            ))
+              );
+            })
           ) : (
             <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-2xl">No feedback received yet.</p>
           )}
