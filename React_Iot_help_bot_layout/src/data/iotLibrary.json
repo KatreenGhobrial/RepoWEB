@@ -65,6 +65,17 @@
       "difficulty": "Advanced",
       "price": "$99–$149",
       "tags": ["AI", "GPU", "vision", "robotics"]
+    },
+    {
+      "name": "M5StickC Plus2",
+      "type": "Microcontroller",
+      "icon": "📟",
+      "description": "Compact ESP32-based IoT development board with a built-in LCD screen, battery, and sensors.",
+      "specs": { "CPU": "240 MHz", "RAM": "520 KB", "Flash": "8 MB", "Battery": "200mAh", "Wifi": "Yes", "Bluetooth": "Yes" },
+      "bestFor": "Wearables, mini dashboards, rapid prototyping",
+      "difficulty": "Beginner",
+      "price": "$15–$20",
+      "tags": ["esp32", "portable", "display", "wearable"]
     }
   ],
   "protocols": [
