@@ -1,12 +1,18 @@
 import mqtt from 'mqtt';
 import { Server } from 'socket.io';
-import MqttConfig, { IMqttConfig } from '../models/MqttConfig';
 
 // Keep track of active devices: deviceId -> { status: 'online'|'offline', lastSeen: number }
 const devices = new Map<string, { status: string; lastSeen: number }>();
 
 // Keep track of all active MQTT clients
-const mqttClients: mqtt.MqttClient[] = [];
+const mqttClients = new Map<string, mqtt.MqttClient>();
+
+// Track transient brokers for UI display
+const transientBrokers = new Map<string, any>();
+
+export const getActiveCustomBrokers = () => {
+  return Array.from(transientBrokers.values());
+};
 
 let ioInstance: Server | null = null;
 
@@ -39,12 +45,18 @@ const setupClientListeners = (client: mqtt.MqttClient, name: string) => {
   });
 };
 
-export const connectToDynamicBroker = (config: IMqttConfig | { url: string, username?: string, password?: string, topic: string, name: string }) => {
+export const connectToDynamicBroker = (config: { url: string, username?: string, password?: string, topic: string, name: string, _id?: string }) => {
   console.log(`[MQTT] Trying to connect to dynamic broker: ${config.name} at ${config.url}`);
   
   const options: mqtt.IClientOptions = {};
   if (config.username) options.username = config.username;
   if (config.password) options.password = config.password;
+
+  const id = config._id?.toString() || config.name;
+  if (mqttClients.has(id)) {
+    console.log(`[MQTT] Broker ${id} is already connected.`);
+    return;
+  }
 
   const client = mqtt.connect(config.url, options);
 
@@ -55,7 +67,10 @@ export const connectToDynamicBroker = (config: IMqttConfig | { url: string, user
       if (!err) console.log(`[MQTT - ${config.name}] Subscribed to topic: ${listenTopic}`);
       else console.error(`[MQTT - ${config.name}] Failed to subscribe:`, err);
     });
-    mqttClients.push(client);
+    mqttClients.set(id, client);
+    if (!config._id) {
+      transientBrokers.set(id, { _id: id, name: config.name, url: config.url });
+    }
   });
 
   client.on('error', (err) => {
@@ -63,6 +78,16 @@ export const connectToDynamicBroker = (config: IMqttConfig | { url: string, user
   });
 
   setupClientListeners(client, config.name);
+};
+
+export const disconnectFromDynamicBroker = (id: string) => {
+  const client = mqttClients.get(id);
+  if (client) {
+    client.end();
+    mqttClients.delete(id);
+    transientBrokers.delete(id);
+    console.log(`[MQTT] Disconnected from broker: ${id}`);
+  }
 };
 
 export const initMqttService = async (io: Server) => {
@@ -77,15 +102,7 @@ export const initMqttService = async (io: Server) => {
     name: 'Default Spiritech Broker'
   });
 
-  // 2. Fetch and connect to all dynamic brokers from DB
-  try {
-    const dynamicBrokers = await MqttConfig.find({ isActive: true });
-    dynamicBrokers.forEach(broker => {
-      connectToDynamicBroker(broker);
-    });
-  } catch (err) {
-    console.error('[MQTT] Failed to load dynamic brokers from DB', err);
-  }
+  // (Dynamic DB brokers fetch has been removed since we moved to transient brokers)
 
   // 3. Periodically check for inactive devices and broadcast status
   setInterval(() => {

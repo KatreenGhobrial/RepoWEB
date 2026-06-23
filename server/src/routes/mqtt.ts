@@ -1,13 +1,13 @@
 import express from 'express';
-import MqttConfig from '../models/MqttConfig';
-import { connectToDynamicBroker } from '../services/mqttService';
+// Removed MqttConfig import
+import { connectToDynamicBroker, disconnectFromDynamicBroker, getActiveCustomBrokers } from '../services/mqttService';
 
 const router = express.Router();
 
 // GET all active MQTT configurations
 router.get('/brokers', async (req, res) => {
   try {
-    const brokers = await MqttConfig.find().sort({ createdAt: -1 });
+    const brokers = getActiveCustomBrokers();
     res.json(brokers);
   } catch (error) {
     console.error('Error fetching brokers:', error);
@@ -15,7 +15,7 @@ router.get('/brokers', async (req, res) => {
   }
 });
 
-// POST a new MQTT configuration
+// POST a new MQTT configuration (transient)
 router.post('/brokers', async (req, res) => {
   try {
     const { url, username, password, topic, name } = req.body;
@@ -24,17 +24,16 @@ router.post('/brokers', async (req, res) => {
       return res.status(400).json({ message: 'URL and Name are required.' });
     }
 
-    const newBroker = new MqttConfig({
+    const newBroker = {
+      _id: Date.now().toString(),
       url,
       username,
       password,
       topic: topic || '#',
       name
-    });
+    };
 
-    await newBroker.save();
-
-    // Trigger the mqttService to dynamically connect to this new broker
+    // Trigger the mqttService to dynamically connect to this new broker in-memory
     connectToDynamicBroker(newBroker);
 
     res.status(201).json(newBroker);
@@ -44,14 +43,10 @@ router.post('/brokers', async (req, res) => {
   }
 });
 
-// DELETE a broker configuration
+// DELETE a broker configuration (transient)
 router.delete('/brokers/:id', async (req, res) => {
   try {
-    const broker = await MqttConfig.findByIdAndDelete(req.params.id);
-    if (!broker) return res.status(404).json({ message: 'Broker not found' });
-    
-    // Note: Disconnecting at runtime requires keeping track of active clients in mqttService.
-    // For simplicity, we just delete it from DB and the UI can handle the rest. Next restart will ignore it.
+    disconnectFromDynamicBroker(req.params.id);
     res.json({ message: 'Broker deleted' });
   } catch (error) {
     console.error('Error deleting broker:', error);
