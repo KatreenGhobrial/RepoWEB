@@ -3,11 +3,10 @@ import { io } from 'socket.io-client';
 
 export default function DevicePlayground() {
   const [messages, setMessages] = useState([]);
-  const [commandText, setCommandText] = useState('');
   const [socketInstance, setSocketInstance] = useState(null);
   const [activeDevices, setActiveDevices] = useState([]);
-  
-  // Dynamic Brokers State
+
+  // Dynamic Brokers State (Transient)
   const [brokers, setBrokers] = useState([]);
   const [newBroker, setNewBroker] = useState({ name: '', url: '', username: '', password: '', topic: '#' });
   const [brokerLoading, setBrokerLoading] = useState(false);
@@ -50,15 +49,6 @@ export default function DevicePlayground() {
     };
   }, []);
 
-  const sendCommand = () => {
-    if (!commandText.trim() || !socketInstance) return;
-    socketInstance.emit('send_mqtt_command', {
-      topic: 'Braude/team8/command',
-      message: commandText
-    });
-    setCommandText('');
-  };
-
   const handleAddBroker = async (e) => {
     e.preventDefault();
     setBrokerLoading(true);
@@ -70,7 +60,7 @@ export default function DevicePlayground() {
         body: JSON.stringify(newBroker)
       });
       if (res.ok) {
-        setBrokerMsg('✅ Broker added and connected successfully!');
+        setBrokerMsg('✅ Broker connected successfully!');
         setNewBroker({ name: '', url: '', username: '', password: '', topic: '#' });
         fetchBrokers();
       } else {
@@ -81,6 +71,20 @@ export default function DevicePlayground() {
       setBrokerMsg('❌ Failed to connect to server.');
     } finally {
       setBrokerLoading(false);
+    }
+  };
+
+  const handleDeleteBroker = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/mqtt/brokers/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setBrokerMsg('✅ Broker disconnected and removed.');
+        fetchBrokers();
+      } else {
+        setBrokerMsg('❌ Failed to remove broker.');
+      }
+    } catch (err) {
+      setBrokerMsg('❌ Error connecting to server.');
     }
   };
 
@@ -96,11 +100,11 @@ export default function DevicePlayground() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: MQTT Connections & Devices */}
         <div className="flex flex-col gap-6 lg:col-span-1">
-          
+
           {/* Add MQTT Broker Panel */}
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
             <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
-              🔗 Add MQTT Broker
+              🔗 Add Custom MQTT Broker
             </h2>
             <form onSubmit={handleAddBroker} className="flex flex-col gap-3">
               <input type="text" placeholder="Broker Name (e.g., Factory Sensor A)" required value={newBroker.name} onChange={e => setNewBroker({...newBroker, name: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
@@ -111,7 +115,7 @@ export default function DevicePlayground() {
               </div>
               <input type="text" placeholder="Topic (Default: #)" value={newBroker.topic} onChange={e => setNewBroker({...newBroker, topic: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
               <button disabled={brokerLoading} type="submit" className="mt-2 bg-slate-900 hover:bg-slate-800 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold py-2 rounded-xl transition-colors text-sm disabled:opacity-50">
-                {brokerLoading ? 'Connecting...' : 'Add Connection'}
+                {brokerLoading ? 'Connecting...' : 'Connect (Temporary)'}
               </button>
               {brokerMsg && <p className="text-xs mt-1 font-semibold text-slate-600">{brokerMsg}</p>}
             </form>
@@ -124,9 +128,18 @@ export default function DevicePlayground() {
               ) : (
                 <ul className="space-y-2">
                   {brokers.map(b => (
-                    <li key={b._id} className="text-sm bg-slate-50 dark:bg-zinc-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-zinc-700 flex justify-between items-center">
+                    <li key={b._id} className="text-sm bg-slate-50 dark:bg-zinc-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-zinc-700 flex justify-between items-center group">
                       <span className="font-semibold text-slate-700 dark:text-slate-200">{b.name}</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"></span>
+                      <div className="flex items-center gap-3">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"></span>
+                        <button 
+                          onClick={() => handleDeleteBroker(b._id)} 
+                          className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity" 
+                          title="Disconnect"
+                        >
+                          ✖
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -168,12 +181,12 @@ export default function DevicePlayground() {
           {/* Live Data Feed */}
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex-grow">
             <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
-              📡 Live Multi-Broker Data Feed
+              📡 Live Data Feed
             </h2>
             <div className="bg-slate-50 dark:bg-zinc-950 rounded-xl p-4 h-96 overflow-y-auto border border-slate-100 dark:border-zinc-800 font-mono text-sm shadow-inner">
               {messages.length === 0 ? (
                 <div className="h-full flex items-center justify-center">
-                  <p className="text-slate-400 italic">Listening for MQTT messages across all brokers...</p>
+                  <p className="text-slate-400 italic">Listening for MQTT messages...</p>
                 </div>
               ) : (
                 <ul className="space-y-3">
@@ -190,32 +203,6 @@ export default function DevicePlayground() {
                   ))}
                 </ul>
               )}
-            </div>
-          </div>
-
-          {/* Send Command */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold mb-3 text-slate-800 dark:text-white flex items-center gap-2">
-              ⚡ Broadcast Command
-            </h2>
-            <p className="text-sm text-slate-500 mb-4">
-              Send a command to <strong>Braude/team8/command</strong> across all connected brokers simultaneously.
-            </p>
-            <div className="flex gap-3">
-              <input 
-                type="text" 
-                value={commandText}
-                onChange={(e) => setCommandText(e.target.value)}
-                placeholder="Enter command here..."
-                className="flex-grow px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
-              />
-              <button 
-                onClick={sendCommand}
-                disabled={!commandText.trim()}
-                className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-lg shadow-sky-500/30 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                Send 🚀
-              </button>
             </div>
           </div>
 
