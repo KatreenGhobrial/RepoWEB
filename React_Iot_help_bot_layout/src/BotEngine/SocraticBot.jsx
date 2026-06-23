@@ -1,15 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import Header from '../UIComponents/Header';
+import { marked } from "marked";
+
+const renderer = new marked.Renderer();
+
+function parseMdText(mdText) {
+  return marked(mdText, { renderer });
+}
 
 export default function SocraticBot() {
-  const [botQuestions, setBotQuestions] = useState([]);
   const [investigationPath, setInvestigationPath] = useState([]);
-  
+ 
   const [problem, setProblem] = useState('Component does not respond');
   const [currentProblem, setCurrentProblem] = useState('Not selected yet');
   const [areaText, setAreaText] = useState('Waiting for answers');
   const [statusText, setStatusText] = useState('Ready');
-  
+ 
   const [chatHistory, setChatHistory] = useState([]);
   const [answerInput, setAnswerInput] = useState('');
   const [answerCounter, setAnswerCounter] = useState(0);
@@ -19,11 +25,6 @@ export default function SocraticBot() {
   const chatEndRef = useRef(null);
 
   useEffect(() => {
-    setBotQuestions([
-      "Can you describe the problem in more detail?",
-      "When did you first notice this issue?",
-      "Have you made any recent changes to the system?"
-    ]);
     setInvestigationPath([
       "Check power supply",
       "Verify network connection",
@@ -77,13 +78,13 @@ export default function SocraticBot() {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5000/api/bot/chat', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          message: `The problem I am having is: ${currentProblem}. ${answerInput}`, 
-          sessionId 
+        body: JSON.stringify({
+          message: `The problem I am having is: ${currentProblem}. ${answerInput}`,
+          sessionId
         })
       });
 
@@ -122,7 +123,7 @@ export default function SocraticBot() {
               <p className="text-slate-500">Select a problem and answer the bot questions.</p>
             </div>
           </div>
-          
+         
           <div className="mb-6">
             <label className="block text-sm font-bold text-slate-700 mb-2">Select problem type</label>
             <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={problem} onChange={e => setProblem(e.target.value)}>
@@ -132,7 +133,7 @@ export default function SocraticBot() {
               <option>Slow response time</option>
             </select>
           </div>
-          
+         
           <button onClick={handleStart} disabled={isLoading} className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed mb-6">
             {hasStarted ? 'Restart investigation' : 'Start investigation'}
           </button>
@@ -141,7 +142,12 @@ export default function SocraticBot() {
             {chatHistory.map((msg, idx) => (
               <div key={idx} className={msg.sender === 'bot' ? 'bg-slate-100 border border-slate-200 rounded-2xl p-5 max-w-xl' : 'bg-slate-950 text-white rounded-2xl p-5 max-w-xl ml-auto'}>
                 <p className={`text-sm mb-1 ${msg.sender === 'bot' ? 'text-slate-400' : 'text-slate-300'}`}>{msg.sender === 'bot' ? '🤖 IoT HelpBot' : '👤 Student'}</p>
-                <p className={`font-bold ${msg.sender === 'bot' ? 'text-slate-900' : 'text-white'}`}>{msg.text}</p>
+                <div
+                    className={msg.sender === 'bot' ? 'text-slate-900' : 'text-white'}
+                    dangerouslySetInnerHTML={{
+                      __html: parseMdText(msg.text, msg.sender),
+                    }}
+                />
               </div>
             ))}
             {isLoading && (
@@ -154,16 +160,16 @@ export default function SocraticBot() {
           </div>
 
           <form onSubmit={handleSend} className="flex gap-3">
-            <input 
-              type="text" 
-              className="flex-1 border border-slate-300 rounded-2xl px-4 py-3" 
-              placeholder={!hasStarted ? 'Click "Start investigation" first' : isLoading ? 'Waiting for bot response...' : 'Write your answer here'} 
-              value={answerInput} 
-              onChange={e => setAnswerInput(e.target.value)} 
+            <input
+              type="text"
+              className="flex-1 border border-slate-300 rounded-2xl px-4 py-3"
+              placeholder={!hasStarted ? 'Click "Start investigation" first' : isLoading ? 'Waiting for bot response...' : 'Write your answer here'}
+              value={answerInput}
+              onChange={e => setAnswerInput(e.target.value)}
               disabled={isLoading || !hasStarted}
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading || !hasStarted || !answerInput.trim()}
               className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -192,22 +198,7 @@ export default function SocraticBot() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">❓</div>
-            <h3 className="text-2xl font-bold text-slate-950">Bot questions</h3>
-          </div>
-          <div className="space-y-4">
-            {botQuestions.map((q, idx) => (
-              <div key={idx} className="border border-slate-200 rounded-2xl p-5 hover:bg-slate-50">
-                <p className="text-sm text-slate-400 mb-1">Bot question {idx + 1}</p>
-                <p className="font-bold text-slate-900">{q}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
+      <section className="grid grid-cols-1 gap-6">
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🧭</div>
