@@ -14,7 +14,7 @@ import {
   getIssuesSummary,
   ArchitectureInput,
 } from '../services/interdisciplinaryAnalyzer';
-import { DEMO_PROJECTS, getDemoProject } from '../data/demoProjects';
+import { DEMO_PROJECTS, getDemoProject } from '../dto/demoProjects';
 
 const router = Router();
 
