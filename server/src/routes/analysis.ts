@@ -9,12 +9,8 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { Router, Request, Response } from 'express';
-import {
-  analyzeInterdisciplinaryIssues,
-  getIssuesSummary,
-  ArchitectureInput,
-} from '../services/interdisciplinaryAnalyzer';
 import { DEMO_PROJECTS, getDemoProject } from '../dto/demoProjects';
+import { analyzeInterdisciplinaryIssues, getIssuesSummary, ArchitectureInput, analyzeArchitecture } from '../services/analyze';
 
 const router = Router();
 
@@ -89,7 +85,7 @@ router.get('/demo-projects', (_req: Request, res: Response): void => {
 // ───────────────────────────────────────────────────────────────────────────
 router.get('/demo-projects/:id', (req: Request, res: Response): void => {
   try {
-    const project = getDemoProject(req.params.id);
+    const project = getDemoProject(req.params.id as string);
 
     if (!project) {
       res.status(404).json({ message: 'Demo project not found' });
@@ -126,67 +122,8 @@ router.post('/architecture', (req: Request, res: Response): void => {
       cloudPlatform: cloudPlatform || '',
     };
 
-    // Run interdisciplinary analysis
-    const issues = analyzeInterdisciplinaryIssues(architecture);
-    const summary = getIssuesSummary(issues);
-
-    // Calculate a simple health score based on issues found
-    const highPenalty = summary.bySeverity.HIGH * 15;
-    const mediumPenalty = summary.bySeverity.MEDIUM * 8;
-    const lowPenalty = summary.bySeverity.LOW * 3;
-    const healthScore = Math.max(0, 100 - highPenalty - mediumPenalty - lowPenalty);
-
-    // Build data flow based on input
-    const dataFlow = [];
-    if (sensors && sensors.length > 0) dataFlow.push(sensors.join(' + '));
-    if (device) dataFlow.push(`${device} (MCU/Processing)`);
-    if (protocol) dataFlow.push(`${protocol} (Communication)`);
-    if (cloudPlatform) dataFlow.push(`${cloudPlatform} (Cloud)`);
-    if (database) dataFlow.push(`${database} (Storage)`);
-    if (dataFlow.length === 0) dataFlow.push('No components defined');
-
-    // Generate simple layer analysis
-    const layers = [
-      {
-        name: 'Sensor Layer',
-        status: (sensors.length > 4 ? 'warning' : 'healthy') as 'healthy' | 'warning' | 'critical',
-        score: Math.max(50, 95 - sensors.length * 5),
-        details: `${sensors.length} sensor(s) configured: ${sensors.join(', ') || 'none'}`,
-      },
-      {
-        name: 'Firmware Layer',
-        status: (summary.byCategory['memory'] ? 'warning' : 'healthy') as 'healthy' | 'warning' | 'critical',
-        score: summary.byCategory['memory'] ? 55 : 85,
-        details: `Running on ${device}. ${summary.byCategory['memory'] ? 'Memory constraints detected.' : 'No memory issues detected.'}`,
-      },
-      {
-        name: 'Communication Layer',
-        status: (summary.byCategory['protocol'] ? 'warning' : 'healthy') as 'healthy' | 'warning' | 'critical',
-        score: summary.byCategory['protocol'] ? 50 : 80,
-        details: `Using ${protocol || 'unknown protocol'}. ${summary.byCategory['protocol'] ? 'Protocol issues detected.' : 'Protocol looks compatible.'}`,
-      },
-      {
-        name: 'Power Layer',
-        status: (summary.byCategory['power'] ? 'critical' : 'healthy') as 'healthy' | 'warning' | 'critical',
-        score: summary.byCategory['power'] ? 35 : 90,
-        details: `Power source: ${powerSource || 'unknown'}. ${summary.byCategory['power'] ? 'Power management issues detected.' : 'Power setup looks adequate.'}`,
-      },
-      {
-        name: 'Cloud/Database Layer',
-        status: (summary.byCategory['architecture'] ? 'warning' : 'healthy') as 'healthy' | 'warning' | 'critical',
-        score: summary.byCategory['architecture'] ? 60 : 85,
-        details: `${cloudPlatform || 'No cloud'} + ${database || 'No DB'}`,
-      },
-    ];
-
-    res.json({
-      architecture,
-      healthScore,
-      dataFlow,
-      layers,
-      issues,
-      summary,
-    });
+    const result = analyzeArchitecture(architecture);
+    res.json(result);
   } catch (error) {
     console.error('Architecture analysis error:', error);
     res.status(500).json({ message: 'Server error in architecture analysis' });

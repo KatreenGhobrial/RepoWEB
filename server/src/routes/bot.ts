@@ -3,9 +3,8 @@ import ChatHistory from '../models/ChatHistory';
 import Project from '../models/Project';
 import {
   socraticChat,
-  detectConflictsAI,
-  analyzeArchitecture,
 } from '../services/openaiService';
+import { detectConflictsAI, analyzeArchitectureAI } from '../services/analyze';
 
 const router = Router();
 
@@ -100,7 +99,7 @@ router.post('/analyze', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const analysis = await analyzeArchitecture({
+    const analysis = await analyzeArchitectureAI({
       device: project.device,
       protocol: project.protocol,
       database: project.database,
