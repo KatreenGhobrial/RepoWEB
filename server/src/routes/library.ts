@@ -136,7 +136,8 @@ router.get('/:category', async (req: Request, res: Response): Promise<void> => {
       sensors: 'sensors'
     };
     
-    const cat = categoryMap[req.params.category];
+    const categoryKey = Array.isArray(req.params.category) ? req.params.category[0] : req.params.category;
+    const cat = categoryMap[categoryKey as string];
     if (!cat) {
       // Fallback to next middleware or 404
       res.status(404).json({ message: 'Category not found' });
