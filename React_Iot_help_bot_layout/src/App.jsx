@@ -16,6 +16,7 @@ import ManageUsers from './UserManagement/ManageUsers';
 import Login from './UserManagement/Login';
 import Register from './UserManagement/Register';
 import DevicePlayground from './IoTManagement/DevicePlayground';
+import TechDocs from './Documentation/TechDocs';
 import ProtectedRoute from './UIComponents/ProtectedRoute';
 //Including all routes in the app
 function App() {
@@ -41,6 +42,7 @@ function App() {
           <Route path="/mentor-dashboard" element={<ProtectedRoute><MentorDashboard /></ProtectedRoute>} />
           <Route path="/community" element={<ProtectedRoute><CommunityBoard /></ProtectedRoute>} />
           <Route path="/manage-users" element={<ProtectedRoute><ManageUsers /></ProtectedRoute>} />
+          <Route path="/tech-docs" element={<ProtectedRoute><TechDocs /></ProtectedRoute>} />
         </Route>
       </Routes>
     </Router>
