@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
 import api from '../apiClient';
-
+import { LuWifi, LuShield, LuZap, LuClock, LuCpu, LuTriangleAlert } from 'react-icons/lu';
 const DEFAULT_FORM = { projectName: '', device: 'ESP32', protocol: 'HTTP', database: 'MongoDB', powerSource: 'Battery', membersText: '', requirements: '' };
 
 export default function ProjectSetup() {
@@ -37,6 +37,8 @@ export default function ProjectSetup() {
     setProjectId(p._id);
     setFormData(data);
     setSummaryData(data);
+    // Also trigger conflict detection immediately when loading a project
+    handleAnalyze(data);
   };
 
   const handleSubmit = async (e) => {
@@ -67,17 +69,20 @@ export default function ProjectSetup() {
       }
       setSummaryData(formData);
       setFormData(prev => ({ ...prev, membersText: '' }));
+      
+      // Automatically detect conflicts after successful save
+      handleAnalyze(payload);
     } catch (err) {
       setMsg(err.message || 'Error saving project.');
     } finally { setIsSaving(false); }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (dataToAnalyze = formData) => {
     setIsAnalyzing(true);
     setConflicts([]);
     setAnalysisMsg('');
     try {
-      const data = await api.post('/bot/detect-conflicts', { ...formData, sensors: ['DHT22'] });
+      const data = await api.post('/bot/detect-conflicts', { ...dataToAnalyze, sensors: ['DHT22'] });
       if (data?.conflicts) {
         setConflicts(data.conflicts);
         setAnalysisMsg(`Found ${data.conflicts.filter(c => c.level !== 'LOW').length} issue(s).`);
@@ -85,14 +90,12 @@ export default function ProjectSetup() {
     } catch {
       // Fallback
       const local = [];
-      if (formData.powerSource === 'Battery' && formData.protocol === 'HTTP')
-        local.push({ title: 'HTTP on Battery is power-hungry', level: 'HIGH', reason: 'HTTP has large overhead vs MQTT.', suggestion: 'Consider MQTT.' });
-      if (formData.device === 'Arduino Uno' && formData.protocol !== 'HTTP')
-        local.push({ title: 'Arduino has no built-in WiFi', level: 'HIGH', reason: 'Requires external module.', suggestion: 'Consider ESP32.' });
-      if (!local.length)
-        local.push({ title: 'No major conflicts', level: 'LOW', reason: 'Looks good.', suggestion: 'Test under realistic conditions.' });
+      if (dataToAnalyze.powerSource === 'Battery' && dataToAnalyze.protocol === 'HTTP')
+        local.push({ title: 'HTTP on Battery is power-hungry', level: 'HIGH', reason: 'HTTP has large overhead vs MQTT.', suggestion: 'Consider MQTT.', category: 'Power' });
+      if (dataToAnalyze.device === 'Arduino Uno' && dataToAnalyze.protocol !== 'HTTP')
+        local.push({ title: 'Arduino has no built-in WiFi', level: 'HIGH', reason: 'Requires external module.', suggestion: 'Consider ESP32.', category: 'Hardware' });
       setConflicts(local);
-      setAnalysisMsg(`Found ${local.filter(c => c.level !== 'LOW').length} issue(s) (offline).`);
+      setAnalysisMsg(local.length ? `Found ${local.length} issue(s) (offline).` : 'No conflicts found.');
     } finally { setIsAnalyzing(false); }
   };
 
@@ -168,28 +171,42 @@ export default function ProjectSetup() {
       <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7 mb-8 transition-colors">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-bold flex items-center gap-3 text-slate-900 dark:text-white">
-            <span className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center text-xl">🔍</span> Conflict Analysis
+            <span className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center text-xl">🔍</span> Interdisciplinary Difficulties
           </h3>
-          <button onClick={handleAnalyze} disabled={isAnalyzing} className="bg-slate-900 dark:bg-rose-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-800 dark:hover:bg-rose-500 disabled:opacity-50 transition-colors">
-            {isAnalyzing?'⏳ Analyzing...':'🔍 Analyze'}
-          </button>
         </div>
-        {analysisMsg && <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 font-medium">{analysisMsg}</p>}
-        {conflicts.length ? (
-          <div className="space-y-3">
-            {conflicts.map((c, i) => {
-              const col = c.level === 'HIGH' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400' 
-                        : c.level === 'MEDIUM' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-900/50 text-orange-700 dark:text-orange-400' 
-                        : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400';
-              return (
-                <div key={i} className={`border rounded-2xl p-5 ${col}`}>
-                  <div className="flex justify-between mb-2"><h4 className="font-bold">{c.title}</h4><span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/60 dark:bg-black/30">{c.level}</span></div>
-                  <p className="text-sm mb-2 opacity-90">{c.reason}</p><p className="text-sm font-semibold">💡 {c.suggestion}</p>
-                </div>
-              );
-            })}
-          </div>
-        ) : <p className="text-slate-400 dark:text-slate-500 text-center py-8 font-medium">Press "Analyze" to detect risks</p>}
+        {isAnalyzing ? (
+          <p className="text-slate-500 dark:text-slate-400 font-medium py-4">Analyzing architecture...</p>
+        ) : analysisMsg ? (
+          conflicts.length === 0 ? (
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-5 text-emerald-700 dark:text-emerald-400">
+              <h4 className="font-bold flex items-center gap-2"><LuCpu size={20} /> No major conflicts detected!</h4>
+              <p className="text-sm mt-1 opacity-90">Your architecture looks solid. Proceed with confidence.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {conflicts.map((c, i) => {
+                const isHigh = c.level === 'HIGH';
+                const Icon = isHigh ? LuShield : LuTriangleAlert;
+                const col = isHigh 
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400' 
+                  : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-900/50 text-orange-700 dark:text-orange-400';
+                
+                return (
+                  <div key={i} className={`border rounded-2xl p-5 ${col}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-bold flex items-center gap-2"><Icon size={20} /> {c.title}</h4>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/60 dark:bg-black/30">{c.level}</span>
+                    </div>
+                    <p className="text-sm mb-2 opacity-90">{c.reason}</p>
+                    <p className="text-sm font-semibold mt-2">💡 {c.suggestion}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        ) : (
+          <p className="text-slate-400 dark:text-slate-500 text-center py-8 font-medium">Save project to detect risks automatically</p>
+        )}
       </section>
     </>
   );

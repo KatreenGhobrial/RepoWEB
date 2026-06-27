@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Header from '../UIComponents/Header';
 import { marked } from "marked";
+import api from '../apiClient';
+import { getAlerts } from '../IoTManagement/alertService';
+import { LuTriangleAlert, LuWifi, LuShield, LuZap, LuClock, LuCpu } from 'react-icons/lu';
 
 const renderer = new marked.Renderer();
 
@@ -24,12 +27,48 @@ export default function SocraticBot() {
   const [hasStarted, setHasStarted] = useState(false);
   const chatEndRef = useRef(null);
 
+  const [activeProject, setActiveProject] = useState(null);
+  const [projectConflicts, setProjectConflicts] = useState([]);
+  const [projectAlerts, setProjectAlerts] = useState([]);
+
   useEffect(() => {
     setInvestigationPath([
       "Check power supply",
       "Verify network connection",
       "Inspect server logs"
     ]);
+
+    const fetchProjectData = async () => {
+      try {
+        const projs = await api.get('/projects');
+        if (projs && projs.length > 0) {
+          const p = projs[0];
+          setActiveProject(p);
+          
+          try {
+            const conflicts = await api.post('/bot/detect-conflicts', {
+              device: p.device,
+              protocol: p.protocol,
+              database: p.database,
+              powerSource: p.powerSource
+            });
+            setProjectConflicts(conflicts || []);
+          } catch (e) {
+            console.error("Conflicts error:", e);
+          }
+
+          try {
+            const alerts = await getAlerts(p._id);
+            setProjectAlerts((alerts || []).filter(a => !a.resolved));
+          } catch (e) {
+            console.error("Alerts error:", e);
+          }
+        }
+      } catch (e) {
+        console.error("Projects error:", e);
+      }
+    };
+    fetchProjectData();
   }, []);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -83,6 +122,7 @@ export default function SocraticBot() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
+          projectId: activeProject?._id,
           message: `The problem I am having is: ${currentProblem}. ${answerInput}`,
           sessionId
         })
@@ -113,6 +153,30 @@ export default function SocraticBot() {
   return (
     <>
       <Header title="IoT Help Bot" subtitle="Manage architecture, detect IoT risks, and support collaboration." />
+
+      {activeProject && (projectConflicts.length > 0 || projectAlerts.length > 0) && (
+        <section className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-500/30 rounded-3xl p-6 mb-8">
+          <h3 className="text-xl font-bold text-orange-900 dark:text-orange-300 flex items-center gap-2 mb-4">
+            <LuTriangleAlert /> IoT Project Risks Detected ({activeProject.name})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Render alerts first */}
+            {projectAlerts.map(alert => (
+              <div key={alert._id || alert.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-red-200 dark:border-red-900/50">
+                <p className="font-bold text-red-700 dark:text-red-400 text-sm mb-1">{alert.title}</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs">{alert.message}</p>
+              </div>
+            ))}
+            {/* Render conflicts next */}
+            {projectConflicts.map(conf => (
+              <div key={conf.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-orange-200 dark:border-orange-900/50">
+                <p className="font-bold text-orange-700 dark:text-orange-400 text-sm mb-1">{conf.title}</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs">{conf.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
