@@ -36,6 +36,14 @@ export interface IProject extends Document {
   phase: 'ideation' | 'design' | 'integration' | 'testing' | 'reflection';
   status: 'active' | 'completed' | 'archived';
   progress: Record<string, number>;  // { hardware: 80, backend: 65, ... }
+  assessment?: {
+    interdisciplinary: number | null;
+    collaboration: number | null;
+    technical: number | null;
+    comments: string;
+    assessedAt: Date | null;
+    assessor: mongoose.Types.ObjectId | null;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -104,6 +112,14 @@ const projectSchema = new Schema<IProject>(
     progress: {
       type: Schema.Types.Mixed,
       default: { hardware: 0, backend: 0, frontend: 0, ai: 0 },
+    },
+    assessment: {
+      interdisciplinary: { type: Number, min: 0, max: 100, default: null },
+      collaboration: { type: Number, min: 0, max: 100, default: null },
+      technical: { type: Number, min: 0, max: 100, default: null },
+      comments: { type: String, default: '' },
+      assessedAt: { type: Date, default: null },
+      assessor: { type: Schema.Types.ObjectId, ref: 'User', default: null }
     },
   },
   { timestamps: true }

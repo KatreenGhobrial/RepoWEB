@@ -97,6 +97,8 @@ export default function Dashboard() {
 
         const progressPercentage = totalTasks === 0 ? 0 : Math.round(((completedTasks + (inProgressTasks * 0.5)) / totalTasks) * 100);
 
+        const assessment = projects.length > 0 ? projects[0].assessment : null;
+
         // Build live dashboard object
         setDashboard({
           detectedIssues: 0,
@@ -111,7 +113,8 @@ export default function Dashboard() {
           documentationStatus: totalProjects > 0 ? 'Active' : 'No projects',
           progress: [],
           alerts: [],
-          feedbacks: feedbacks
+          feedbacks: feedbacks,
+          assessment: assessment
         });
       } catch (err) {
         console.error('Dashboard fetch error:', err);
@@ -122,7 +125,8 @@ export default function Dashboard() {
           documentationStatus: 'Error',
           progress: [],
           alerts: [],
-          feedbacks: []
+          feedbacks: [],
+          assessment: null
         });
       } finally {
         setLoading(false);
@@ -274,6 +278,47 @@ export default function Dashboard() {
             )}
           </div>
         </section>
+
+        {dashboard.assessment && dashboard.assessment.assessedAt && (
+          <section className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl border border-indigo-100 shadow-sm p-7 col-span-1 lg:col-span-2">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-xl shadow-sm">🎓</div>
+              <h3 className="text-2xl font-bold text-indigo-900">Official Assessment & Grades</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-indigo-50">
+                <p className="text-sm text-slate-500 font-semibold mb-2">Interdisciplinary Work</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-bold text-indigo-600">{dashboard.assessment.interdisciplinary}</span>
+                  <span className="text-lg text-slate-400 mb-1">/ 100</span>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-indigo-50">
+                <p className="text-sm text-slate-500 font-semibold mb-2">Collaboration</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-bold text-indigo-600">{dashboard.assessment.collaboration}</span>
+                  <span className="text-lg text-slate-400 mb-1">/ 100</span>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-indigo-50">
+                <p className="text-sm text-slate-500 font-semibold mb-2">Technical Progress</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-bold text-indigo-600">{dashboard.assessment.technical}</span>
+                  <span className="text-lg text-slate-400 mb-1">/ 100</span>
+                </div>
+              </div>
+            </div>
+
+            {dashboard.assessment.comments && (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-indigo-50">
+                <h4 className="text-sm font-bold text-indigo-900 mb-2">Mentor Summary</h4>
+                <p className="text-slate-700 leading-relaxed">{dashboard.assessment.comments}</p>
+                <p className="text-xs text-slate-400 mt-4 text-right">Evaluated on: {new Date(dashboard.assessment.assessedAt).toLocaleDateString()}</p>
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">

@@ -16,6 +16,8 @@ export default function MentorDashboard() {
   const [fbSaving, setFbSaving] = useState(false);
   const [fbTaskId, setFbTaskId] = useState("");
   const [projectProgress, setProjectProgress] = useState({});
+  const [assessment, setAssessment] = useState({ interdisciplinary: 0, collaboration: 0, technical: 0, comments: '' });
+  const [assessmentSaving, setAssessmentSaving] = useState(false);
 
   if (currentUser?.role !== 'mentor') return <Navigate to="/dashboard" replace />;
 
@@ -47,10 +49,22 @@ export default function MentorDashboard() {
 
   useEffect(() => {
     if (!selectedProject) return;
+    const p = projects.find(x => x._id === selectedProject);
+    if (p && p.assessment) {
+      setAssessment({
+        interdisciplinary: p.assessment.interdisciplinary || 0,
+        collaboration: p.assessment.collaboration || 0,
+        technical: p.assessment.technical || 0,
+        comments: p.assessment.comments || ''
+      });
+    } else {
+      setAssessment({ interdisciplinary: 0, collaboration: 0, technical: 0, comments: '' });
+    }
+
     Promise.all([mentorService.getFeedback(selectedProject), mentorService.getTasks(selectedProject)])
       .then(([f, t]) => { setFeedback(f.data || f || []); setProjectTasks(t.data || t || []); })
       .catch(() => {});
-  }, [selectedProject]);
+  }, [selectedProject, projects]);
 
   const handleFeedback = async (e) => {
     e.preventDefault();
@@ -73,6 +87,21 @@ export default function MentorDashboard() {
       await mentorService.updateProjectPhase(projectId, newPhase);
       setProjects(projects.map(p => p._id === projectId ? { ...p, phase: newPhase } : p));
     } catch (err) { setError("Failed to update phase: " + err.message); }
+  };
+
+  const handleAssessmentSave = async (e) => {
+    e.preventDefault();
+    if (!selectedProject) return;
+    setAssessmentSaving(true);
+    try {
+      const data = { ...assessment, assessor: currentUser?._id };
+      await mentorService.submitProjectAssessment(selectedProject, data);
+      setProjects(prev => prev.map(p => p._id === selectedProject ? { ...p, assessment: { ...data, assessedAt: new Date().toISOString() } } : p));
+    } catch (err) {
+      setError(err.message || "Failed to save assessment");
+    } finally {
+      setAssessmentSaving(false);
+    }
   };
 
   const generateCSV = () => {
@@ -203,6 +232,37 @@ export default function MentorDashboard() {
                   </div>
                 </div>
               )}
+
+              <form onSubmit={handleAssessmentSave} className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">🎓 Official Assessment & Grading</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm text-indigo-900 font-semibold mb-1">
+                      <label>Interdisciplinary Work</label><span>{assessment.interdisciplinary} / 100</span>
+                    </div>
+                    <input type="range" min="0" max="100" value={assessment.interdisciplinary} onChange={e => setAssessment({...assessment, interdisciplinary: Number(e.target.value)})} className="w-full accent-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm text-indigo-900 font-semibold mb-1">
+                      <label>Collaboration</label><span>{assessment.collaboration} / 100</span>
+                    </div>
+                    <input type="range" min="0" max="100" value={assessment.collaboration} onChange={e => setAssessment({...assessment, collaboration: Number(e.target.value)})} className="w-full accent-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm text-indigo-900 font-semibold mb-1">
+                      <label>Technical Progress</label><span>{assessment.technical} / 100</span>
+                    </div>
+                    <input type="range" min="0" max="100" value={assessment.technical} onChange={e => setAssessment({...assessment, technical: Number(e.target.value)})} className="w-full accent-indigo-600" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-indigo-900 font-semibold mb-1">Final Evaluation Comments</label>
+                    <textarea value={assessment.comments} onChange={e => setAssessment({...assessment, comments: e.target.value})} rows={3} placeholder="Provide an official summary of their work..." className="w-full border border-indigo-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500 resize-none bg-white/80" />
+                  </div>
+                  <button type="submit" disabled={assessmentSaving} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-md transition-colors disabled:opacity-50">
+                    {assessmentSaving ? "Saving..." : "💾 Save Official Grades"}
+                  </button>
+                </div>
+              </form>
             </>
           ) : (
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-12 text-center shadow-sm">

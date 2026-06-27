@@ -20,20 +20,49 @@ export default function MonitorPanel() {
   };
 
   const checkAlerts = (deviceId, type, value) => {
-    const alertId = `${deviceId}-${type}-high`;
-    const exists = alertsRef.current.some(a => a.id === alertId);
+    const timeStr = new Date().toLocaleTimeString();
 
-    if (type === 'temperature' && parseFloat(value) > 30) {
+    const triggerAlert = (alertType, title, level, description) => {
+      const alertId = `${deviceId}-${alertType}`;
+      const exists = alertsRef.current.some(a => a.id === alertId);
       if (!exists) {
-        setAlerts(prev => [{
-          id: alertId, title: 'High Temperature Alert', level: parseFloat(value) > 35 ? 'HIGH' : 'MEDIUM',
-          description: `Device ${deviceId} reported ${value}°C.`, time: new Date().toLocaleTimeString()
-        }, ...prev]);
-        addLog('Threshold Exceeded', `Device ${deviceId} at ${value}°C`);
+        setAlerts(prev => [{ id: alertId, title, level, description, time: timeStr, deviceId }, ...prev]);
+        addLog('New Alert', title);
       }
-    } else if (type === 'temperature' && parseFloat(value) <= 30 && exists) {
-      setAlerts(prev => prev.filter(a => a.id !== alertId));
-      addLog('Alert Cleared', `Device ${deviceId} normalized to ${value}°C`);
+    };
+
+    const clearAlert = (alertType, resolveMsg) => {
+      const alertId = `${deviceId}-${alertType}`;
+      const exists = alertsRef.current.some(a => a.id === alertId);
+      if (exists) {
+        setAlerts(prev => prev.filter(a => a.id !== alertId));
+        addLog('Alert Cleared', resolveMsg);
+      }
+    };
+
+    if (type === 'temperature') {
+      if (parseFloat(value) > 30) triggerAlert('temp', 'High Temperature Alert', parseFloat(value) > 35 ? 'HIGH' : 'MEDIUM', `Device ${deviceId} reported ${value}°C.`);
+      else clearAlert('temp', `Device ${deviceId} temp normalized.`);
+    }
+
+    if (type === 'packetLoss' || type === 'packet_loss') {
+      if (parseFloat(value) > 5) triggerAlert('packet_loss', 'High Packet Loss Detected', 'HIGH', `Packet loss rate at ${value}% on ${deviceId}.`);
+      else clearAlert('packet_loss', `Packet loss normalized on ${deviceId}.`);
+    }
+
+    if (type === 'battery' || type === 'battery_level') {
+      if (parseFloat(value) < 15) triggerAlert('battery_drain', 'Critical Battery Level', 'HIGH', `Battery level dropped to ${value}% on ${deviceId}.`);
+      else clearAlert('battery_drain', `Battery level OK on ${deviceId}.`);
+    }
+
+    if (type === 'latency') {
+      if (parseFloat(value) > 200) triggerAlert('high_latency', 'Elevated Network Latency', 'MEDIUM', `Latency is ${value}ms on ${deviceId}.`);
+      else clearAlert('high_latency', `Latency normalized on ${deviceId}.`);
+    }
+
+    if (type === 'sensor_fault' || type === 'sensorStatus') {
+      if (value === 'fault' || value === true || value === 'error') triggerAlert('sensor_failure', 'Sensor Failure Detected', 'CRITICAL', `A sensor fault was reported on ${deviceId}.`);
+      else clearAlert('sensor_failure', `Sensor status OK on ${deviceId}.`);
     }
   };
 
@@ -68,11 +97,30 @@ export default function MonitorPanel() {
           setSensors(prev => {
             const next = { ...prev };
             if (data.temperature !== undefined) {
-              next[`${deviceId}-temp`] = { id: `${deviceId}-temp`, name: `Temp (${deviceId})`, location: deviceId, value: data.temperature, unit: '°C', status: parseFloat(data.temperature) > 30 ? 'Warning' : 'Online', lastUpdate: time };
+              next[`${deviceId}-temp`] = { id: `${deviceId}-temp`, name: `Temp`, location: deviceId, value: data.temperature, unit: '°C', status: parseFloat(data.temperature) > 30 ? 'Warning' : 'Online', lastUpdate: time };
               checkAlerts(deviceId, 'temperature', data.temperature);
             }
             if (data.humidity !== undefined) {
-              next[`${deviceId}-hum`] = { id: `${deviceId}-hum`, name: `Humidity (${deviceId})`, location: deviceId, value: data.humidity, unit: '%', status: 'Online', lastUpdate: time };
+              next[`${deviceId}-hum`] = { id: `${deviceId}-hum`, name: `Humidity`, location: deviceId, value: data.humidity, unit: '%', status: 'Online', lastUpdate: time };
+            }
+            if (data.packetLoss !== undefined || data.packet_loss !== undefined) {
+              const loss = data.packetLoss || data.packet_loss;
+              next[`${deviceId}-pkt`] = { id: `${deviceId}-pkt`, name: `Packet Loss`, location: deviceId, value: loss, unit: '%', status: parseFloat(loss) > 5 ? 'Warning' : 'Online', lastUpdate: time };
+              checkAlerts(deviceId, 'packetLoss', loss);
+            }
+            if (data.battery !== undefined || data.batteryLevel !== undefined) {
+              const batt = data.battery || data.batteryLevel;
+              next[`${deviceId}-batt`] = { id: `${deviceId}-batt`, name: `Battery`, location: deviceId, value: batt, unit: '%', status: parseFloat(batt) < 15 ? 'Warning' : 'Online', lastUpdate: time };
+              checkAlerts(deviceId, 'battery', batt);
+            }
+            if (data.latency !== undefined) {
+              next[`${deviceId}-lat`] = { id: `${deviceId}-lat`, name: `Latency`, location: deviceId, value: data.latency, unit: 'ms', status: parseFloat(data.latency) > 200 ? 'Warning' : 'Online', lastUpdate: time };
+              checkAlerts(deviceId, 'latency', data.latency);
+            }
+            if (data.sensorStatus !== undefined || data.sensorFault !== undefined) {
+              const fault = data.sensorStatus === 'error' || data.sensorStatus === 'fault' || data.sensorFault === true;
+              next[`${deviceId}-sens`] = { id: `${deviceId}-sens`, name: `Sensor Health`, location: deviceId, value: fault ? 'FAULT' : 'OK', unit: '', status: fault ? 'Offline' : 'Online', lastUpdate: time };
+              checkAlerts(deviceId, 'sensor_fault', fault);
             }
             return next;
           });
@@ -149,6 +197,30 @@ export default function MonitorPanel() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 mb-8">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+          <h3 className="text-2xl font-bold mb-6 flex items-center gap-4"><span className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-xl">⚠️</span> Active Alerts</h3>
+          {!alerts.length ? (
+            <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed"><p className="text-slate-500 italic">No active alerts. All systems nominal.</p></div>
+          ) : (
+            <div className="space-y-3">
+              {alerts.map(a => (
+                <div key={a.id} className={`border rounded-2xl p-4 flex justify-between items-center ${a.level === 'CRITICAL' ? 'bg-red-50 border-red-200' : a.level === 'HIGH' ? 'bg-orange-50 border-orange-200' : 'bg-yellow-50 border-yellow-200'}`}>
+                  <div>
+                    <h4 className={`font-bold ${a.level === 'CRITICAL' ? 'text-red-700' : a.level === 'HIGH' ? 'text-orange-700' : 'text-yellow-700'}`}>{a.title}</h4>
+                    <p className="text-sm text-slate-700 mt-1">{a.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-xs px-3 py-1 rounded-full font-bold ${a.level === 'CRITICAL' ? 'bg-red-200 text-red-800' : a.level === 'HIGH' ? 'bg-orange-200 text-orange-800' : 'bg-yellow-200 text-yellow-800'}`}>{a.level}</span>
+                    <p className="text-xs text-slate-500 mt-2">{a.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

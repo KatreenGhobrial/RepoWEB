@@ -214,4 +214,38 @@ router.post('/:id/members', async (req: Request, res: Response): Promise<void> =
   }
 });
 
+// ───────────────────────────────────────────────────────────────────────────
+// PUT /api/projects/:id/assessment — Add or update project grading assessment
+// ───────────────────────────────────────────────────────────────────────────
+router.put('/:id/assessment', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { interdisciplinary, collaboration, technical, comments, assessor } = req.body;
+
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { 
+        $set: { 
+          'assessment.interdisciplinary': interdisciplinary,
+          'assessment.collaboration': collaboration,
+          'assessment.technical': technical,
+          'assessment.comments': comments || '',
+          'assessment.assessedAt': new Date(),
+          'assessment.assessor': assessor || null
+        } 
+      },
+      { new: true }
+    );
+
+    if (!project) {
+      res.status(404).json({ message: 'Project not found' });
+      return;
+    }
+
+    res.json(project);
+  } catch (error) {
+    console.error('Update assessment error:', error);
+    res.status(500).json({ message: 'Server error updating assessment' });
+  }
+});
+
 export default router;

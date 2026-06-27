@@ -53,3 +53,7 @@ export async function getSensors() {
 export async function search(q) {
   return await api.get(`/library/search`, { params: { q } });
 }
+
+export async function submitProjectAssessment(projectId, data) {
+  return await api.put(`/projects/${projectId}/assessment`, data);
+}
