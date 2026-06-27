@@ -11,6 +11,8 @@ import communityRoutes from './routes/community';
 import userRoutes from './routes/users';
 import analysisRoutes from './routes/analysis';
 import mqttRoutes from './routes/mqtt';
+import alertRoutes from './routes/alerts';
+import docRoutes from './routes/docs';
 import { initMqttService } from './services/mqttService';
 
 // Load environment variables
@@ -62,6 +64,8 @@ app.use('/api/community', communityRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/mqtt', mqttRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/docs', docRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

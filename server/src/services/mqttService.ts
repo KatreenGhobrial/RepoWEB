@@ -93,14 +93,15 @@ export const disconnectFromDynamicBroker = (id: string) => {
 export const initMqttService = async (io: Server) => {
   ioInstance = io;
 
-  // 1. Connect to the default spiritech broker (as requested)
-  connectToDynamicBroker({
-    url: 'mqtt://mqtt.spiritech.me',
-    username: 'team8',
-    password: 'Braude2026',
-    topic: 'Braude/team8/#',
-    name: 'Default Spiritech Broker'
-  });
+  // 1. Default broker disabled — credentials rejected by mqtt.spiritech.me
+  //    Connect manually via POST /api/mqtt with valid credentials if needed.
+  // connectToDynamicBroker({
+  //   url: 'mqtt://mqtt.spiritech.me',
+  //   username: 'team8',
+  //   password: 'Braude2026',
+  //   topic: 'Braude/team8/#',
+  //   name: 'Default Spiritech Broker'
+  // });
 
   // (Dynamic DB brokers fetch has been removed since we moved to transient brokers)
 
