@@ -152,22 +152,7 @@ export default function MonitorPanel() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-          <h3 className="text-2xl font-bold mb-8 flex items-center gap-4"><span className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-xl">🔔</span> Active Alerts</h3>
-          <div className="space-y-4">
-            {!alerts.length ? <p className="text-slate-500 italic text-center py-6">✅ No active alerts.</p> : alerts.map(a => (
-              <div key={a.id} className={`border rounded-2xl p-5 animate-pulse ${a.level === 'MEDIUM' ? 'bg-yellow-50 text-orange-600' : 'bg-red-50 text-red-700'}`}>
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-bold text-lg">⚠️ {a.title}</h4><span className="font-bold text-xs bg-white/50 px-2 py-1 rounded border">{a.level}</span>
-                </div>
-                <p className="text-sm font-medium">{a.description}</p>
-                <p className="text-xs mt-2 opacity-75">{a.time}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
+      <section className="grid grid-cols-1 gap-6">
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-4"><span className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">📋</span> System Logs</h3>
           <div className="space-y-3">
