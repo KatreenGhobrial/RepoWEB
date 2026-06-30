@@ -114,28 +114,11 @@ export default function SocraticBot() {
     setIsError(false);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/bot/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          projectId: activeProject?._id,
-          message: `The problem I am having is: ${currentProblem}. ${answerInput}`,
-          sessionId
-        })
+      const data = await api.post('/bot/chat', {
+        projectId: activeProject?._id,
+        message: `The problem I am having is: ${currentProblem}. ${answerInput}`,
+        sessionId
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setBotMessage(data.message || 'Error communicating with AI.');
-        setIsError(true);
-        setIsLoading(false);
-        return;
-      }
 
       setChatHistory([...newChat, { sender: 'bot', text: data.reply }]);
       setStatusText('Waiting for your response');
@@ -143,7 +126,7 @@ export default function SocraticBot() {
       setSessionId(data.sessionId);
     } catch (error) {
       console.error('Chat error:', error);
-      setBotMessage('Server error. Is the backend running?');
+      setBotMessage(error.message || 'Server error. Is the backend running?');
       setIsError(true);
     } finally {
       setIsLoading(false);

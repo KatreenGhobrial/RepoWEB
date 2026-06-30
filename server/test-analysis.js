@@ -1,19 +1,23 @@
 /**
  * Shortened Test Suite for Analysis Features
  */
+const axios = require('axios');
 const BASE = 'http://localhost:5000/api';
 
 async function req(method, path, body) {
-  const headers = { 'Content-Type': 'application/json' };
-  const opts = { method, headers };
-  if (body) opts.body = JSON.stringify(body);
   try {
-    const res = await fetch(`${BASE}${path}`, opts);
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch { data = text; }
-    return { status: res.status, data, ok: res.ok };
+    const config = {
+      method,
+      url: `${BASE}${path}`,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    if (body) config.data = body;
+    const res = await axios(config);
+    return { status: res.status, data: res.data, ok: true };
   } catch (err) {
+    if (err.response) {
+      return { status: err.response.status, data: err.response.data, ok: false };
+    }
     return { status: 0, data: err.message, ok: false };
   }
 }

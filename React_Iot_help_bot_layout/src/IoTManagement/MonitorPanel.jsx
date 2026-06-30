@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import Header from '../UIComponents/Header';
+import api from '../apiClient';
 
 export default function MonitorPanel() {
   const [monitorData, setMonitorData] = useState({ summary: { health: 'Loading...' }, services: [] });
@@ -67,19 +68,17 @@ export default function MonitorPanel() {
   };
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/health')
-      .then(res => {
-        if (res.ok) {
-          setMonitorData({
-            summary: { health: 'OK' },
-            services: [
-              { name: 'Backend API', status: 'Online', description: 'Connected' },
-              { name: 'MongoDB', status: 'Online', description: 'Connected' },
-              { name: 'Socratic Bot', status: 'Online', description: 'Ready' }
-            ]
-          });
-          addLog('System Start', 'Monitor initialized.');
-        } else throw new Error();
+    api.get('/health')
+      .then(() => {
+        setMonitorData({
+          summary: { health: 'OK' },
+          services: [
+            { name: 'Backend API', status: 'Online', description: 'Connected' },
+            { name: 'MongoDB', status: 'Online', description: 'Connected' },
+            { name: 'Socratic Bot', status: 'Online', description: 'Ready' }
+          ]
+        });
+        addLog('System Start', 'Monitor initialized.');
       })
       .catch(() => setMonitorData({ summary: { health: 'Down' }, services: [{ name: 'Backend API', status: 'Down', description: 'Unreachable' }] }))
       .finally(() => setLoading(false));

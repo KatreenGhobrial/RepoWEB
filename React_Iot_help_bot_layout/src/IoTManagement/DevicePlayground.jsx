@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import api from '../apiClient';
 
 export default function DevicePlayground() {
   const [messages, setMessages] = useState([]);
@@ -14,11 +15,8 @@ export default function DevicePlayground() {
 
   const fetchBrokers = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/mqtt/brokers');
-      if (res.ok) {
-        const data = await res.json();
-        setBrokers(data);
-      }
+      const data = await api.get('/mqtt/brokers');
+      setBrokers(data);
     } catch (err) {
       console.error('Failed to fetch brokers', err);
     }
@@ -54,21 +52,12 @@ export default function DevicePlayground() {
     setBrokerLoading(true);
     setBrokerMsg('');
     try {
-      const res = await fetch('http://localhost:5000/api/mqtt/brokers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBroker)
-      });
-      if (res.ok) {
-        setBrokerMsg('✅ Broker connected successfully!');
-        setNewBroker({ name: '', url: '', username: '', password: '', topic: '#' });
-        fetchBrokers();
-      } else {
-        const data = await res.json();
-        setBrokerMsg(`❌ Error: ${data.message}`);
-      }
+      await api.post('/mqtt/brokers', newBroker);
+      setBrokerMsg('✅ Broker connected successfully!');
+      setNewBroker({ name: '', url: '', username: '', password: '', topic: '#' });
+      fetchBrokers();
     } catch (err) {
-      setBrokerMsg('❌ Failed to connect to server.');
+      setBrokerMsg(`❌ Error: ${err.message || 'Failed to connect to server.'}`);
     } finally {
       setBrokerLoading(false);
     }
@@ -76,15 +65,11 @@ export default function DevicePlayground() {
 
   const handleDeleteBroker = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/mqtt/brokers/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setBrokerMsg('✅ Broker disconnected and removed.');
-        fetchBrokers();
-      } else {
-        setBrokerMsg('❌ Failed to remove broker.');
-      }
+      await api.delete(`/mqtt/brokers/${id}`);
+      setBrokerMsg('✅ Broker disconnected and removed.');
+      fetchBrokers();
     } catch (err) {
-      setBrokerMsg('❌ Error connecting to server.');
+      setBrokerMsg(`❌ ${err.message || 'Error connecting to server.'}`);
     }
   };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
+import api from '../apiClient';
 
 export default function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
@@ -28,25 +29,7 @@ export default function Dashboard() {
         const userId = user._id;
 
         // Fetch projects from backend
-        const projRes = await fetch('http://localhost:5000/api/projects', {
-          headers: { 'x-user-id': userId }
-        });
-
-        if (!projRes.ok) {
-          setDashboard({
-            detectedIssues: 0,
-            documentationStatus: 'Error',
-            progress: [],
-            alerts: [],
-            feedbacks: [],
-            tasksStats: { total: 0, done: 0, inProgress: 0, todo: 0, progressPercentage: 0 },
-            workload: []
-          });
-          setLoading(false);
-          return;
-        }
-
-        const projects = await projRes.json();
+        const projects = await api.get('/projects');
         
         // Build dashboard from real data
         const totalProjects = projects.length;
@@ -65,11 +48,8 @@ export default function Dashboard() {
         let feedbacks = [];
 
         if (projects.length > 0) {
-          const taskRes = await fetch(`http://localhost:5000/api/tasks/${projects[0]._id}`, {
-            headers: { 'x-user-id': userId }
-          });
-          if (taskRes.ok) {
-            const tasks = await taskRes.json();
+          try {
+            const tasks = await api.get(`/tasks/${projects[0]._id}`);
             totalTasks = tasks.length;
             
             tasks.forEach(t => {
@@ -87,12 +67,11 @@ export default function Dashboard() {
                else if (st === 'in-progress' || st === 'in progress') memberWorkload[owner].inProgress++;
                else memberWorkload[owner].todo++;
             });
-          }
+          } catch (e) { console.error('Tasks fetch error:', e); }
 
-          const fbRes = await fetch(`http://localhost:5000/api/mentor/feedback/${projects[0]._id}`);
-          if (fbRes.ok) {
-            feedbacks = await fbRes.json();
-          }
+          try {
+            feedbacks = await api.get(`/mentor/feedback/${projects[0]._id}`);
+          } catch (e) { console.error('Feedback fetch error:', e); }
         }
 
         const progressPercentage = totalTasks === 0 ? 0 : Math.round(((completedTasks + (inProgressTasks * 0.5)) / totalTasks) * 100);

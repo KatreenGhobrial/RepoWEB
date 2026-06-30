@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
+import api from '../apiClient';
 
 const TABS = [
   { key: 'hardware', label: 'Hardware', icon: '🔧' },
@@ -23,11 +24,8 @@ export default function IoTSolutionLibrary() {
   useEffect(() => {
     const fetchLibrary = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/library');
-        if (res.ok) {
-          const data = await res.json();
-          setLibraryData(data);
-        }
+        const data = await api.get('/library');
+        setLibraryData(data);
       } catch (err) {
         console.error('Error fetching library:', err);
       } finally {

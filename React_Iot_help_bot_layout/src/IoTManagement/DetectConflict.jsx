@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
+import api from '../apiClient';
 
 export default function DetectConflict() {
   const [results, setResults] = useState([]);
@@ -20,26 +21,16 @@ export default function DetectConflict() {
     setResults([]);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/bot/detect-conflicts', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          device,
-          protocol,
-          database,
-          powerSource: power,
-          sensors: ['DHT22'],
-          cloudPlatform: ''
-        })
+      const data = await api.post('/bot/detect-conflicts', {
+        device,
+        protocol,
+        database,
+        powerSource: power,
+        sensors: ['DHT22'],
+        cloudPlatform: ''
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.conflicts) {
+      if (data.conflicts) {
         setResults(data.conflicts);
         const count = data.conflicts.filter(c => c.level !== 'LOW').length;
         setConflictCount(count);
@@ -49,7 +40,7 @@ export default function DetectConflict() {
         else setHighestRisk('LOW');
         setMessage(`Analysis complete. Found ${count} potential issue(s).`);
       } else {
-        throw new Error(data.message || 'Failed to analyze');
+        throw new Error('Failed to analyze');
       }
     } catch (err) {
       console.error('Conflict check error:', err);
