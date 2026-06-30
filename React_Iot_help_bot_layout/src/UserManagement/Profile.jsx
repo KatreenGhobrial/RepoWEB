@@ -1,4 +1,5 @@
 import Header from '../UIComponents/Header';
+import LabeledInput from '../UIComponents/LabeledInput';
 
 export default function Profile() {
   return (
@@ -16,18 +17,9 @@ export default function Profile() {
         </div>
 
         <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Full Name</label>
-            <input type="text" className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" value="Student" disabled />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Email Address</label>
-            <input type="email" className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" value="student@university.edu" disabled />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Role</label>
-            <input type="text" className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" value="IoT Developer" disabled />
-          </div>
+          <LabeledInput label="Full Name" type="text" value="Student" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
+          <LabeledInput label="Email Address" type="email" value="student@university.edu" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
+          <LabeledInput label="Role" type="text" value="IoT Developer" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
           
           <div className="pt-4 mt-6 border-t border-slate-200">
             <h3 className="text-xl font-bold text-slate-950 mb-4">Preferences</h3>

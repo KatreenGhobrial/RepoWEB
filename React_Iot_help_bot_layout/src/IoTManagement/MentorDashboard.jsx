@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import Header from "../UIComponents/Header";
+import LabeledInput from '../UIComponents/LabeledInput';
 import * as mentorService from "./iotService";
 
 export default function MentorDashboard() {
@@ -184,14 +185,15 @@ export default function MentorDashboard() {
             <>
               <form onSubmit={handleFeedback} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
                 <h3 className="font-semibold">💬 Give Feedback</h3>
-                <textarea value={fbContent} onChange={e => setFbContent(e.target.value)} rows={3} placeholder="Write feedback..." className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-cyan-500 resize-none" required />
-                <div>
-                  <label className="block text-xs text-slate-500 mb-1.5">Link to Task</label>
+                <LabeledInput label="Feedback Content">
+                    <textarea value={fbContent} onChange={e => setFbContent(e.target.value)} rows={3} placeholder="Write feedback..." className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-cyan-500 resize-none" required />
+                </LabeledInput>
+                <LabeledInput label="Link to Task">
                   <select value={fbTaskId} onChange={e => setFbTaskId(e.target.value)} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none">
                     <option value="">📌 General Feedback</option>
                     {projectTasks.map(t => <option key={t._id} value={t._id}>📌 Task: {t.title}</option>)}
                   </select>
-                </div>
+                </LabeledInput>
                 <button type="submit" disabled={fbSaving} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold text-sm shadow-lg shadow-cyan-500/20 disabled:opacity-50">{fbSaving ? "Sending..." : "📤 Send Feedback"}</button>
               </form>
 
@@ -254,10 +256,9 @@ export default function MentorDashboard() {
                     </div>
                     <input type="range" min="0" max="100" value={assessment.technical} onChange={e => setAssessment({...assessment, technical: Number(e.target.value)})} className="w-full accent-indigo-600" />
                   </div>
-                  <div>
-                    <label className="block text-sm text-indigo-900 font-semibold mb-1">Final Evaluation Comments</label>
+                  <LabeledInput label="Final Evaluation Comments">
                     <textarea value={assessment.comments} onChange={e => setAssessment({...assessment, comments: e.target.value})} rows={3} placeholder="Provide an official summary of their work..." className="w-full border border-indigo-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500 resize-none bg-white/80" />
-                  </div>
+                  </LabeledInput>
                   <button type="submit" disabled={assessmentSaving} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-md transition-colors disabled:opacity-50">
                     {assessmentSaving ? "Saving..." : "💾 Save Official Grades"}
                   </button>

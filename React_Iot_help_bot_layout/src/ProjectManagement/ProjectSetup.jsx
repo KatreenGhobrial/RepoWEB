@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
 import api from '../apiClient';
 import { LuWifi, LuShield, LuZap, LuClock, LuCpu, LuTriangleAlert } from 'react-icons/lu';
+import LabeledInput from '../UIComponents/LabeledInput';
 const DEFAULT_FORM = { projectName: '', device: 'ESP32', protocol: 'HTTP', database: 'MongoDB', powerSource: 'Battery', membersText: '', requirements: '' };
 
 export default function ProjectSetup() {
@@ -213,20 +214,18 @@ export default function ProjectSetup() {
 }
 
 const Input = ({label, val, onChange, placeholder, isArea}) => (
-  <div>
-    <label className="block text-sm font-bold text-slate-900 dark:text-slate-200 mb-1">{label}</label>
+  <LabeledInput label={label}>
     {isArea ? <textarea className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 font-medium transition-colors" rows="3" value={val} onChange={e=>onChange(e.target.value)} placeholder={placeholder} />
             : <input className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 font-medium transition-colors" value={val} onChange={e=>onChange(e.target.value)} placeholder={placeholder} />}
-  </div>
+  </LabeledInput>
 );
 
 const Select = ({label, val, opts, onChange}) => (
-  <div>
-    <label className="block text-sm font-bold text-slate-900 dark:text-slate-200 mb-1">{label}</label>
+  <LabeledInput label={label}>
     <select className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white font-medium transition-colors" value={val} onChange={e=>onChange(e.target.value)}>
       {opts.map(o => <option key={o}>{o}</option>)}
     </select>
-  </div>
+  </LabeledInput>
 );
 
 const SummaryBox = ({title, val, pre}) => (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { marked } from 'marked';
 import { LuFileText, LuPlus, LuTrash2, LuPencil, LuEye, LuSave, LuX, LuFilter } from 'react-icons/lu';
 import Header from '../UIComponents/Header';
+import LabeledInput from '../UIComponents/LabeledInput';
 import { getDocs, createDoc, updateDoc, deleteDoc } from './docService';
 import api from '../apiClient';
 
@@ -159,8 +160,7 @@ export default function TechDocs() {
     <>
       <Header title="📝 Technical Documentation" subtitle="Shared workspace for requirements, work plans, and engineering docs" />
       <section className="bg-white dark:bg-zinc-800 rounded-3xl border border-slate-200 dark:border-zinc-700 shadow-sm p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Select Project</label>
+        <LabeledInput label="Select Project">
           <select
             className="border border-slate-300 dark:border-zinc-600 rounded-xl px-4 py-2 bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none"
             value={selectedProjectId || ''}
@@ -174,7 +174,7 @@ export default function TechDocs() {
             ))}
             {projects.length === 0 && <option value="">No projects available</option>}
           </select>
-        </div>
+        </LabeledInput>
         
         {selectedProject && (
           <div className="text-sm bg-slate-50 dark:bg-zinc-900 px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-700">
@@ -225,21 +225,19 @@ export default function TechDocs() {
           {isEditing ? (
             <div className="space-y-5">
               {/* Title */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title</label>
-                <input
-                  type="text"
-                  className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-                  value={editForm.title}
-                  onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="Document title"
-                />
+              <LabeledInput
+                label="Title"
+                type="text"
+                className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                value={editForm.title}
+                onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                placeholder="Document title"
+              />
               </div>
 
               {/* Type + Tags */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Type</label>
+                <LabeledInput label="Type">
                   <select
                     className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
                     value={editForm.type}
@@ -249,22 +247,19 @@ export default function TechDocs() {
                     <option value="work_plan">Work Plan</option>
                     <option value="engineering_doc">Engineering Doc</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Tags (comma-separated)</label>
-                  <input
-                    type="text"
-                    className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
-                    value={editForm.tags}
-                    onChange={e => setEditForm(f => ({ ...f, tags: e.target.value }))}
-                    placeholder="e.g. mqtt, esp32, sensors"
-                  />
-                </div>
+                </LabeledInput>
+                <LabeledInput
+                  label="Tags (comma-separated)"
+                  type="text"
+                  className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                  value={editForm.tags}
+                  onChange={e => setEditForm(f => ({ ...f, tags: e.target.value }))}
+                  placeholder="e.g. mqtt, esp32, sensors"
+                />
               </div>
 
               {/* Markdown Editor + Preview */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Content (Markdown)</label>
+              <LabeledInput label="Content (Markdown)">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <textarea
                     className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white font-mono text-sm min-h-[400px] resize-y focus:outline-none focus:ring-2 focus:ring-slate-400"
@@ -277,7 +272,7 @@ export default function TechDocs() {
                     <div dangerouslySetInnerHTML={{ __html: marked(editForm.content || '') }} />
                   </div>
                 </div>
-              </div>
+              </LabeledInput>
             </div>
           ) : (
             /* View mode */

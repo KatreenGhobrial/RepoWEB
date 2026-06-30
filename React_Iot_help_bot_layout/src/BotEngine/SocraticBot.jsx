@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Header from '../UIComponents/Header';
+import LabeledInput from '../UIComponents/LabeledInput';
 import { marked } from "marked";
 import api from '../apiClient';
 import { getAlerts } from '../IoTManagement/alertService';
@@ -172,13 +173,14 @@ export default function SocraticBot() {
           </div>
          
           <div className="mb-6">
-            <label className="block text-sm font-bold text-slate-700 mb-2">Select problem type</label>
-            <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={problem} onChange={e => setProblem(e.target.value)}>
-              <option>Component does not respond</option>
-              <option>No data in database</option>
-              <option>Device disconnects often</option>
-              <option>Slow response time</option>
-            </select>
+            <LabeledInput label="Select problem type">
+              <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={problem} onChange={e => setProblem(e.target.value)}>
+                <option>Component does not respond</option>
+                <option>No data in database</option>
+                <option>Device disconnects often</option>
+                <option>Slow response time</option>
+              </select>
+            </LabeledInput>
           </div>
          
           <button onClick={handleStart} disabled={isLoading} className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed mb-6">

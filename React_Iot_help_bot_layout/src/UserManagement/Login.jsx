@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import * as usersService from './usersService';
+import LabeledInput from '../UIComponents/LabeledInput';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -25,26 +26,22 @@ export default function Login() {
         <h2 className="text-2xl font-bold text-center text-slate-800 dark:text-white mb-6">Welcome Back</h2>
         {error && <div className="mb-4 text-red-500 text-sm text-center">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
-            <input 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white"
-              required 
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
-            <input 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white"
-              required 
-            />
-          </div>
+          <LabeledInput 
+            label="Email" 
+            type="email" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white"
+            required 
+          />
+          <LabeledInput 
+            label="Password" 
+            type="password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white"
+            required 
+          />
           <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
             Log In
           </button>

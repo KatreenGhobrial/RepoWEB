@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LabeledInput from '../UIComponents/LabeledInput';
 import { Navigate } from 'react-router-dom';
 import Header from '../UIComponents/Header';
 import { getUsers } from '../UserManagement/usersService';
@@ -228,29 +229,23 @@ export default function TasksTeam() {
         <div className="bg-white rounded-3xl border border-slate-200 p-7 shadow-sm">
           <h3 className="text-2xl font-bold mb-6 text-slate-950">Add new task</h3>
           <form onSubmit={handleAddTask} className="space-y-5">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Task title</label>
-              <input className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" placeholder="Enter task description" value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Assign To (Partner)</label>
+            <LabeledInput label="Task title" type="text" placeholder="Enter task description" value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" />
+            <LabeledInput label="Assign To (Partner)">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" value={taskForm.discipline} onChange={e => setTaskForm({...taskForm, discipline: e.target.value})}>
                 <option value="">-- Select Partner --</option>
                 {team.map((m, i) => { const nm = m.username||m.name||m.email||m; return <option key={i} value={nm}>{nm}</option>; })}
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Status</label>
+            </LabeledInput>
+            <LabeledInput label="Status">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" value={taskForm.status} onChange={e => setTaskForm({...taskForm, status: e.target.value})}>
                 <option value="todo">To Do</option><option value="in-progress">In Progress</option><option value="done">Done</option>
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Priority</label>
+            </LabeledInput>
+            <LabeledInput label="Priority">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" value={taskForm.priority} onChange={e => setTaskForm({...taskForm, priority: e.target.value})}>
                 <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
               </select>
-            </div>
+            </LabeledInput>
             <button className="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 transition-colors">Add task</button>
           </form>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import Header from "../UIComponents/Header";
+import LabeledInput from '../UIComponents/LabeledInput';
 import * as communityService from "./communityService";
 
 const TAG_COLORS = {
@@ -226,19 +227,8 @@ export default function CommunityBoard() {
             {showForm ? (
               <form onSubmit={handleCreate} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-8 space-y-6 sticky top-6">
                 <h3 className="text-2xl font-bold text-slate-900">Create New Post</h3>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Title *</label>
-                  <input 
-                    type="text" 
-                    value={title} 
-                    onChange={(e) => setTitle(e.target.value)} 
-                    placeholder="e.g. How to reduce latency in MQTT?" 
-                    className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" 
-                    required 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Content *</label>
+                <LabeledInput label="Title *" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. How to reduce latency in MQTT?" className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" required />
+                <LabeledInput label="Content *">
                   <textarea 
                     value={content} 
                     onChange={(e) => setContent(e.target.value)} 
@@ -247,17 +237,8 @@ export default function CommunityBoard() {
                     className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none" 
                     required 
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Tags (comma-separated)</label>
-                  <input 
-                    type="text" 
-                    value={tags} 
-                    onChange={(e) => setTags(e.target.value)} 
-                    placeholder="mqtt, hardware, security" 
-                    className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" 
-                  />
-                </div>
+                </LabeledInput>
+                <LabeledInput label="Tags (comma-separated)" type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="mqtt, hardware, security" className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" />
                 <button type="submit" disabled={saving || !title.trim() || !content.trim()} className="bg-slate-950 text-white px-8 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors">
                   {saving ? "⏳ Posting..." : "📢 Publish Post"}
                 </button>

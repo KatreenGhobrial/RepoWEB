@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
+import LabeledInput from '../UIComponents/LabeledInput';
 import api from '../apiClient';
 
 export default function DetectConflict() {
@@ -120,39 +121,35 @@ export default function DetectConflict() {
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
           <h3 className="text-2xl font-bold text-slate-950 mb-6">Run conflict analysis</h3>
           <form onSubmit={handleCheck} className="space-y-5">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Device</label>
+            <LabeledInput label="Device">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={device} onChange={e => setDevice(e.target.value)}>
                 <option>ESP32</option>
                 <option>Arduino Uno</option>
                 <option>Raspberry Pi</option>
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Power</label>
+            </LabeledInput>
+            <LabeledInput label="Power">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={power} onChange={e => setPower(e.target.value)}>
                 <option>Battery</option>
                 <option>USB Power</option>
                 <option>Wall Adapter</option>
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Protocol</label>
+            </LabeledInput>
+            <LabeledInput label="Protocol">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={protocol} onChange={e => setProtocol(e.target.value)}>
                 <option>HTTP</option>
                 <option>MQTT</option>
                 <option>CoAP</option>
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Database</label>
+            </LabeledInput>
+            <LabeledInput label="Database">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={database} onChange={e => setDatabase(e.target.value)}>
                 <option>MongoDB</option>
                 <option>MySQL</option>
                 <option>Firebase</option>
                 <option>No Database</option>
               </select>
-            </div>
+            </LabeledInput>
             {message && <p className="text-sm text-green-500">{message}</p>}
             <button type="submit" disabled={isLoading} className="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50">
               {isLoading ? '⏳ Analyzing...' : 'Analyze Architecture'}
