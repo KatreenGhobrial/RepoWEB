@@ -3,27 +3,19 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LuSun, LuMoon, LuBell, LuX, LuCheck } from "react-icons/lu";
 import { getAlerts, simulateAlert, resolveAlert } from '../IoTManagement/alertService';
 import AlertToast from './AlertToast';
+import useDarkMode from '../hooks/useDarkMode';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  
+  const { isDark, toggleTheme } = useDarkMode();
+
   const currentUserStr = localStorage.getItem('currentUser');
   const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
 
   const [alerts, setAlerts] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
 
   useEffect(() => {
     if (currentUser) {
@@ -54,10 +46,6 @@ export default function Navbar() {
     } catch (err) {
       console.error("Error resolving alert:", err);
     }
-  };
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   const handleLogout = () => {
@@ -179,7 +167,7 @@ export default function Navbar() {
               )}
               <div className='bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl flex items-center justify-center'>
                 <button onClick={toggleTheme} className='bg-transparent p-2 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-black dark:text-white transition-all'>
-                  {theme === 'dark' ? <LuSun size={20} /> : <LuMoon size={20} />}
+                  {isDark ? <LuSun size={20} /> : <LuMoon size={20} />}
                 </button>
               </div>
             </div>
