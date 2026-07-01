@@ -32,9 +32,11 @@ export const io = new Server(httpServer, {
 });
 
 io.on('connection', (socket) => {
-  console.log(`[Socket] Client connected: ${socket.id}`);
+  const userIdentifier = socket.handshake.query.userId || 'Anonymous';
+  console.log(`[Socket] User '${userIdentifier}' connected (ID: ${socket.id})`);
+  
   socket.on('disconnect', () => {
-    console.log(`[Socket] Client disconnected: ${socket.id}`);
+    console.log(`[Socket] User '${userIdentifier}' disconnected (ID: ${socket.id})`);
   });
 });
 

@@ -323,7 +323,9 @@ export async function detectConflictsAI(architecture: {
       ];
     }
   } catch (error: any) {
-    console.warn('⚠️  OpenAI API error in conflict detection, using rule-based fallback:', error?.code || error?.message);
+    if (error?.code !== 'invalid_api_key') {
+      console.warn('⚠️  OpenAI API error in conflict detection, using rule-based fallback:', error?.code || error?.message);
+    }
     
     // ═══════════════════════════════════════════════════════════════════════
     // Rule-based conflict detection fallback (expanded)
