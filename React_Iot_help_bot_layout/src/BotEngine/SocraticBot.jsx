@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import Header from '../UIComponents/Header';
 import LabeledInput from '../UIComponents/LabeledInput';
 import { marked } from "marked";
-import api from '../apiClient';
+import { list as listProjects } from '../ProjectManagement/projectService';
+import { detectConflicts, chat as chatBot } from './botService';
 import { getAlerts } from '../IoTManagement/alertService';
 import { LuTriangleAlert, LuWifi, LuShield, LuZap, LuClock, LuCpu } from 'react-icons/lu';
 
@@ -41,13 +42,13 @@ export default function SocraticBot() {
 
     const fetchProjectData = async () => {
       try {
-        const projs = await api.get('/projects');
+        const projs = await listProjects();
         if (projs && projs.length > 0) {
           const p = projs[0];
           setActiveProject(p);
           
           try {
-            const conflicts = await api.post('/bot/detect-conflicts', {
+            const conflicts = await detectConflicts({
               device: p.device,
               protocol: p.protocol,
               database: p.database,
@@ -115,11 +116,11 @@ export default function SocraticBot() {
     setIsError(false);
 
     try {
-      const data = await api.post('/bot/chat', {
-        projectId: activeProject?._id,
-        message: `The problem I am having is: ${currentProblem}. ${answerInput}`,
+      const data = await chatBot(
+        activeProject?._id,
+        `The problem I am having is: ${currentProblem}. ${answerInput}`,
         sessionId
-      });
+      );
 
       setChatHistory([...newChat, { sender: 'bot', text: data.reply }]);
       setStatusText('Waiting for your response');
