@@ -6,9 +6,6 @@ export async function getDocs(projectId, type) {
   return await api.get(`/docs/project/${projectId}`, { params });
 }
 
-export async function getDoc(id) {
-  return await api.get(`/docs/${id}`);
-}
 
 export async function createDoc(data) {
   return await api.post('/docs', data);

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
-import api from '../apiClient';
+import { list as listProjects } from '../ProjectManagement/projectService';
+import { listByProject as listTasks } from '../ProjectManagement/taskService';
+import { getFeedback } from '../IoTManagement/iotService';
 
 export default function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
@@ -29,7 +31,7 @@ export default function Dashboard() {
         const userId = user._id;
 
         // Fetch projects from backend
-        const projects = await api.get('/projects');
+        const projects = await listProjects();
         
         // Build dashboard from real data
         const totalProjects = projects.length;
@@ -49,7 +51,7 @@ export default function Dashboard() {
 
         if (projects.length > 0) {
           try {
-            const tasks = await api.get(`/tasks/${projects[0]._id}`);
+            const tasks = await listTasks(projects[0]._id);
             totalTasks = tasks.length;
             
             tasks.forEach(t => {
@@ -70,7 +72,7 @@ export default function Dashboard() {
           } catch (e) { console.error('Tasks fetch error:', e); }
 
           try {
-            feedbacks = await api.get(`/mentor/feedback/${projects[0]._id}`);
+            feedbacks = await getFeedback(projects[0]._id);
           } catch (e) { console.error('Feedback fetch error:', e); }
         }
 

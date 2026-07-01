@@ -4,7 +4,7 @@ import { LuFileText, LuPlus, LuTrash2, LuPencil, LuEye, LuSave, LuX, LuFilter } 
 import Header from '../UIComponents/Header';
 import LabeledInput from '../UIComponents/LabeledInput';
 import { getDocs, createDoc, updateDoc, deleteDoc } from './docService';
-import api from '../apiClient';
+import { list as listProjects } from '../ProjectManagement/projectService';
 
 const TYPE_CONFIG = {
   requirements:    { label: 'Requirements',    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
@@ -28,7 +28,7 @@ export default function TechDocs() {
   useEffect(() => {
     (async () => {
       try {
-        const projs = await api.get('/projects');
+        const projs = await listProjects();
         setProjects(projs || []);
         if (projs && projs.length > 0) {
           setSelectedProjectId(projs[0]._id);
@@ -233,7 +233,6 @@ export default function TechDocs() {
                 onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="Document title"
               />
-              </div>
 
               {/* Type + Tags */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
