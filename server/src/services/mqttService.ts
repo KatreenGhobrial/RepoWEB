@@ -18,7 +18,10 @@ const lastAlertTimes = new Map<string, number>();
 const globalAlertTimestamps: number[] = [];
 
 export const getActiveCustomBrokers = () => {
-  return Array.from(transientBrokers.values());
+  return Array.from(transientBrokers.values()).map(b => {
+    const client = mqttClients.get(b._id);
+    return { ...b, connected: client ? client.connected : false };
+  });
 };
 
 let isGlobalMqttPaused = false;
@@ -159,10 +162,30 @@ const setupClientListeners = (client: mqtt.MqttClient, name: string) => {
   });
 };
 
-export const connectToDynamicBroker = (config: { url: string, username?: string, password?: string, topic: string, name: string, _id?: string }) => {
+const broadcastBrokerStatus = () => {
+  if (!ioInstance) return;
+  let anyConnected = false;
+  for (const client of mqttClients.values()) {
+    if (client.connected) {
+      anyConnected = true;
+      break;
+    }
+  }
+  
+  if (anyConnected) {
+    ioInstance.emit('mqtt_broker_status', { status: 'connected' });
+  } else if (mqttClients.size > 0) {
+    ioInstance.emit('mqtt_broker_status', { status: 'error', message: 'Brokers disconnected' });
+  } else {
+    ioInstance.emit('mqtt_broker_status', { status: 'disconnected' });
+  }
+};
+
+export const connectToDynamicBroker = (config: { url: string, port?: string | number, username?: string, password?: string, topic: string, name: string, _id?: string }) => {
   console.log(`[MQTT] Trying to connect to dynamic broker: ${config.name} at ${config.url}`);
   
   const options: mqtt.IClientOptions = {};
+  if (config.port) options.port = Number(config.port);
   if (config.username) options.username = config.username;
   if (config.password) options.password = config.password;
 
@@ -182,11 +205,17 @@ export const connectToDynamicBroker = (config: { url: string, username?: string,
       else console.error(`[MQTT - ${config.name}] Failed to subscribe:`, err);
     });
     mqttClients.set(id, client);
-    transientBrokers.set(id, { _id: id, name: config.name, url: config.url });
+    transientBrokers.set(id, { _id: id, name: config.name, url: config.url, port: config.port });
+    broadcastBrokerStatus();
   });
 
   client.on('error', (err) => {
     console.error(`[MQTT - ${config.name}] Connection error:`, err.message);
+    broadcastBrokerStatus();
+  });
+  
+  client.on('close', () => {
+    broadcastBrokerStatus();
   });
 
   setupClientListeners(client, config.name);
@@ -212,6 +241,7 @@ export const disconnectAllBrokers = () => {
   mqttClients.clear();
   transientBrokers.clear();
   console.log(`[MQTT] Disconnected from all brokers.`);
+  broadcastBrokerStatus();
 };
 
 export const initMqttService = async (io: Server) => {

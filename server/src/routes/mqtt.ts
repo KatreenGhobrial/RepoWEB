@@ -18,7 +18,7 @@ router.get('/brokers', async (req, res) => {
 // POST a new MQTT configuration (transient)
 router.post('/brokers', async (req, res) => {
   try {
-    const { url, username, password, topic, name } = req.body;
+    const { url, port, username, password, topic, name } = req.body;
 
     if (!url || !name) {
       return res.status(400).json({ message: 'URL and Name are required.' });
@@ -27,6 +27,7 @@ router.post('/brokers', async (req, res) => {
     const newBroker = {
       _id: Date.now().toString(),
       url,
+      port,
       username,
       password,
       topic: topic || '#',

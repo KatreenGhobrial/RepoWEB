@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import Header from '../UIComponents/Header';
-import { getHealth } from './iotService';
+import { getHealth, getBrokers } from './iotService';
 
 export default function MonitorPanel() {
   const [monitorData, setMonitorData] = useState({ summary: { health: 'Loading...' }, services: [] });
@@ -11,6 +11,7 @@ export default function MonitorPanel() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [mqttStatus, setMqttStatus] = useState('Disconnected');
 
   const alertsRef = useRef(alerts);
   useEffect(() => { alertsRef.current = alerts; }, [alerts]);
@@ -83,8 +84,21 @@ export default function MonitorPanel() {
       .catch(() => setMonitorData({ summary: { health: 'Down' }, services: [{ name: 'Backend API', status: 'Down', description: 'Unreachable' }] }))
       .finally(() => setLoading(false));
 
+    getBrokers()
+      .then(brokers => {
+        const anyConnected = brokers.some(b => b.connected);
+        setMqttStatus(anyConnected ? 'Connected' : brokers.length > 0 ? 'Connection Error' : 'Disconnected');
+      })
+      .catch(() => setMqttStatus('Connection Error'));
+
     const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', { withCredentials: true });
     socket.on('device_status_update', setActiveDevices);
+    
+    socket.on('mqtt_broker_status', (data) => {
+      if (data.status === 'error') setMqttStatus('Connection Error');
+      else if (data.status === 'connected') setMqttStatus('Connected');
+      else if (data.status === 'disconnected') setMqttStatus('Disconnected');
+    });
     socket.on('mqtt_message', ({ topic, payload }) => {
       try {
         const parts = topic.split('/');
@@ -195,6 +209,16 @@ export default function MonitorPanel() {
                 <span className={`text-xs px-3 py-1 rounded-full font-bold ${svc.status === 'Down' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{svc.status}</span>
               </div>
             ))}
+            
+            <div className="border border-slate-200 rounded-2xl p-5 flex justify-between items-start bg-slate-50 dark:bg-zinc-800">
+              <div>
+                <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200">MQTT Broker</h4>
+                <p className="text-sm text-slate-500 mt-2">Custom connections status</p>
+              </div>
+              <span className={`text-xs px-3 py-1 rounded-full font-bold ${mqttStatus === 'Connected' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : mqttStatus === 'Connection Error' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
+                {mqttStatus}
+              </span>
+            </div>
           </div>
         </div>
       </section>

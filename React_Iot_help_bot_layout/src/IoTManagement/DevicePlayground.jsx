@@ -9,7 +9,7 @@ export default function DevicePlayground() {
 
   // Dynamic Brokers State (Transient)
   const [brokers, setBrokers] = useState([]);
-  const [newBroker, setNewBroker] = useState({ name: '', url: '', username: '', password: '', topic: '#' });
+  const [newBroker, setNewBroker] = useState({ name: '', url: '', port: '', username: '', password: '', topic: '#' });
   const [brokerLoading, setBrokerLoading] = useState(false);
   const [brokerMsg, setBrokerMsg] = useState('');
 
@@ -54,7 +54,7 @@ export default function DevicePlayground() {
     try {
       await addBroker(newBroker);
       setBrokerMsg('✅ Broker connected successfully!');
-      setNewBroker({ name: '', url: '', username: '', password: '', topic: '#' });
+      setNewBroker({ name: '', url: '', port: '', username: '', password: '', topic: '#' });
       fetchBrokers();
     } catch (err) {
       setBrokerMsg(`❌ Error: ${err.message || 'Failed to connect to server.'}`);
@@ -109,6 +109,7 @@ export default function DevicePlayground() {
             <form onSubmit={handleAddBroker} className="flex flex-col gap-3">
               <input type="text" placeholder="Broker Name (e.g., Factory Sensor A)" required value={newBroker.name} onChange={e => setNewBroker({...newBroker, name: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
               <input type="text" placeholder="URL (e.g., mqtt://test.mosquitto.org)" required value={newBroker.url} onChange={e => setNewBroker({...newBroker, url: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+              <input type="number" placeholder="Port (e.g. 1883 or 8883)" value={newBroker.port} onChange={e => setNewBroker({...newBroker, port: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
               <div className="flex gap-3">
                 <input type="text" placeholder="Username (Optional)" value={newBroker.username} onChange={e => setNewBroker({...newBroker, username: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
                 <input type="password" placeholder="Password (Optional)" value={newBroker.password} onChange={e => setNewBroker({...newBroker, password: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
