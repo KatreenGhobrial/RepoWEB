@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
-import api from '../apiClient';
+import { getBrokers, addBroker, deleteBroker } from './iotService';
 
 export default function DevicePlayground() {
   const [messages, setMessages] = useState([]);
@@ -15,7 +15,7 @@ export default function DevicePlayground() {
 
   const fetchBrokers = async () => {
     try {
-      const data = await api.get('/mqtt/brokers');
+      const data = await getBrokers();
       setBrokers(data);
     } catch (err) {
       console.error('Failed to fetch brokers', err);
@@ -52,7 +52,7 @@ export default function DevicePlayground() {
     setBrokerLoading(true);
     setBrokerMsg('');
     try {
-      await api.post('/mqtt/brokers', newBroker);
+      await addBroker(newBroker);
       setBrokerMsg('✅ Broker connected successfully!');
       setNewBroker({ name: '', url: '', username: '', password: '', topic: '#' });
       fetchBrokers();
@@ -65,7 +65,7 @@ export default function DevicePlayground() {
 
   const handleDeleteBroker = async (id) => {
     try {
-      await api.delete(`/mqtt/brokers/${id}`);
+      await deleteBroker(id);
       setBrokerMsg('✅ Broker disconnected and removed.');
       fetchBrokers();
     } catch (err) {

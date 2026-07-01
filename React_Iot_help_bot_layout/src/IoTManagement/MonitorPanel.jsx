@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import Header from '../UIComponents/Header';
-import api from '../apiClient';
+import { getHealth } from './iotService';
 
 export default function MonitorPanel() {
   const [monitorData, setMonitorData] = useState({ summary: { health: 'Loading...' }, services: [] });
@@ -68,7 +68,7 @@ export default function MonitorPanel() {
   };
 
   useEffect(() => {
-    api.get('/health')
+    getHealth()
       .then(() => {
         setMonitorData({
           summary: { health: 'OK' },

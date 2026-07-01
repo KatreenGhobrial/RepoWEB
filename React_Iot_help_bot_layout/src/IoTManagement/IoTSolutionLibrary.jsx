@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
-import api from '../apiClient';
+import { getAll } from './iotService';
 
 const TABS = [
   { key: 'hardware', label: 'Hardware', icon: '🔧' },
@@ -24,7 +24,7 @@ export default function IoTSolutionLibrary() {
   useEffect(() => {
     const fetchLibrary = async () => {
       try {
-        const data = await api.get('/library');
+        const data = await getAll();
         setLibraryData(data);
       } catch (err) {
         console.error('Error fetching library:', err);

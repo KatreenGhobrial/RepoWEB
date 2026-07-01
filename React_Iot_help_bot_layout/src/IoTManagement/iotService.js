@@ -25,35 +25,27 @@ export async function getFeedback(projectId) {
   return await api.get(`/mentor/feedback/${projectId}`);
 }
 
-export async function broadcast(message) {
-  return await api.post("/mentor/broadcast", { message });
-}
-
 // Library Endpoints
 export async function getAll() {
   return await api.get("/library");
 }
 
-export async function getProtocols() {
-  return await api.get("/library/protocols");
-}
-
-export async function getHardware() {
-  return await api.get("/library/hardware");
-}
-
-export async function getCloud() {
-  return await api.get("/library/cloud");
-}
-
-export async function getSensors() {
-  return await api.get("/library/sensors");
-}
-
-export async function search(q) {
-  return await api.get(`/library/search`, { params: { q } });
-}
-
 export async function submitProjectAssessment(projectId, data) {
   return await api.put(`/projects/${projectId}/assessment`, data);
+}
+
+export async function getBrokers() {
+  return await api.get('/mqtt/brokers');
+}
+
+export async function addBroker(broker) {
+  return await api.post('/mqtt/brokers', broker);
+}
+
+export async function deleteBroker(id) {
+  return await api.delete(`/mqtt/brokers/${id}`);
+}
+
+export async function getHealth() {
+  return await api.get('/health');
 }
