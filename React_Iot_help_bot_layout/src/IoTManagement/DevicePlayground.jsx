@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
-import { getBrokers, addBroker, deleteBroker } from './iotService';
+import { getBrokers, addBroker, deleteBroker, deleteAllBrokers } from './iotService';
 
 export default function DevicePlayground() {
   const [messages, setMessages] = useState([]);
@@ -73,6 +73,21 @@ export default function DevicePlayground() {
     }
   };
 
+  const handleDisconnect = async () => {
+    try {
+      await deleteAllBrokers();
+      setBrokers([]);
+    } catch (err) {
+      console.error('Failed to disconnect brokers', err);
+    }
+    
+    if (socketInstance) {
+      socketInstance.disconnect();
+    }
+    
+    setBrokerMsg('🔌 Disconnected from playground and stopped all custom brokers.');
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto mt-6 px-4">
       <div className="text-center mb-4">
@@ -101,6 +116,9 @@ export default function DevicePlayground() {
               <input type="text" placeholder="Topic (Default: #)" value={newBroker.topic} onChange={e => setNewBroker({...newBroker, topic: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
               <button disabled={brokerLoading} type="submit" className="mt-2 bg-slate-900 hover:bg-slate-800 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold py-2 rounded-xl transition-colors text-sm disabled:opacity-50">
                 {brokerLoading ? 'Connecting...' : 'Connect (Temporary)'}
+              </button>
+              <button type="button" onClick={handleDisconnect} className="mt-2 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold py-2 rounded-xl transition-colors text-sm">
+                Disconnect
               </button>
               {brokerMsg && <p className="text-xs mt-1 font-semibold text-slate-600">{brokerMsg}</p>}
             </form>

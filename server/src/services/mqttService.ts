@@ -182,9 +182,7 @@ export const connectToDynamicBroker = (config: { url: string, username?: string,
       else console.error(`[MQTT - ${config.name}] Failed to subscribe:`, err);
     });
     mqttClients.set(id, client);
-    if (!config._id) {
-      transientBrokers.set(id, { _id: id, name: config.name, url: config.url });
-    }
+    transientBrokers.set(id, { _id: id, name: config.name, url: config.url });
   });
 
   client.on('error', (err) => {
@@ -202,6 +200,18 @@ export const disconnectFromDynamicBroker = (id: string) => {
     transientBrokers.delete(id);
     console.log(`[MQTT] Disconnected from broker: ${id}`);
   }
+};
+
+export const disconnectAllBrokers = () => {
+  for (const id of mqttClients.keys()) {
+    const client = mqttClients.get(id);
+    if (client) {
+      client.end();
+    }
+  }
+  mqttClients.clear();
+  transientBrokers.clear();
+  console.log(`[MQTT] Disconnected from all brokers.`);
 };
 
 export const initMqttService = async (io: Server) => {

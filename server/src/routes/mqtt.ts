@@ -1,6 +1,6 @@
 import express from 'express';
 // Removed MqttConfig import
-import { connectToDynamicBroker, disconnectFromDynamicBroker, getActiveCustomBrokers } from '../services/mqttService';
+import { connectToDynamicBroker, disconnectFromDynamicBroker, disconnectAllBrokers, getActiveCustomBrokers } from '../services/mqttService';
 
 const router = express.Router();
 
@@ -54,4 +54,16 @@ router.delete('/brokers/:id', async (req, res) => {
   }
 });
 
+// DELETE all brokers (transient)
+router.delete('/brokers', async (req, res) => {
+  try {
+    disconnectAllBrokers();
+    res.json({ message: 'All brokers deleted' });
+  } catch (error) {
+    console.error('Error deleting all brokers:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
+

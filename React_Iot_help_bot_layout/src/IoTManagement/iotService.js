@@ -46,6 +46,10 @@ export async function deleteBroker(id) {
   return await api.delete(`/mqtt/brokers/${id}`);
 }
 
+export async function deleteAllBrokers() {
+  return await api.delete('/mqtt/brokers');
+}
+
 export async function getHealth() {
   return await api.get('/health');
 }
