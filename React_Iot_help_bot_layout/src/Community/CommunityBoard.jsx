@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { io } from "socket.io-client";
+
 import Header from "../UIComponents/Header";
 import LabeledInput from '../UIComponents/LabeledInput';
 import * as communityService from "./communityService";
@@ -36,32 +36,6 @@ export default function CommunityBoard() {
 
   useEffect(() => {
     loadPosts();
-
-    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
-      withCredentials: true,
-    });
-
-    socket.on('new_post', (post) => {
-      setPosts((prev) => [post, ...prev]);
-    });
-
-    socket.on('post_updated', (updatedPost) => {
-      setPosts((prev) => prev.map((p) => p._id === updatedPost._id ? updatedPost : p));
-      setSelectedPost((prevSelected) => prevSelected?._id === updatedPost._id ? updatedPost : prevSelected);
-    });
-
-    socket.on('upvote_update', ({ postId, upvotes }) => {
-      setPosts((prev) => prev.map((p) => {
-        if (p._id === postId) {
-          // Handled elsewhere if full object is sent, or just updating visually
-        }
-        return p;
-      }));
-    });
-
-    return () => {
-      socket.disconnect();
-    };
   }, [tagFilter, searchQuery]);
 
   const loadPosts = async () => {
@@ -79,35 +53,55 @@ export default function CommunityBoard() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
+    
     try {
+      let tagsArray = tags.split(",");
+      
       await communityService.create({
-        title,
-        content,
-        tags: tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
+        title: title,
+        content: content,
+        tags: tagsArray
       });
+      
+      const allPosts = await communityService.list();
+      setPosts(allPosts);
+      
       setShowForm(false);
       setTitle("");
       setContent("");
       setTags("");
+      
     } catch (err) {
-      setError(err.message || "Failed to create post");
-    } finally {
-      setSaving(false);
+      setError("שגיאה ביצירת הפוסט");
     }
+    
+    setSaving(false);
   };
 
   const handleReply = async (e) => {
     e.preventDefault();
-    if (!selectedPost || !replyContent.trim()) return;
+    
+    if (replyContent === "") {
+      return;
+    }
+    
     setReplying(true);
+    
     try {
       await communityService.reply(selectedPost._id, replyContent);
       setReplyContent("");
+      
+      const allPosts = await communityService.list();
+      setPosts(allPosts);
+      
+      const updatedPost = allPosts.find(p => p._id === selectedPost._id);
+      setSelectedPost(updatedPost);
+      
     } catch (err) {
-      setError(err.message || "Failed to post reply");
-    } finally {
-      setReplying(false);
+      setError("error");
     }
+    
+    setReplying(false);
   };
 
   const handleUpvote = async (postId) => {
