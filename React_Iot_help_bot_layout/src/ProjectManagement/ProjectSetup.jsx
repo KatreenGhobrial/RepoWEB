@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
-import api from '../apiClient';
+import { list as listProjects, update as updateProject, create as createProject } from './projectService';
+import { detectConflicts } from '../BotEngine/botService';
 import { LuWifi, LuShield, LuZap, LuClock, LuCpu, LuTriangleAlert } from 'react-icons/lu';
 import LabeledInput from '../UIComponents/LabeledInput';
 const DEFAULT_FORM = { projectName: '', device: 'ESP32', protocol: 'HTTP', database: 'MongoDB', powerSource: 'Battery', membersText: '', requirements: '' };
@@ -20,7 +21,7 @@ export default function ProjectSetup() {
 
   useEffect(() => {
     if (!currentUser) return;
-    api.get('/projects').then(projs => {
+    listProjects().then(projs => {
       if (projs?.length) {
         setAllProjects(projs);
         loadProj(projs[0]);
@@ -58,11 +59,11 @@ export default function ProjectSetup() {
       };
 
       if (projectId) {
-        await api.put(`/projects/${projectId}`, payload);
+        await updateProject(projectId, payload);
         setMsg('✅ Project updated!');
         setAllProjects(prev => prev.map(p => p._id === projectId ? { ...p, ...payload } : p));
       } else {
-        const res = await api.post('/projects', { ...payload, sensors: ['DHT22'], description: payload.description || `IoT project using ${payload.device}` });
+        const res = await createProject({ ...payload, sensors: ['DHT22'], description: payload.description || `IoT project using ${payload.device}` });
         const newProjId = res.data?._id || res._id;
         setProjectId(newProjId);
         setMsg('✅ New project created!');
@@ -83,7 +84,7 @@ export default function ProjectSetup() {
     setConflicts([]);
     setAnalysisMsg('');
     try {
-      const data = await api.post('/bot/detect-conflicts', { ...dataToAnalyze, sensors: ['DHT22'] });
+      const data = await detectConflicts({ ...dataToAnalyze, sensors: ['DHT22'] });
       if (data?.conflicts) {
         setConflicts(data.conflicts);
         setAnalysisMsg(`Found ${data.conflicts.filter(c => c.level !== 'LOW').length} issue(s).`);

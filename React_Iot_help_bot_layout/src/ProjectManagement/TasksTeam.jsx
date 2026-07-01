@@ -3,7 +3,10 @@ import LabeledInput from '../UIComponents/LabeledInput';
 import { Navigate } from 'react-router-dom';
 import Header from '../UIComponents/Header';
 import { getUsers } from '../UserManagement/usersService';
-import api from '../apiClient';
+import { list as listProjects, update as updateProject } from './projectService';
+import { listByProject as listTasks, create as createTask, update as updateTask, deleteTask } from './taskService';
+import { getFeedback } from '../IoTManagement/iotService';
+
 
 export default function TasksTeam() {
   const [team, setTeam] = useState([]);
@@ -27,20 +30,20 @@ export default function TasksTeam() {
     const fetchData = async () => {
       try {
         if (!currentUser) return;
-        const projects = await api.get('/projects') || [];
+        const projects = await listProjects() || [];
         if (projects.length > 0) {
           const proj = projects[0];
           setProjectId(proj._id);
           setProjectStatus(proj.status || 'Active');
           setTeam(proj.members || proj.students || []);
 
-          const backendTasks = await api.get(`/tasks/${proj._id}`) || [];
+          const backendTasks = await listTasks(proj._id) || [];
           setTasks(backendTasks.map(t => ({
             ...t, owner: t.owner?.username || t.discipline || 'Unassigned',
             status: t.status === 'todo' ? 'To Do' : t.status === 'in-progress' ? 'In Progress' : 'Done'
           })));
 
-          setFeedbacks(await api.get(`/mentor/feedback/${proj._id}`) || []);
+          setFeedbacks(await getFeedback(proj._id) || []);
         }
       } catch (err) { console.error(err); } 
       finally { setLoading(false); }
@@ -59,7 +62,7 @@ export default function TasksTeam() {
 
     try {
       if (projectId) {
-        const newTask = await api.post('/tasks', { project: projectId, ...taskForm });
+        const newTask = await createTask({ project: projectId, ...taskForm });
         setTasks([...tasks, { ...newTask, owner: newTask.discipline, status: taskForm.status === 'todo' ? 'To Do' : taskForm.status === 'in-progress' ? 'In Progress' : 'Done' }]);
         showMsg('Task saved!');
       } else {
@@ -76,15 +79,15 @@ export default function TasksTeam() {
       if (action === 'status') {
         const dStat = data.status === 'todo' ? 'To Do' : data.status === 'in-progress' ? 'In Progress' : 'Done';
         setTasks(tasks.map(t => t._id === taskId ? { ...t, status: dStat } : t));
-        if (taskId) await api.put(`/tasks/${taskId}`, { status: data.status });
+        if (taskId) await updateTask(taskId, { status: data.status });
       } else if (action === 'delete') {
         setTasks(tasks.filter(t => t._id !== taskId));
-        if (taskId) await api.delete(`/tasks/${taskId}`);
+        if (taskId) await deleteTask(taskId);
       } else if (action === 'edit') {
         const dStat = data.status === 'todo' ? 'To Do' : data.status === 'in-progress' ? 'In Progress' : 'Done';
         setTasks(tasks.map(t => t._id === taskId ? { ...t, title: data.title, owner: data.owner, status: dStat, priority: data.priority } : t));
         setEditingTaskId(null);
-        if (taskId) await api.put(`/tasks/${taskId}`, { title: data.title, discipline: data.owner, status: data.status, priority: data.priority });
+        if (taskId) await updateTask(taskId, { title: data.title, discipline: data.owner, status: data.status, priority: data.priority });
       }
     } catch (err) { console.error('Task action failed', err); }
   };
@@ -92,7 +95,7 @@ export default function TasksTeam() {
   const updateTeamDB = async (updatedTeam) => {
     if (!projectId) return;
     const emails = updatedTeam.map(m => m.email || m.username || m).filter(Boolean);
-    await api.put(`/projects/${projectId}`, { memberEmails: emails });
+    await updateProject(projectId, { memberEmails: emails });
   };
 
   const handleAddMember = async (e) => {
