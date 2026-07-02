@@ -3,12 +3,15 @@ import LabeledInput from '../UIComponents/LabeledInput';
 import { Navigate } from 'react-router-dom';
 import Header from '../UIComponents/Header';
 import { getUsers } from '../UserManagement/usersService';
-import { list as listProjects, update as updateProject } from './projectService';
+import { update as updateProject } from './projectService';
 import { listByProject as listTasks, create as createTask, update as updateTask, deleteTask } from './taskService';
 import { getFeedback } from '../IoTManagement/iotService';
+import { useProject } from '../hooks/ProjectContext';
 
 
 export default function TasksTeam() {
+  const { selectedProjectId, selectedProject, updateProjectInCache } = useProject();
+
   const [team, setTeam] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [projectId, setProjectId] = useState(null);
@@ -30,9 +33,8 @@ export default function TasksTeam() {
     const fetchData = async () => {
       try {
         if (!currentUser) return;
-        const projects = await listProjects() || [];
-        if (projects.length > 0) {
-          const proj = projects[0];
+        const proj = selectedProject;
+        if (proj) {
           setProjectId(proj._id);
           setProjectStatus(proj.status || 'Active');
           setTeam(proj.members || proj.students || []);
@@ -44,12 +46,18 @@ export default function TasksTeam() {
           })));
 
           setFeedbacks(await getFeedback(proj._id) || []);
+        } else {
+          setProjectId(null);
+          setProjectStatus('Active');
+          setTeam([]);
+          setTasks([]);
+          setFeedbacks([]);
         }
       } catch (err) { console.error(err); } 
       finally { setLoading(false); }
     };
     fetchData();
-  }, [currentUser]);
+  }, [selectedProjectId]);
 
   const showMsg = (text, isError = false) => {
     setMsg({ text, isError });
