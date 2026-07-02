@@ -149,14 +149,14 @@ export default function SocraticBot() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Render alerts first */}
             {projectAlerts.map(alert => (
-              <div key={alert._id || alert.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-red-200 dark:border-red-900/50">
+              <div key={alert._id || alert.id} className="bg-white dark:bg-zinc-900 dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-red-200 dark:border-red-900/50">
                 <p className="font-bold text-red-700 dark:text-red-400 text-sm mb-1">{alert.title}</p>
                 <p className="text-slate-600 dark:text-slate-400 text-xs">{alert.message}</p>
               </div>
             ))}
             {/* Render conflicts next */}
             {projectConflicts.map(conf => (
-              <div key={conf.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-orange-200 dark:border-orange-900/50">
+              <div key={conf.id} className="bg-white dark:bg-zinc-900 dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-orange-200 dark:border-orange-900/50">
                 <p className="font-bold text-orange-700 dark:text-orange-400 text-sm mb-1">{conf.title}</p>
                 <p className="text-slate-600 dark:text-slate-400 text-xs">{conf.description}</p>
               </div>
@@ -166,12 +166,12 @@ export default function SocraticBot() {
       )}
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🤖</div>
             <div>
-              <h3 className="text-2xl font-bold text-slate-950">IoT troubleshooting chat</h3>
-              <p className="text-slate-500">Select a problem and answer the bot questions.</p>
+              <h3 className="text-2xl font-bold text-slate-950 dark:text-white">IoT troubleshooting chat</h3>
+              <p className="text-slate-500 dark:text-slate-400">Select a problem and answer the bot questions.</p>
             </div>
           </div>
          
@@ -192,7 +192,7 @@ export default function SocraticBot() {
 
           <div className="space-y-4 mb-6 max-h-96 overflow-y-auto pr-2">
             {chatHistory.map((msg, idx) => (
-              <div key={idx} className={msg.sender === 'bot' ? 'bg-slate-100 border border-slate-200 rounded-2xl p-5 max-w-xl' : 'bg-slate-950 text-white rounded-2xl p-5 max-w-xl ml-auto'}>
+              <div key={idx} className={msg.sender === 'bot' ? 'bg-slate-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 max-w-xl' : 'bg-slate-950 text-white rounded-2xl p-5 max-w-xl ml-auto'}>
                 <p className={`text-sm mb-1 ${msg.sender === 'bot' ? 'text-slate-400' : 'text-slate-300'}`}>{msg.sender === 'bot' ? '🤖 IoT HelpBot' : '👤 Student'}</p>
                 <div
                     className={msg.sender === 'bot' ? 'text-slate-900' : 'text-white'}
@@ -203,9 +203,9 @@ export default function SocraticBot() {
               </div>
             ))}
             {isLoading && (
-              <div className="bg-slate-100 border border-slate-200 rounded-2xl p-5 max-w-xl">
+              <div className="bg-slate-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 max-w-xl">
                 <p className="text-sm mb-1 text-slate-400">🤖 IoT HelpBot</p>
-                <p className="font-bold text-slate-500 animate-pulse">Thinking...</p>
+                <p className="font-bold text-slate-500 dark:text-slate-400 animate-pulse">Thinking...</p>
               </div>
             )}
             <div ref={chatEndRef} />
@@ -231,18 +231,18 @@ export default function SocraticBot() {
           {botMessage && <p className={`text-sm mt-4 ${isError ? 'text-red-500' : 'text-green-500'}`}>{botMessage}</p>}
         </div>
 
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-          <h3 className="text-2xl font-bold text-slate-950 mb-6">Current diagnosis</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
+          <h3 className="text-2xl font-bold text-slate-950 dark:text-white mb-6">Current diagnosis</h3>
           <div className="space-y-4">
-            <div className="border border-slate-200 rounded-2xl p-5">
+            <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5">
               <p className="text-sm text-slate-400 mb-1">Problem</p>
               <p className="font-bold text-slate-900">{currentProblem}</p>
             </div>
-            <div className="border border-slate-200 rounded-2xl p-5">
+            <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5">
               <p className="text-sm text-slate-400 mb-1">Possible area</p>
               <p className="font-bold text-slate-900">{areaText}</p>
             </div>
-            <div className="border border-slate-200 rounded-2xl p-5">
+            <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5">
               <p className="text-sm text-slate-400 mb-1">Bot status</p>
               <p className="font-bold text-slate-900">{statusText}</p>
             </div>
@@ -251,10 +251,10 @@ export default function SocraticBot() {
       </section>
 
       <section className="grid grid-cols-1 gap-6">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🧭</div>
-            <h3 className="text-2xl font-bold text-slate-950">Suggested investigation path</h3>
+            <h3 className="text-2xl font-bold text-slate-950 dark:text-white">Suggested investigation path</h3>
           </div>
           <ol className="space-y-4 text-slate-600 list-decimal list-inside">
             {investigationPath.map((path, idx) => (

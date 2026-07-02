@@ -150,7 +150,7 @@ export default function MonitorPanel() {
     setTimeout(() => setMessage(''), 3000);
   };
 
-  if (loading) return <div className="p-12 text-center text-slate-500">Loading monitor...</div>;
+  if (loading) return <div className="p-12 text-center text-slate-500 dark:text-slate-400">Loading monitor...</div>;
 
   const sensorArray = Object.values(sensors);
   const onlineCount = activeDevices.filter(d => d.status === 'online').length;
@@ -166,33 +166,33 @@ export default function MonitorPanel() {
           { l: 'Open Alerts', v: alerts.length, s: 'Need attention' },
           { l: 'System Health', v: monitorData.summary.health, s: 'Live status', c: monitorData.summary.health === 'OK' ? 'text-green-600' : 'text-orange-500' }
         ].map((x, i) => (
-          <div key={i} className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-            <p className="text-slate-500 mb-3">{x.l}</p>
-            <h3 className={`text-5xl font-bold ${x.c || 'text-slate-950'}`}>{x.v}</h3>
-            <p className="text-slate-500 mt-3">{x.s}</p>
+          <div key={i} className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
+            <p className="text-slate-500 dark:text-slate-400 mb-3">{x.l}</p>
+            <h3 className={`text-5xl font-bold ${x.c || 'text-slate-950 dark:text-white'}`}>{x.v}</h3>
+            <p className="text-slate-500 dark:text-slate-400 mt-3">{x.s}</p>
           </div>
         ))}
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-2xl font-bold flex items-center gap-4"><span className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🌡️</span> Sensor readings</h3>
             <button onClick={handleRefresh} className="bg-slate-950 text-white px-5 py-3 rounded-2xl font-bold hover:bg-slate-800">Ping System</button>
           </div>
           
           {!sensorArray.length ? (
-            <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed"><p className="text-slate-500 italic">Waiting for MQTT data...</p></div>
+            <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed"><p className="text-slate-500 dark:text-slate-400 italic">Waiting for MQTT data...</p></div>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               {sensorArray.map(s => (
-                <div key={s.id} className="border border-slate-200 rounded-2xl p-5 hover:bg-slate-50">
+                <div key={s.id} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 hover:bg-slate-50">
                   <div className="flex justify-between items-start mb-4">
-                    <div><h4 className="font-bold text-lg">{s.name}</h4><p className="text-sm text-slate-500">ID: {s.location}</p></div>
+                    <div><h4 className="font-bold text-lg">{s.name}</h4><p className="text-sm text-slate-500 dark:text-slate-400">ID: {s.location}</p></div>
                     <span className={`text-xs px-3 py-1 rounded-full font-bold ${s.status === 'Warning' ? 'bg-yellow-100 text-orange-600' : s.status === 'Offline' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{s.status}</span>
                   </div>
-                  <p className="text-4xl font-bold">{s.value}<span className="text-2xl text-slate-500">{s.unit}</span></p>
-                  <p className="text-xs text-slate-500 mt-2 bg-slate-100 inline-block px-2 py-1 rounded">Last seen: {s.lastUpdate}</p>
+                  <p className="text-4xl font-bold">{s.value}<span className="text-2xl text-slate-500 dark:text-slate-400">{s.unit}</span></p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-100 inline-block px-2 py-1 rounded">Last seen: {s.lastUpdate}</p>
                 </div>
               ))}
             </div>
@@ -200,20 +200,20 @@ export default function MonitorPanel() {
           {message && <p className="text-sm mt-5 text-sky-600 font-bold animate-pulse">{message}</p>}
         </div>
 
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-4"><span className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🖥️</span> System services</h3>
           <div className="space-y-4">
             {monitorData.services.map((svc, i) => (
-              <div key={i} className="border border-slate-200 rounded-2xl p-5 flex justify-between items-start">
-                <div><h4 className="font-bold text-lg">{svc.name}</h4><p className="text-sm text-slate-500 mt-2">{svc.description}</p></div>
+              <div key={i} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 flex justify-between items-start">
+                <div><h4 className="font-bold text-lg">{svc.name}</h4><p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{svc.description}</p></div>
                 <span className={`text-xs px-3 py-1 rounded-full font-bold ${svc.status === 'Down' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{svc.status}</span>
               </div>
             ))}
             
-            <div className="border border-slate-200 rounded-2xl p-5 flex justify-between items-start bg-slate-50 dark:bg-zinc-800">
+            <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 flex justify-between items-start bg-slate-50 dark:bg-zinc-800">
               <div>
                 <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200">MQTT Broker</h4>
-                <p className="text-sm text-slate-500 mt-2">Custom connections status</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Custom connections status</p>
               </div>
               <span className={`text-xs px-3 py-1 rounded-full font-bold ${mqttStatus === 'Connected' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : mqttStatus === 'Connection Error' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
                 {mqttStatus}
@@ -224,10 +224,10 @@ export default function MonitorPanel() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 mb-8">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-4"><span className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-xl">⚠️</span> Active Alerts</h3>
           {!alerts.length ? (
-            <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed"><p className="text-slate-500 italic">No active alerts. All systems nominal.</p></div>
+            <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed"><p className="text-slate-500 dark:text-slate-400 italic">No active alerts. All systems nominal.</p></div>
           ) : (
             <div className="space-y-3">
               {alerts.map(a => (
@@ -238,7 +238,7 @@ export default function MonitorPanel() {
                   </div>
                   <div className="text-right">
                     <span className={`text-xs px-3 py-1 rounded-full font-bold ${a.level === 'CRITICAL' ? 'bg-red-200 text-red-800' : a.level === 'HIGH' ? 'bg-orange-200 text-orange-800' : 'bg-yellow-200 text-yellow-800'}`}>{a.level}</span>
-                    <p className="text-xs text-slate-500 mt-2">{a.time}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{a.time}</p>
                   </div>
                 </div>
               ))}
@@ -248,13 +248,13 @@ export default function MonitorPanel() {
       </section>
 
       <section className="grid grid-cols-1 gap-6">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-4"><span className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">📋</span> System Logs</h3>
           <div className="space-y-3">
-            {!logs.length ? <p className="text-slate-500 italic text-center py-6">No logs yet.</p> : logs.map(l => (
+            {!logs.length ? <p className="text-slate-500 dark:text-slate-400 italic text-center py-6">No logs yet.</p> : logs.map(l => (
               <div key={l.id} className="border border-slate-100 rounded-2xl p-4 bg-slate-50 flex justify-between items-start">
                 <div><h4 className="font-bold text-sm">{l.title}</h4><p className="text-sm text-slate-600 mt-1">{l.message}</p></div>
-                <span className="text-xs text-slate-400 bg-white border px-2 py-1 rounded">{l.time}</span>
+                <span className="text-xs text-slate-400 bg-white dark:bg-zinc-900 border px-2 py-1 rounded">{l.time}</span>
               </div>
             ))}
           </div>

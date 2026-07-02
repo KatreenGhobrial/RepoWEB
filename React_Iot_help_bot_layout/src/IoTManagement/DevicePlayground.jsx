@@ -92,7 +92,7 @@ export default function DevicePlayground() {
     <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto mt-6 px-4">
       <div className="text-center mb-4">
         <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-3">Device Playground 🎮</h1>
-        <p className="text-slate-500 text-lg">
+        <p className="text-slate-500 dark:text-slate-400 text-lg">
           Real-time connection to your IoT devices and custom MQTT brokers.
         </p>
       </div>
@@ -102,19 +102,19 @@ export default function DevicePlayground() {
         <div className="flex flex-col gap-6 lg:col-span-1">
 
           {/* Add MQTT Broker Panel */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
             <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
               🔗 Add Custom MQTT Broker
             </h2>
             <form onSubmit={handleAddBroker} className="flex flex-col gap-3">
-              <input type="text" placeholder="Broker Name (e.g., Factory Sensor A)" required value={newBroker.name} onChange={e => setNewBroker({...newBroker, name: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
-              <input type="text" placeholder="URL (e.g., mqtt://test.mosquitto.org)" required value={newBroker.url} onChange={e => setNewBroker({...newBroker, url: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
-              <input type="number" placeholder="Port (e.g. 1883 or 8883)" value={newBroker.port} onChange={e => setNewBroker({...newBroker, port: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+              <input type="text" placeholder="Broker Name (e.g., Factory Sensor A)" required value={newBroker.name} onChange={e => setNewBroker({...newBroker, name: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+              <input type="text" placeholder="URL (e.g., mqtt://test.mosquitto.org)" required value={newBroker.url} onChange={e => setNewBroker({...newBroker, url: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+              <input type="number" placeholder="Port (e.g. 1883 or 8883)" value={newBroker.port} onChange={e => setNewBroker({...newBroker, port: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
               <div className="flex gap-3">
-                <input type="text" placeholder="Username (Optional)" value={newBroker.username} onChange={e => setNewBroker({...newBroker, username: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
-                <input type="password" placeholder="Password (Optional)" value={newBroker.password} onChange={e => setNewBroker({...newBroker, password: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+                <input type="text" placeholder="Username (Optional)" value={newBroker.username} onChange={e => setNewBroker({...newBroker, username: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+                <input type="password" placeholder="Password (Optional)" value={newBroker.password} onChange={e => setNewBroker({...newBroker, password: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
               </div>
-              <input type="text" placeholder="Topic (Default: #)" value={newBroker.topic} onChange={e => setNewBroker({...newBroker, topic: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+              <input type="text" placeholder="Topic (Default: #)" value={newBroker.topic} onChange={e => setNewBroker({...newBroker, topic: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
               <button disabled={brokerLoading} type="submit" className="mt-2 bg-slate-900 hover:bg-slate-800 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold py-2 rounded-xl transition-colors text-sm disabled:opacity-50">
                 {brokerLoading ? 'Connecting...' : 'Connect (Temporary)'}
               </button>
@@ -126,7 +126,7 @@ export default function DevicePlayground() {
 
             {/* Active Connections List */}
             <div className="mt-6 pt-4 border-t border-slate-100 dark:border-zinc-800">
-              <h3 className="text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">Active Custom Brokers</h3>
+              <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">Active Custom Brokers</h3>
               {brokers.length === 0 ? (
                 <p className="text-xs text-slate-400 italic">No custom brokers added yet.</p>
               ) : (
@@ -152,7 +152,7 @@ export default function DevicePlayground() {
           </div>
 
           {/* Connected Devices Status Panel */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex-grow">
+          <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex-grow">
             <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
               🟢 Connected Devices
             </h2>
@@ -183,7 +183,7 @@ export default function DevicePlayground() {
         <div className="flex flex-col gap-6 lg:col-span-2">
           
           {/* Live Data Feed */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex-grow">
+          <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex-grow">
             <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
               📡 Live Data Feed
             </h2>
@@ -195,7 +195,7 @@ export default function DevicePlayground() {
               ) : (
                 <ul className="space-y-3">
                   {messages.map((msg, index) => (
-                    <li key={index} className="bg-white dark:bg-zinc-800 p-3 rounded-lg border border-slate-200 dark:border-zinc-700 shadow-sm transition-all hover:border-sky-300">
+                    <li key={index} className="bg-white dark:bg-zinc-900 dark:bg-zinc-800 p-3 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 shadow-sm transition-all hover:border-sky-300">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-xs text-sky-600 dark:text-sky-400 font-bold bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded">Topic: {msg.topic}</span>
                         <span className="text-xs text-slate-400">{new Date(msg.time).toLocaleTimeString()}</span>

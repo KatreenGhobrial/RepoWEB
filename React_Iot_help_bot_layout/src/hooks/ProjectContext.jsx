@@ -8,23 +8,31 @@ export function ProjectProvider({ children }) {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-
-  // Fetch all projects on mount
+  // Fetch all projects on mount (only if user is logged in)
   useEffect(() => {
+    let currentUser = null;
+    try {
+      currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    } catch (e) {
+      currentUser = null;
+    }
+
     if (!currentUser) {
       setLoading(false);
       return;
     }
+
     listProjects()
       .then(projs => {
-        const list = projs || [];
+        const list = Array.isArray(projs) ? projs : [];
         setAllProjects(list);
         if (list.length > 0 && !selectedProjectId) {
           setSelectedProjectId(list[0]._id);
         }
       })
-      .catch(console.error)
+      .catch(err => {
+        console.error('ProjectContext: failed to fetch projects', err);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -34,7 +42,7 @@ export function ProjectProvider({ children }) {
   const refreshProjects = async () => {
     try {
       const projs = await listProjects();
-      const list = projs || [];
+      const list = Array.isArray(projs) ? projs : [];
       setAllProjects(list);
       return list;
     } catch (err) {

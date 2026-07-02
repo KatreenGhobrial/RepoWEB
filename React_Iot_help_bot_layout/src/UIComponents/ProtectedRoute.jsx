@@ -7,7 +7,12 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  const currentUser = JSON.parse(currentUserStr);
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(currentUserStr);
+  } catch (e) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
     // If user role is not in the allowed list, redirect to a safe page like dashboard

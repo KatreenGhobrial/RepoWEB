@@ -25,7 +25,10 @@ export default function TasksTeam() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editTaskForm, setEditTaskForm] = useState({});
 
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  } catch(e) {}
 
   if (currentUser?.role === 'mentor') return <Navigate to="/mentor-dashboard" replace />;
 
@@ -133,7 +136,7 @@ export default function TasksTeam() {
     try { await updateTeamDB(newTeam); } catch (err) { console.error(err); }
   };
 
-  if (loading) return <div className="p-12 text-center text-slate-500">Loading tasks...</div>;
+  if (loading) return <div className="p-12 text-center text-slate-500 dark:text-slate-400">Loading tasks...</div>;
 
   return (
     <>
@@ -145,18 +148,18 @@ export default function TasksTeam() {
           { label: 'Completed Tasks', val: tasks.filter(t => t.status === 'Done').length, sub: `${tasks.length} total tasks` },
           { label: 'Project Status', val: projectStatus, sub: projectId ? 'Connected to backend' : 'Demo mode' }
         ].map((s, i) => (
-          <div key={i} className="bg-white rounded-3xl border border-slate-200 p-7 shadow-sm" style={{borderColor: '#E2E8F0'}}>
-            <p className="text-slate-500 mb-3">{s.label}</p>
-            <h3 className="text-5xl font-bold text-slate-950">{s.val}</h3>
-            <p className="text-slate-500 mt-3">{s.sub}</p>
+          <div key={i} className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 p-7 shadow-sm" style={{borderColor: '#E2E8F0'}}>
+            <p className="text-slate-500 dark:text-slate-400 mb-3">{s.label}</p>
+            <h3 className="text-5xl font-bold text-slate-950 dark:text-white">{s.val}</h3>
+            <p className="text-slate-500 dark:text-slate-400 mt-3">{s.sub}</p>
           </div>
         ))}
       </section>
 
-      <section className="bg-white rounded-3xl border border-slate-200 p-7 mb-8 shadow-sm">
+      <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 p-7 mb-8 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">👥</div>
+            <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">👥</div>
             <h3 className="text-2xl font-bold">Team members</h3>
           </div>
           <form onSubmit={handleAddMember} className="flex gap-2 w-full md:w-auto">
@@ -168,11 +171,11 @@ export default function TasksTeam() {
         
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
           {team.map((m, i) => (
-            <div key={i} className="border border-slate-200 rounded-2xl p-5 relative hover:bg-slate-50 transition-colors">
+            <div key={i} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 relative hover:bg-slate-50 dark:bg-zinc-800/50 transition-colors">
               <button onClick={() => handleRemoveMember(m.email || m.username || m)} className="absolute top-3 right-3 text-slate-400 hover:text-red-500 transition-colors" title="Remove Member">✕</button>
-              <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl mb-3">{m.icon || '👤'}</div>
+              <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl mb-3">{m.icon || '👤'}</div>
               <h4 className="font-bold text-lg text-slate-900">{m.username || m.name || m.email || m}</h4>
-              <p className="text-sm text-slate-500 capitalize mt-1">{m.role || 'Student'}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 capitalize mt-1">{m.role || 'Student'}</p>
               <p className="text-sm font-semibold text-cyan-600 mt-3">{m.expertise?.join(', ') || m.responsibility || 'General'}</p>
             </div>
           ))}
@@ -180,14 +183,14 @@ export default function TasksTeam() {
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-7 shadow-sm">
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 p-7 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">✅</div>
+            <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">✅</div>
             <h3 className="text-2xl font-bold">Project tasks</h3>
           </div>
           <div className="space-y-4">
             {tasks.map((task, idx) => (
-              <div key={task._id || idx} className="border border-slate-200 rounded-2xl p-5">
+              <div key={task._id || idx} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5">
                 {editingTaskId === task._id ? (
                   <div className="flex flex-col gap-3">
                     <input className="border border-slate-300 rounded-lg px-3 py-2 font-bold w-full" value={editTaskForm.title} onChange={e => setEditTaskForm({...editTaskForm, title: e.target.value})} />
@@ -204,7 +207,7 @@ export default function TasksTeam() {
                       </select>
                     </div>
                     <div className="flex gap-2 justify-end mt-1">
-                      <button onClick={() => setEditingTaskId(null)} className="px-4 py-1.5 bg-slate-100 text-slate-700 font-bold rounded-lg text-sm hover:bg-slate-200 transition-colors">Cancel</button>
+                      <button onClick={() => setEditingTaskId(null)} className="px-4 py-1.5 bg-slate-100 dark:bg-zinc-800 text-slate-700 font-bold rounded-lg text-sm hover:bg-slate-200 transition-colors">Cancel</button>
                       <button onClick={() => handleTaskAction(task._id, 'edit', editTaskForm)} className="px-4 py-1.5 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800 transition-colors">Save</button>
                     </div>
                   </div>
@@ -212,11 +215,11 @@ export default function TasksTeam() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-bold text-slate-900 text-lg">{task.title}</h4>
-                      <p className="text-sm text-slate-500 mt-2">Owner: {task.owner}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Owner: {task.owner}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <select 
-                        className={`text-sm px-4 py-2 rounded-full font-bold cursor-pointer outline-none appearance-none ${task.status==='Done'?'bg-green-100 text-green-700':task.status==='In Progress'?'bg-yellow-100 text-orange-600':'bg-slate-100 text-slate-600'}`}
+                        className={`text-sm px-4 py-2 rounded-full font-bold cursor-pointer outline-none appearance-none ${task.status==='Done'?'bg-green-100 text-green-700':task.status==='In Progress'?'bg-yellow-100 text-orange-600':'bg-slate-100 dark:bg-zinc-800 text-slate-600'}`}
                         value={task.status === 'Done' ? 'done' : task.status === 'In Progress' ? 'in-progress' : 'todo'}
                         onChange={(e) => handleTaskAction(task._id, 'status', { status: e.target.value })}
                         disabled={!task._id}
@@ -237,8 +240,8 @@ export default function TasksTeam() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl border border-slate-200 p-7 shadow-sm">
-          <h3 className="text-2xl font-bold mb-6 text-slate-950">Add new task</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 p-7 shadow-sm">
+          <h3 className="text-2xl font-bold mb-6 text-slate-950 dark:text-white">Add new task</h3>
           <form onSubmit={handleAddTask} className="space-y-5">
             <LabeledInput label="Task title" type="text" placeholder="Enter task description" value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" />
             <LabeledInput label="Assign To (Partner)">
@@ -262,24 +265,24 @@ export default function TasksTeam() {
         </div>
       </section>
 
-      <section className="bg-white rounded-3xl border border-slate-200 p-7 shadow-sm">
+      <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 p-7 shadow-sm">
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">💬</div>
-          <h3 className="text-2xl font-bold text-slate-950">Mentor Feedback</h3>
+          <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">💬</div>
+          <h3 className="text-2xl font-bold text-slate-950 dark:text-white">Mentor Feedback</h3>
         </div>
         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
           {feedbacks.length ? feedbacks.map((fb, i) => {
             const m = fb.content.match(/^\[Task:\s*(.*?)\]\s*(.*)$/);
             return (
-              <div key={i} className="border border-slate-100 bg-slate-50 rounded-3xl p-5">
+              <div key={i} className="border border-slate-100 bg-slate-50 dark:bg-zinc-800/50 rounded-3xl p-5">
                 <div className="flex items-center justify-end mb-1">
-                  <span className="text-xs text-slate-500">{new Date(fb.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{new Date(fb.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="text-xs font-semibold text-slate-600 mb-1">📌 {m ? `Task: ${m[1]}` : fb.relatedTaskTitle ? `Task: ${fb.relatedTaskTitle}` : 'General Feedback'}</div>
                 <p className="text-slate-700 text-sm">{m ? m[2] : fb.content}</p>
               </div>
             );
-          }) : <p className="text-slate-500 text-center py-8 bg-slate-50 rounded-2xl">No feedback received yet.</p>}
+          }) : <p className="text-slate-500 dark:text-slate-400 text-center py-8 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">No feedback received yet.</p>}
         </div>
       </section>
     </>

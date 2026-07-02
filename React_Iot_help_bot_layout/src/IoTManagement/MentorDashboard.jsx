@@ -5,7 +5,10 @@ import LabeledInput from '../UIComponents/LabeledInput';
 import * as mentorService from "./iotService";
 
 export default function MentorDashboard() {
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  } catch(e) {}
   const [dashData, setDashData] = useState(null);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
@@ -194,8 +197,8 @@ export default function MentorDashboard() {
             { l: "Tasks Completed", v: dashData.completedTasks, i: "✅" },
             { l: "Avg Reflection", v: (dashData.avgReflection || 0).toFixed(1), i: "🧠" }
           ].map(s => (
-            <div key={s.l} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-2"><span>{s.i}</span><span className="text-xs text-slate-500">{s.l}</span></div>
+            <div key={s.l} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-2"><span>{s.i}</span><span className="text-xs text-slate-500 dark:text-slate-400">{s.l}</span></div>
               <p className="text-2xl font-bold">{s.v}</p>
             </div>
           ))}
@@ -209,14 +212,14 @@ export default function MentorDashboard() {
             const team = [p.owner, ...(p.members || [])].filter(Boolean).map(s => s.username || s.name || s.email || s);
             const progress = projectProgress[p._id] || { completed: 0, total: 0, percent: 0 };
             return (
-              <button key={p._id} onClick={() => setSelectedProject(p._id)} className={`w-full text-left bg-white border rounded-xl p-4 transition-all hover:bg-slate-50 shadow-sm ${selectedProject === p._id ? "border-cyan-500 ring-1 ring-cyan-500/30" : "border-slate-200"}`}>
+              <button key={p._id} onClick={() => setSelectedProject(p._id)} className={`w-full text-left bg-white dark:bg-zinc-900 border rounded-xl p-4 transition-all hover:bg-slate-50 shadow-sm ${selectedProject === p._id ? "border-cyan-500 ring-1 ring-cyan-500/30" : "border-slate-200 dark:border-zinc-800"}`}>
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium">{p.name}</p>
                   <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{p.status || 'Active'}</span>
                 </div>
                 
                 <div className="mt-3">
-                  <div className="flex justify-between text-xs text-slate-500 mb-1">
+                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                     <span>Progress</span>
                     <span>{progress.percent}% ({progress.completed}/{progress.total})</span>
                   </div>
@@ -229,19 +232,19 @@ export default function MentorDashboard() {
                   <select value={p.phase || 'ideation'} onChange={e => handlePhaseChange(e, p._id, e.target.value)} onClick={e => e.stopPropagation()} className="text-xs px-2 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 outline-none cursor-pointer">
                     <option value="ideation">Ideation</option><option value="design">Design</option><option value="integration">Integration</option><option value="testing">Testing</option><option value="reflection">Reflection</option>
                   </select>
-                  <span className="text-xs text-slate-500">{p.device || 'ESP32'}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{p.device || 'ESP32'}</span>
                 </div>
                 <p className="text-xs text-slate-600 mt-3"><span className="font-semibold text-slate-800">Team: </span>{[...new Set(team)].join(', ') || 'None'}</p>
               </button>
             );
           })}
-          {!projects.length && !loading && <p className="text-sm text-slate-500 text-center py-8">No projects found</p>}
+          {!projects.length && !loading && <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-8">No projects found</p>}
         </div>
 
         <div className="lg:col-span-2 space-y-6">
           {selectedProject ? (
             <>
-              <form onSubmit={handleFeedback} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+              <form onSubmit={handleFeedback} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 space-y-4 shadow-sm">
                 <h3 className="font-semibold">💬 Give Feedback</h3>
                 <LabeledInput label="Feedback Content">
                     <textarea value={fbContent} onChange={e => setFbContent(e.target.value)} rows={3} placeholder="Write feedback..." className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-cyan-500 resize-none" required />
@@ -256,7 +259,7 @@ export default function MentorDashboard() {
               </form>
 
               {/* Evaluation and Grades Panel */}
-              <form onSubmit={handleSaveEvaluation} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
+              <form onSubmit={handleSaveEvaluation} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 space-y-5 shadow-sm">
                 <div className="flex items-center justify-between border-b pb-3">
                   <h3 className="font-bold text-slate-900 flex items-center gap-2 text-base">
                     <span>📊</span>
@@ -297,7 +300,7 @@ export default function MentorDashboard() {
                     onChange={e => setInterdisciplinaryNotes(e.target.value)} 
                     rows={2} 
                     placeholder="Comments about interdisciplinary work..." 
-                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-cyan-500 resize-none"
+                    className="w-full border border-slate-200 dark:border-zinc-800 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-cyan-500 resize-none"
                   />
                 </div>
 
@@ -324,7 +327,7 @@ export default function MentorDashboard() {
                     onChange={e => setCooperationNotes(e.target.value)} 
                     rows={2} 
                     placeholder="Comments about team cooperation..." 
-                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-violet-500 resize-none"
+                    className="w-full border border-slate-200 dark:border-zinc-800 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-violet-500 resize-none"
                   />
                 </div>
 
@@ -351,7 +354,7 @@ export default function MentorDashboard() {
                     onChange={e => setTechnicalNotes(e.target.value)} 
                     rows={2} 
                     placeholder="Comments about technical progress..." 
-                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-emerald-500 resize-none"
+                    className="w-full border border-slate-200 dark:border-zinc-800 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-emerald-500 resize-none"
                   />
                 </div>
 
@@ -365,7 +368,7 @@ export default function MentorDashboard() {
                     onChange={e => setSummaryNotes(e.target.value)} 
                     rows={3} 
                     placeholder="Write a general evaluation summary..." 
-                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-slate-400 resize-none"
+                    className="w-full border border-slate-200 dark:border-zinc-800 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-slate-400 resize-none"
                   />
                 </div>
 
@@ -378,11 +381,11 @@ export default function MentorDashboard() {
                 </button>
               </form>
 
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+              <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
                 <h3 className="text-sm font-semibold mb-3">📊 Task Progress</h3>
                 {projectTasks.length ? (
                   <div>
-                    <div className="flex justify-between text-xs text-slate-500 mb-1">
+                    <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                       <span>Progress</span><span>{projectTasks.filter(t => t.status?.toLowerCase() === 'done').length} / {projectTasks.length} Done</span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-2.5 mb-4"><div className="bg-cyan-500 h-2.5 rounded-full" style={{ width: `${Math.round((projectTasks.filter(t => t.status?.toLowerCase() === 'done').length / projectTasks.length) * 100)}%` }}></div></div>
@@ -395,18 +398,18 @@ export default function MentorDashboard() {
                       ))}
                     </div>
                   </div>
-                ) : <p className="text-sm text-slate-500">No tasks yet.</p>}
+                ) : <p className="text-sm text-slate-500 dark:text-slate-400">No tasks yet.</p>}
               </div>
 
               {feedback.length > 0 && (
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
                   <h3 className="text-sm font-semibold mb-3">📋 Feedback History</h3>
                   <div className="space-y-3 max-h-60 overflow-auto">
                     {feedback.map(fb => {
                       const m = fb.content.match(/^\[Task:\s*(.*?)\]\s*(.*)$/);
                       return (
                         <div key={fb._id} className="bg-slate-50 rounded-lg p-3 text-sm">
-                          <div className="text-right text-xs text-slate-500 mb-1">{new Date(fb.createdAt).toLocaleDateString()}</div>
+                          <div className="text-right text-xs text-slate-500 dark:text-slate-400 mb-1">{new Date(fb.createdAt).toLocaleDateString()}</div>
                           <div className="text-xs font-semibold text-slate-600 mb-1">📌 {m ? `Task: ${m[1]}` : fb.relatedTaskTitle ? `Task: ${fb.relatedTaskTitle}` : 'General Feedback'}</div>
                           <p className="text-slate-700">{m ? m[2] : fb.content}</p>
                         </div>
@@ -438,7 +441,7 @@ export default function MentorDashboard() {
                     <input type="range" min="0" max="100" value={assessment.technical} onChange={e => setAssessment({...assessment, technical: Number(e.target.value)})} className="w-full accent-indigo-600" />
                   </div>
                   <LabeledInput label="Final Evaluation Comments">
-                    <textarea value={assessment.comments} onChange={e => setAssessment({...assessment, comments: e.target.value})} rows={3} placeholder="Provide an official summary of their work..." className="w-full border border-indigo-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500 resize-none bg-white/80" />
+                    <textarea value={assessment.comments} onChange={e => setAssessment({...assessment, comments: e.target.value})} rows={3} placeholder="Provide an official summary of their work..." className="w-full border border-indigo-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-500 resize-none bg-white dark:bg-zinc-900/80" />
                   </LabeledInput>
                   <button type="submit" disabled={assessmentSaving} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-md transition-colors disabled:opacity-50">
                     {assessmentSaving ? "Saving..." : "💾 Save Official Grades"}
@@ -447,10 +450,10 @@ export default function MentorDashboard() {
               </form>
             </>
           ) : (
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
+            <div className="bg-slate-50 border border-slate-200 dark:border-zinc-800 rounded-2xl p-12 text-center shadow-sm">
               <span className="text-4xl">👈</span>
               <h3 className="text-lg font-semibold mt-4">Select a Project</h3>
-              <p className="text-sm text-slate-500 mt-2">Choose a student project to view details and provide feedback.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Choose a student project to view details and provide feedback.</p>
             </div>
           )}
         </div>

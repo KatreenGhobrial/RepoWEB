@@ -105,21 +105,21 @@ export default function DetectConflict() {
       <Header title="Detect Conflict" subtitle="AI-powered architecture risk analysis" />
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-          <p className="text-slate-500 text-lg mb-3">Current Conflicts</p>
-          <h3 className="text-5xl font-bold text-slate-950">{conflictCount}</h3>
-          <p className="text-slate-500 text-lg mt-3">Issues found in analysis</p>
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
+          <p className="text-slate-500 dark:text-slate-400 text-lg mb-3">Current Conflicts</p>
+          <h3 className="text-5xl font-bold text-slate-950 dark:text-white">{conflictCount}</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-lg mt-3">Issues found in analysis</p>
         </div>
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-          <p className="text-slate-500 text-lg mb-3">Highest Risk</p>
-          <h3 className="text-5xl font-bold text-slate-950">{highestRisk}</h3>
-          <p className="text-slate-500 text-lg mt-3">Severity level</p>
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
+          <p className="text-slate-500 dark:text-slate-400 text-lg mb-3">Highest Risk</p>
+          <h3 className="text-5xl font-bold text-slate-950 dark:text-white">{highestRisk}</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-lg mt-3">Severity level</p>
         </div>
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-          <h3 className="text-2xl font-bold text-slate-950 mb-6">Run conflict analysis</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
+          <h3 className="text-2xl font-bold text-slate-950 dark:text-white mb-6">Run conflict analysis</h3>
           <form onSubmit={handleCheck} className="space-y-5">
             <LabeledInput label="Device">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={device} onChange={e => setDevice(e.target.value)}>
@@ -157,8 +157,8 @@ export default function DetectConflict() {
           </form>
         </div>
         
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
-          <h3 className="text-2xl font-bold text-slate-950 mb-6">Analysis Results</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
+          <h3 className="text-2xl font-bold text-slate-950 dark:text-white mb-6">Analysis Results</h3>
           <div className="space-y-4">
             {results.length > 0 ? results.map(renderConflictCard) : (
               <p className="text-slate-400 text-center py-8">Run an analysis to see results</p>

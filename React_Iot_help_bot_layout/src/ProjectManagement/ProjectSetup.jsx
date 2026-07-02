@@ -19,7 +19,10 @@ export default function ProjectSetup() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisMsg, setAnalysisMsg] = useState('');
 
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  } catch(e) {}
 
   // Sync local state when selectedProject changes (from context)
   useEffect(() => {
@@ -110,16 +113,16 @@ export default function ProjectSetup() {
     <>
       <Header title="IoT Help Bot" subtitle="Manage architecture, detect IoT risks, and support collaboration." />
 
-      <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7 mb-8 transition-colors">
+      <section className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 shadow-sm p-7 mb-8 transition-colors">
         <h3 className="text-2xl font-bold mb-8 flex items-center gap-4 text-slate-900 dark:text-white">
-          <span className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">🔗</span> Architecture flow
+          <span className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">🔗</span> Architecture flow
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {[
             { n: 'Device', i: '📱', d: summaryData.device }, { n: 'Protocol', i: '📡', d: summaryData.protocol },
             { n: 'Gateway', i: '🌐', d: 'Wi-Fi' }, { n: 'Backend', i: '⚙️', d: 'Node.js' }, { n: 'Database', i: '🗄️', d: summaryData.database }
           ].map((item, idx) => (
-            <div key={idx} className="border border-slate-200 dark:border-zinc-700 rounded-2xl p-5 text-center bg-slate-50 dark:bg-zinc-800/50 transition-colors">
+            <div key={idx} className="border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 rounded-2xl p-5 text-center bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 transition-colors">
               <p className="text-3xl mb-3">{item.i}</p>
               <h4 className="font-bold text-slate-900 dark:text-white">{item.n}</h4>
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">{item.d}</p>
@@ -129,11 +132,11 @@ export default function ProjectSetup() {
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7 transition-colors">
+        <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 shadow-sm p-7 transition-colors">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Project details</h3>
             {allProjects.length > 0 && (
-              <select className="border border-slate-300 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-sm font-semibold bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white outline-none" value={selectedProjectId || 'new'} onChange={e => {
+              <select className="border border-slate-300 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-sm font-semibold bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 text-slate-900 dark:text-white outline-none" value={selectedProjectId || 'new'} onChange={e => {
                 if (e.target.value === 'new') { setSelectedProjectId(null); setProjectId(null); setFormData(DEFAULT_FORM); setSummaryData(DEFAULT_FORM); }
                 else setSelectedProjectId(e.target.value);
               }}>
@@ -157,7 +160,7 @@ export default function ProjectSetup() {
           </form>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7 transition-colors">
+        <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 shadow-sm p-7 transition-colors">
           <h3 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Current summary</h3>
           <div className="space-y-4">
             <SummaryBox title="Project" val={summaryData.projectName} />
@@ -173,14 +176,14 @@ export default function ProjectSetup() {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7 mb-8 transition-colors">
+      <section className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 shadow-sm p-7 mb-8 transition-colors">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-bold flex items-center gap-3 text-slate-900 dark:text-white">
             <span className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center text-xl">🔍</span> Interdisciplinary Difficulties
           </h3>
         </div>
         {isAnalyzing ? (
-          <p className="text-slate-500 dark:text-slate-400 font-medium py-4">Analyzing architecture...</p>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium py-4">Analyzing architecture...</p>
         ) : analysisMsg ? (
           conflicts.length === 0 ? (
             <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-5 text-emerald-700 dark:text-emerald-400">
@@ -200,7 +203,7 @@ export default function ProjectSetup() {
                   <div key={i} className={`border rounded-2xl p-5 ${col}`}>
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-bold flex items-center gap-2"><Icon size={20} /> {c.title}</h4>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/60 dark:bg-black/30">{c.level}</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white dark:bg-zinc-900/60 dark:bg-black/30">{c.level}</span>
                     </div>
                     <p className="text-sm mb-2 opacity-90">{c.reason}</p>
                     <p className="text-sm font-semibold mt-2">💡 {c.suggestion}</p>
@@ -210,7 +213,7 @@ export default function ProjectSetup() {
             </div>
           )
         ) : (
-          <p className="text-slate-400 dark:text-slate-500 text-center py-8 font-medium">Save project to detect risks automatically</p>
+          <p className="text-slate-400 dark:text-slate-500 dark:text-slate-400 text-center py-8 font-medium">Save project to detect risks automatically</p>
         )}
       </section>
     </>
@@ -219,22 +222,22 @@ export default function ProjectSetup() {
 
 const Input = ({label, val, onChange, placeholder, isArea}) => (
   <LabeledInput label={label}>
-    {isArea ? <textarea className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 font-medium transition-colors" rows="3" value={val} onChange={e=>onChange(e.target.value)} placeholder={placeholder} />
-            : <input className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 font-medium transition-colors" value={val} onChange={e=>onChange(e.target.value)} placeholder={placeholder} />}
+    {isArea ? <textarea className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-900 dark:bg-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 font-medium transition-colors" rows="3" value={val} onChange={e=>onChange(e.target.value)} placeholder={placeholder} />
+            : <input className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-900 dark:bg-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 font-medium transition-colors" value={val} onChange={e=>onChange(e.target.value)} placeholder={placeholder} />}
   </LabeledInput>
 );
 
 const Select = ({label, val, opts, onChange}) => (
   <LabeledInput label={label}>
-    <select className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white font-medium transition-colors" value={val} onChange={e=>onChange(e.target.value)}>
+    <select className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-900 dark:bg-zinc-800 text-slate-900 dark:text-white font-medium transition-colors" value={val} onChange={e=>onChange(e.target.value)}>
       {opts.map(o => <option key={o}>{o}</option>)}
     </select>
   </LabeledInput>
 );
 
 const SummaryBox = ({title, val, pre}) => (
-  <div className="border border-slate-200 dark:border-zinc-700 rounded-2xl p-5 bg-slate-50 dark:bg-zinc-800/50 transition-colors">
-    <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-semibold uppercase tracking-wider">{title}</p>
+  <div className="border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 rounded-2xl p-5 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 transition-colors">
+    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1 font-semibold uppercase tracking-wider">{title}</p>
     <p className={`font-bold text-slate-900 dark:text-white text-lg ${pre?'whitespace-pre-wrap':''}`}>{val}</p>
   </div>
 );

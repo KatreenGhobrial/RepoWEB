@@ -11,7 +11,12 @@ export default function Navbar() {
   const { isDark, toggleTheme } = useDarkMode();
 
   const currentUserStr = localStorage.getItem('currentUser');
-  const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+  let currentUser = null;
+  try {
+    currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+  } catch (e) {
+    currentUser = null;
+  }
 
   const [alerts, setAlerts] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
