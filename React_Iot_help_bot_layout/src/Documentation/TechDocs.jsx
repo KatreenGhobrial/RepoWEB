@@ -162,7 +162,7 @@ export default function TechDocs() {
       <section className="bg-white dark:bg-zinc-900 dark:bg-zinc-800 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 shadow-sm p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <LabeledInput label="Select Project">
           <select
-            className="border border-slate-300 dark:border-zinc-600 rounded-xl px-4 py-2 bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none"
+            className="border border-slate-300 dark:border-zinc-600 rounded-xl px-4 py-2 bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-white dark:text-white focus:outline-none"
             value={selectedProjectId || ''}
             onChange={(e) => {
               setSelectedProjectId(e.target.value);
@@ -178,8 +178,8 @@ export default function TechDocs() {
         
         {selectedProject && (
           <div className="text-sm bg-slate-50 dark:bg-zinc-900 px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-700">
-            <span className="font-bold text-slate-700 dark:text-slate-300">Project Team Members (can edit docs):</span>
-            <div className="text-slate-600 dark:text-slate-400 mt-1">
+            <span className="font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300">Project Team Members (can edit docs):</span>
+            <div className="text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-1">
               {(selectedProject.members || []).map(m => m.email || m.username).join(', ') || 'No members'}
             </div>
           </div>
@@ -195,13 +195,13 @@ export default function TechDocs() {
         {renderProjectHeader()}
 
         <div className="mb-6 flex items-center gap-3">
-          <button onClick={backToList} className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors">
+          <button onClick={backToList} className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 dark:text-slate-400 dark:hover:text-white transition-colors">
             ← Back to list
           </button>
           <div className="flex-1" />
           {!isEditing && selectedDoc && (
             <>
-              <button onClick={startEdit} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-zinc-700 dark:text-slate-300 dark:hover:bg-zinc-600 transition-colors">
+              <button onClick={startEdit} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:bg-zinc-700 dark:text-slate-300 dark:hover:bg-zinc-600 transition-colors">
                 <LuPencil /> Edit
               </button>
               <button onClick={() => handleDelete(selectedDoc._id)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors">
@@ -214,7 +214,7 @@ export default function TechDocs() {
               <button onClick={handleSave} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:bg-zinc-900 dark:text-zinc-900 dark:hover:bg-slate-200 transition-colors">
                 <LuSave /> Save
               </button>
-              <button onClick={cancelEdit} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-700 dark:text-slate-300 dark:hover:bg-zinc-600 transition-colors">
+              <button onClick={cancelEdit} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:bg-zinc-700 dark:text-slate-300 dark:hover:bg-zinc-600 transition-colors">
                 <LuX /> Cancel
               </button>
             </>
@@ -228,7 +228,7 @@ export default function TechDocs() {
               <LabeledInput
                 label="Title"
                 type="text"
-                className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
                 value={editForm.title}
                 onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="Document title"
@@ -238,7 +238,7 @@ export default function TechDocs() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <LabeledInput label="Type">
                   <select
-                    className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white"
+                    className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white dark:text-white"
                     value={editForm.type}
                     onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))}
                   >
@@ -250,7 +250,7 @@ export default function TechDocs() {
                 <LabeledInput
                   label="Tags (comma-separated)"
                   type="text"
-                  className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                  className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={editForm.tags}
                   onChange={e => setEditForm(f => ({ ...f, tags: e.target.value }))}
                   placeholder="e.g. mqtt, esp32, sensors"
@@ -261,7 +261,7 @@ export default function TechDocs() {
               <LabeledInput label="Content (Markdown)">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <textarea
-                    className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white font-mono text-sm min-h-[400px] resize-y focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white dark:text-white font-mono text-sm min-h-[400px] resize-y focus:outline-none focus:ring-2 focus:ring-slate-400"
                     value={editForm.content}
                     onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
                     placeholder="Write your markdown here..."
@@ -287,7 +287,7 @@ export default function TechDocs() {
               {selectedDoc.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {(Array.isArray(selectedDoc.tags) ? selectedDoc.tags : []).map(tag => (
-                    <span key={tag} className="text-xs bg-slate-100 dark:bg-zinc-700 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-lg">
+                    <span key={tag} className="text-xs bg-slate-100 dark:bg-zinc-700 text-slate-600 dark:text-slate-400 dark:text-slate-300 px-2.5 py-1 rounded-lg">
                       #{tag}
                     </span>
                   ))}
@@ -321,7 +321,7 @@ export default function TechDocs() {
                 className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-colors ${
                   filterType === b.key
                     ? 'bg-slate-950 text-white dark:bg-white dark:bg-zinc-900 dark:text-zinc-900'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-700 dark:text-slate-300 dark:hover:bg-zinc-600'
+                    : 'bg-slate-100 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:bg-zinc-700 dark:text-slate-300 dark:hover:bg-zinc-600'
                 }`}
               >
                 {b.label}
@@ -343,7 +343,7 @@ export default function TechDocs() {
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-800 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 shadow-sm p-12 text-center">
           <LuFileText className="text-5xl text-slate-300 dark:text-zinc-600 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2">No documents yet</h3>
+          <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">No documents yet</h3>
           <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">
             Click <strong>New Document</strong> to create your first technical document.
           </p>
@@ -360,7 +360,7 @@ export default function TechDocs() {
                 className="bg-white dark:bg-zinc-900 dark:bg-zinc-800 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 shadow-sm p-6 hover:shadow-md hover:border-slate-300 dark:hover:border-zinc-500 cursor-pointer transition-all"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <h4 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1">{doc.title}</h4>
+                  <h4 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white line-clamp-1">{doc.title}</h4>
                   <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold shrink-0 ml-2 ${cfg.badge}`}>{cfg.label}</span>
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 line-clamp-2 mb-3">{preview || 'No content'}</p>

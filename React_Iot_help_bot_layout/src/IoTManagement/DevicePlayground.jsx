@@ -91,7 +91,7 @@ export default function DevicePlayground() {
   return (
     <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto mt-6 px-4">
       <div className="text-center mb-4">
-        <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-3">Device Playground 🎮</h1>
+        <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-200 dark:text-white mb-3">Device Playground 🎮</h1>
         <p className="text-slate-500 dark:text-slate-400 text-lg">
           Real-time connection to your IoT devices and custom MQTT brokers.
         </p>
@@ -103,7 +103,7 @@ export default function DevicePlayground() {
 
           {/* Add MQTT Broker Panel */}
           <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
+            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200 dark:text-white flex items-center gap-2">
               🔗 Add Custom MQTT Broker
             </h2>
             <form onSubmit={handleAddBroker} className="flex flex-col gap-3">
@@ -121,7 +121,7 @@ export default function DevicePlayground() {
               <button type="button" onClick={handleDisconnect} className="mt-2 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold py-2 rounded-xl transition-colors text-sm">
                 Disconnect
               </button>
-              {brokerMsg && <p className="text-xs mt-1 font-semibold text-slate-600">{brokerMsg}</p>}
+              {brokerMsg && <p className="text-xs mt-1 font-semibold text-slate-600 dark:text-slate-400">{brokerMsg}</p>}
             </form>
 
             {/* Active Connections List */}
@@ -133,7 +133,7 @@ export default function DevicePlayground() {
                 <ul className="space-y-2">
                   {brokers.map(b => (
                     <li key={b._id} className="text-sm bg-slate-50 dark:bg-zinc-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-zinc-700 flex justify-between items-center group">
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">{b.name}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">{b.name}</span>
                       <div className="flex items-center gap-3">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"></span>
                         <button 
@@ -153,7 +153,7 @@ export default function DevicePlayground() {
 
           {/* Connected Devices Status Panel */}
           <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex-grow">
-            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
+            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200 dark:text-white flex items-center gap-2">
               🟢 Connected Devices
             </h2>
             {activeDevices.length === 0 ? (
@@ -162,7 +162,7 @@ export default function DevicePlayground() {
               <div className="flex flex-col gap-3">
                 {activeDevices.map(device => (
                   <div key={device.id} className="flex justify-between items-center bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 px-4 py-3 rounded-xl">
-                    <span className="font-bold text-slate-700 dark:text-slate-200">{device.id}</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300 dark:text-slate-200">{device.id}</span>
                     {device.status === 'online' ? (
                       <span className="flex items-center gap-2 text-emerald-600 text-sm font-bold">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
@@ -184,7 +184,7 @@ export default function DevicePlayground() {
           
           {/* Live Data Feed */}
           <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex-grow">
-            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
+            <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200 dark:text-white flex items-center gap-2">
               📡 Live Data Feed
             </h2>
             <div className="bg-slate-50 dark:bg-zinc-950 rounded-xl p-4 h-96 overflow-y-auto border border-slate-100 dark:border-zinc-800 font-mono text-sm shadow-inner">
@@ -200,7 +200,7 @@ export default function DevicePlayground() {
                         <span className="text-xs text-sky-600 dark:text-sky-400 font-bold bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded">Topic: {msg.topic}</span>
                         <span className="text-xs text-slate-400">{new Date(msg.time).toLocaleTimeString()}</span>
                       </div>
-                      <div className="text-slate-800 dark:text-slate-200 mt-2 break-all whitespace-pre-wrap font-medium">
+                      <div className="text-slate-800 dark:text-slate-200 dark:text-slate-200 mt-2 break-all whitespace-pre-wrap font-medium">
                         {msg.payload}
                       </div>
                     </li>

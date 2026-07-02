@@ -200,7 +200,7 @@ export default function Dashboard() {
             {dashboard.workload && dashboard.workload.length > 0 ? dashboard.workload.map((wl, idx) => (
               <div key={idx}>
                 <div className="flex justify-between text-sm font-semibold mb-2">
-                  <span className="text-slate-900">{wl.name}</span>
+                  <span className="text-slate-900 dark:text-white">{wl.name}</span>
                   <span className="text-slate-500 dark:text-slate-400">{wl.total} tasks</span>
                 </div>
                 <div className="w-full flex h-4 rounded-full overflow-hidden bg-slate-100 dark:bg-zinc-800">
@@ -232,7 +232,7 @@ export default function Dashboard() {
            dashboard.evaluation.technicalScore === 0)) ? (
           <div className="text-center py-10 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
             <span className="text-4xl mb-3 block">🏁</span>
-            <h4 className="font-bold text-slate-800 text-sm mb-1">Evaluation Pending / הערכה בהמתנה</h4>
+            <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-1">Evaluation Pending / הערכה בהמתנה</h4>
             <p className="text-slate-500 dark:text-slate-400 text-xs max-w-md mx-auto">
               Your project evaluation is pending. Once your mentor submits your interdisciplinary, cooperation, and technical grades, they will display here in real-time.
             </p>
@@ -255,12 +255,12 @@ export default function Dashboard() {
                       <path className="text-cyan-500 transition-all duration-1000 ease-out" strokeDasharray={`${avgScore}, 100`} strokeWidth="3.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
                     <div className="absolute text-center">
-                      <span className="text-3xl font-extrabold text-slate-800">{avgScore}</span>
+                      <span className="text-3xl font-extrabold text-slate-800 dark:text-slate-200">{avgScore}</span>
                       <span className="text-slate-400 text-xs block">/ 100</span>
                     </div>
                   </div>
                   <p className="text-[10px] text-slate-400 mt-5 text-center">
-                    Graded by <span className="font-bold text-slate-700">{dashboard.evaluation.gradedBy?.username || 'Mentor'}</span>
+                    Graded by <span className="font-bold text-slate-700 dark:text-slate-300">{dashboard.evaluation.gradedBy?.username || 'Mentor'}</span>
                     {dashboard.evaluation.gradedAt && ` on ${new Date(dashboard.evaluation.gradedAt).toLocaleDateString()}`}
                   </p>
                 </div>
@@ -270,14 +270,14 @@ export default function Dashboard() {
                   {/* Metric 1 */}
                   <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-800">💡 Quality of Interdisciplinary Work / איכות העבודה הבין-תחומית</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">💡 Quality of Interdisciplinary Work / איכות העבודה הבין-תחומית</span>
                       <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 font-bold rounded-md">{inter}/100</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-2.5">
                       <div className="bg-gradient-to-r from-cyan-400 to-cyan-500 h-2.5 rounded-full" style={{ width: `${inter}%` }}></div>
                     </div>
                     {dashboard.evaluation.interdisciplinaryNotes && (
-                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-cyan-400 p-2 rounded-r-lg text-slate-600 text-xs italic">
+                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-cyan-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
                         "{dashboard.evaluation.interdisciplinaryNotes}"
                       </div>
                     )}
@@ -286,14 +286,14 @@ export default function Dashboard() {
                   {/* Metric 2 */}
                   <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-800">🤝 Cooperation & Collaboration / שיתוף הפעולה</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">🤝 Cooperation & Collaboration / שיתוף הפעולה</span>
                       <span className="px-2 py-0.5 bg-violet-100 text-violet-800 font-bold rounded-md">{coop}/100</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-2.5">
                       <div className="bg-gradient-to-r from-violet-400 to-violet-500 h-2.5 rounded-full" style={{ width: `${coop}%` }}></div>
                     </div>
                     {dashboard.evaluation.cooperationNotes && (
-                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-violet-400 p-2 rounded-r-lg text-slate-600 text-xs italic">
+                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-violet-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
                         "{dashboard.evaluation.cooperationNotes}"
                       </div>
                     )}
@@ -302,14 +302,14 @@ export default function Dashboard() {
                   {/* Metric 3 */}
                   <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-800">⚙️ Technical Progress / ההתקדמות הטכנית</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">⚙️ Technical Progress / ההתקדמות הטכנית</span>
                       <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-md">{tech}/100</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-2.5">
                       <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-2.5 rounded-full" style={{ width: `${tech}%` }}></div>
                     </div>
                     {dashboard.evaluation.technicalNotes && (
-                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-emerald-400 p-2 rounded-r-lg text-slate-600 text-xs italic">
+                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-emerald-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
                         "{dashboard.evaluation.technicalNotes}"
                       </div>
                     )}
@@ -318,10 +318,10 @@ export default function Dashboard() {
                   {/* Summary Notes */}
                   {dashboard.evaluation.summaryNotes && (
                     <div className="mt-4 p-4 bg-gradient-to-r from-slate-50 to-slate-100/50 rounded-2xl border border-slate-200 dark:border-zinc-800/60">
-                      <h4 className="text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1.5">
                         <span>📝</span> Overall Summary / הערות סיכום מהמנטור
                       </h4>
-                      <p className="text-slate-600 text-xs leading-relaxed whitespace-pre-line">{dashboard.evaluation.summaryNotes}</p>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed whitespace-pre-line">{dashboard.evaluation.summaryNotes}</p>
                     </div>
                   )}
                 </div>
@@ -350,15 +350,15 @@ export default function Dashboard() {
                     <span className="text-xs text-slate-500 dark:text-slate-400">{new Date(fb.createdAt).toLocaleDateString()}</span>
                   </div>
                   {relatedTaskTitle ? (
-                    <div className="text-xs font-semibold text-slate-600 mb-1">
+                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       📌 Task: {relatedTaskTitle}
                     </div>
                   ) : (
-                    <div className="text-xs font-semibold text-slate-600 mb-1">
+                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       📌 General Feedback
                     </div>
                   )}
-                  <p className="text-slate-700 text-sm">{displayContent}</p>
+                  <p className="text-slate-700 dark:text-slate-300 text-sm">{displayContent}</p>
                 </div>
                 );
               })
@@ -402,7 +402,7 @@ export default function Dashboard() {
             {dashboard.assessment.comments && (
               <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-indigo-50">
                 <h4 className="text-sm font-bold text-indigo-900 mb-2">Mentor Summary</h4>
-                <p className="text-slate-700 leading-relaxed">{dashboard.assessment.comments}</p>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{dashboard.assessment.comments}</p>
                 <p className="text-xs text-slate-400 mt-4 text-right">Evaluated on: {new Date(dashboard.assessment.assessedAt).toLocaleDateString()}</p>
               </div>
             )}

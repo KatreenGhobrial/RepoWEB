@@ -212,7 +212,7 @@ export default function MonitorPanel() {
             
             <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 flex justify-between items-start bg-slate-50 dark:bg-zinc-800">
               <div>
-                <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200">MQTT Broker</h4>
+                <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200 dark:text-slate-200">MQTT Broker</h4>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Custom connections status</p>
               </div>
               <span className={`text-xs px-3 py-1 rounded-full font-bold ${mqttStatus === 'Connected' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : mqttStatus === 'Connection Error' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
@@ -234,7 +234,7 @@ export default function MonitorPanel() {
                 <div key={a.id} className={`border rounded-2xl p-4 flex justify-between items-center ${a.level === 'CRITICAL' ? 'bg-red-50 border-red-200' : a.level === 'HIGH' ? 'bg-orange-50 border-orange-200' : 'bg-yellow-50 border-yellow-200'}`}>
                   <div>
                     <h4 className={`font-bold ${a.level === 'CRITICAL' ? 'text-red-700' : a.level === 'HIGH' ? 'text-orange-700' : 'text-yellow-700'}`}>{a.title}</h4>
-                    <p className="text-sm text-slate-700 mt-1">{a.description}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{a.description}</p>
                   </div>
                   <div className="text-right">
                     <span className={`text-xs px-3 py-1 rounded-full font-bold ${a.level === 'CRITICAL' ? 'bg-red-200 text-red-800' : a.level === 'HIGH' ? 'bg-orange-200 text-orange-800' : 'bg-yellow-200 text-yellow-800'}`}>{a.level}</span>
@@ -253,7 +253,7 @@ export default function MonitorPanel() {
           <div className="space-y-3">
             {!logs.length ? <p className="text-slate-500 dark:text-slate-400 italic text-center py-6">No logs yet.</p> : logs.map(l => (
               <div key={l.id} className="border border-slate-100 rounded-2xl p-4 bg-slate-50 flex justify-between items-start">
-                <div><h4 className="font-bold text-sm">{l.title}</h4><p className="text-sm text-slate-600 mt-1">{l.message}</p></div>
+                <div><h4 className="font-bold text-sm">{l.title}</h4><p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{l.message}</p></div>
                 <span className="text-xs text-slate-400 bg-white dark:bg-zinc-900 border px-2 py-1 rounded">{l.time}</span>
               </div>
             ))}

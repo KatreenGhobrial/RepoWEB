@@ -71,7 +71,7 @@ export default function IoTSolutionLibrary() {
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap border ${
               activeTab === tab.key
                 ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                : 'bg-white dark:bg-zinc-900 text-slate-600 border-slate-200 dark:border-zinc-800 hover:border-slate-300 hover:bg-slate-50'
+                : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-zinc-800 hover:border-slate-300 hover:bg-slate-50'
             }`}
           >
             <span>{tab.icon}</span> {tab.label}
@@ -91,31 +91,31 @@ export default function IoTSolutionLibrary() {
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{hw.icon}</span>
                   <div>
-                    <h3 className="font-bold text-slate-900">{hw.name}</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white">{hw.name}</h3>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{hw.type}</span>
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLOR[hw.difficulty]}`}>{hw.difficulty}</span>
               </div>
-              <p className="text-sm text-slate-600 mb-3">{hw.description}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{hw.description}</p>
               <div className="bg-slate-50 rounded-xl p-3 mb-3">
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-1">Specs</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   {Object.entries(hw.specs).map(([k, v]) => (
                     <div key={k} className="flex justify-between text-xs">
                       <span className="text-slate-500 dark:text-slate-400">{k}</span>
-                      <span className="font-medium text-slate-800">{v}</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{v}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-xs text-slate-500 dark:text-slate-400">💰 <span className="font-semibold text-slate-700">{hw.price}</span></p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">💰 <span className="font-semibold text-slate-700 dark:text-slate-300">{hw.price}</span></p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Best for: <span className="text-cyan-600 font-medium">{hw.bestFor}</span></p>
               </div>
               <div className="flex flex-wrap gap-1 mt-3">
                 {hw.tags.map(tag => (
-                  <span key={tag} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">#{tag}</span>
+                  <span key={tag} className="text-xs bg-slate-100 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full">#{tag}</span>
                 ))}
               </div>
             </div>
@@ -132,7 +132,7 @@ export default function IoTSolutionLibrary() {
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{proto.icon}</span>
                   <div>
-                    <h3 className="font-bold text-slate-900">{proto.name}</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white">{proto.name}</h3>
                     <span className="text-xs text-cyan-600 font-medium">{proto.category}</span>
                   </div>
                 </div>
@@ -141,25 +141,25 @@ export default function IoTSolutionLibrary() {
                   <span className="text-xs text-slate-500 dark:text-slate-400">{proto.latency}</span>
                 </div>
               </div>
-              <p className="text-sm text-slate-600 mb-3">{proto.description}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{proto.description}</p>
               <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
                 <div className="bg-slate-50 rounded-lg p-2">
                   <p className="text-slate-500 dark:text-slate-400 mb-0.5">Best For</p>
-                  <p className="font-medium text-slate-800">{proto.bestFor}</p>
+                  <p className="font-medium text-slate-800 dark:text-slate-200">{proto.bestFor}</p>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-2">
                   <p className="text-slate-500 dark:text-slate-400 mb-0.5">Power Usage</p>
-                  <p className="font-medium text-slate-800">{proto.powerUsage}</p>
+                  <p className="font-medium text-slate-800 dark:text-slate-200">{proto.powerUsage}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs text-green-600 font-semibold mb-1">✅ Pros</p>
-                  {proto.pros.map((p, i) => <p key={i} className="text-xs text-slate-600">• {p}</p>)}
+                  {proto.pros.map((p, i) => <p key={i} className="text-xs text-slate-600 dark:text-slate-400">• {p}</p>)}
                 </div>
                 <div>
                   <p className="text-xs text-red-500 font-semibold mb-1">❌ Cons</p>
-                  {proto.cons.map((c, i) => <p key={i} className="text-xs text-slate-600">• {c}</p>)}
+                  {proto.cons.map((c, i) => <p key={i} className="text-xs text-slate-600 dark:text-slate-400">• {c}</p>)}
                 </div>
               </div>
             </div>
@@ -176,13 +176,13 @@ export default function IoTSolutionLibrary() {
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{cp.icon}</span>
                   <div>
-                    <h3 className="font-bold text-slate-900">{cp.name}</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white">{cp.name}</h3>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{cp.provider}</span>
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLOR[cp.difficulty]}`}>{cp.difficulty}</span>
               </div>
-              <p className="text-sm text-slate-600 mb-3">{cp.description}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{cp.description}</p>
               <div className="mb-3">
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-1">Features</p>
                 <div className="flex flex-wrap gap-1">
@@ -194,7 +194,7 @@ export default function IoTSolutionLibrary() {
               <div className="flex justify-between text-xs pt-3 border-t border-slate-100">
                 <div>
                   <p className="text-slate-500 dark:text-slate-400">Pricing</p>
-                  <p className="font-semibold text-slate-800">{cp.pricing}</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">{cp.pricing}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-slate-500 dark:text-slate-400">Free Tier</p>
@@ -215,23 +215,23 @@ export default function IoTSolutionLibrary() {
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{sw.icon}</span>
                   <div>
-                    <h3 className="font-bold text-slate-900">{sw.name}</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white">{sw.name}</h3>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{sw.language}</span>
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLOR[sw.difficulty]}`}>{sw.difficulty}</span>
               </div>
-              <p className="text-sm text-slate-600 mb-3">{sw.description}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{sw.description}</p>
               <div className="bg-slate-50 rounded-lg p-2 mb-3 text-xs">
                 <span className="text-slate-500 dark:text-slate-400">Use Case: </span>
-                <span className="font-medium text-slate-800">{sw.useCase}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">{sw.useCase}</span>
               </div>
               <div className="flex flex-wrap gap-1 mb-3">
                 {sw.tags.map(tag => (
-                  <span key={tag} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">#{tag}</span>
+                  <span key={tag} className="text-xs bg-slate-100 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full">#{tag}</span>
                 ))}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">📄 License: <span className="font-medium text-slate-700">{sw.license}</span></p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">📄 License: <span className="font-medium text-slate-700 dark:text-slate-300">{sw.license}</span></p>
             </div>
           ))}
         </div>

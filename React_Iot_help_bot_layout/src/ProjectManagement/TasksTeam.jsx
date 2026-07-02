@@ -174,7 +174,7 @@ export default function TasksTeam() {
             <div key={i} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 relative hover:bg-slate-50 dark:bg-zinc-800/50 transition-colors">
               <button onClick={() => handleRemoveMember(m.email || m.username || m)} className="absolute top-3 right-3 text-slate-400 hover:text-red-500 transition-colors" title="Remove Member">✕</button>
               <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl mb-3">{m.icon || '👤'}</div>
-              <h4 className="font-bold text-lg text-slate-900">{m.username || m.name || m.email || m}</h4>
+              <h4 className="font-bold text-lg text-slate-900 dark:text-white">{m.username || m.name || m.email || m}</h4>
               <p className="text-sm text-slate-500 dark:text-slate-400 capitalize mt-1">{m.role || 'Student'}</p>
               <p className="text-sm font-semibold text-cyan-600 mt-3">{m.expertise?.join(', ') || m.responsibility || 'General'}</p>
             </div>
@@ -207,19 +207,19 @@ export default function TasksTeam() {
                       </select>
                     </div>
                     <div className="flex gap-2 justify-end mt-1">
-                      <button onClick={() => setEditingTaskId(null)} className="px-4 py-1.5 bg-slate-100 dark:bg-zinc-800 text-slate-700 font-bold rounded-lg text-sm hover:bg-slate-200 transition-colors">Cancel</button>
+                      <button onClick={() => setEditingTaskId(null)} className="px-4 py-1.5 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 font-bold rounded-lg text-sm hover:bg-slate-200 transition-colors">Cancel</button>
                       <button onClick={() => handleTaskAction(task._id, 'edit', editTaskForm)} className="px-4 py-1.5 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800 transition-colors">Save</button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-slate-900 text-lg">{task.title}</h4>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-lg">{task.title}</h4>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Owner: {task.owner}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <select 
-                        className={`text-sm px-4 py-2 rounded-full font-bold cursor-pointer outline-none appearance-none ${task.status==='Done'?'bg-green-100 text-green-700':task.status==='In Progress'?'bg-yellow-100 text-orange-600':'bg-slate-100 dark:bg-zinc-800 text-slate-600'}`}
+                        className={`text-sm px-4 py-2 rounded-full font-bold cursor-pointer outline-none appearance-none ${task.status==='Done'?'bg-green-100 text-green-700':task.status==='In Progress'?'bg-yellow-100 text-orange-600':'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400'}`}
                         value={task.status === 'Done' ? 'done' : task.status === 'In Progress' ? 'in-progress' : 'todo'}
                         onChange={(e) => handleTaskAction(task._id, 'status', { status: e.target.value })}
                         disabled={!task._id}
@@ -278,8 +278,8 @@ export default function TasksTeam() {
                 <div className="flex items-center justify-end mb-1">
                   <span className="text-xs text-slate-500 dark:text-slate-400">{new Date(fb.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div className="text-xs font-semibold text-slate-600 mb-1">📌 {m ? `Task: ${m[1]}` : fb.relatedTaskTitle ? `Task: ${fb.relatedTaskTitle}` : 'General Feedback'}</div>
-                <p className="text-slate-700 text-sm">{m ? m[2] : fb.content}</p>
+                <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">📌 {m ? `Task: ${m[1]}` : fb.relatedTaskTitle ? `Task: ${fb.relatedTaskTitle}` : 'General Feedback'}</div>
+                <p className="text-slate-700 dark:text-slate-300 text-sm">{m ? m[2] : fb.content}</p>
               </div>
             );
           }) : <p className="text-slate-500 dark:text-slate-400 text-center py-8 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">No feedback received yet.</p>}

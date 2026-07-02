@@ -207,7 +207,7 @@ export default function MentorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">📂 Student Projects</h3>
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">📂 Student Projects</h3>
           {projects.map(p => {
             const team = [p.owner, ...(p.members || [])].filter(Boolean).map(s => s.username || s.name || s.email || s);
             const progress = projectProgress[p._id] || { completed: 0, total: 0, percent: 0 };
@@ -215,7 +215,7 @@ export default function MentorDashboard() {
               <button key={p._id} onClick={() => setSelectedProject(p._id)} className={`w-full text-left bg-white dark:bg-zinc-900 border rounded-xl p-4 transition-all hover:bg-slate-50 shadow-sm ${selectedProject === p._id ? "border-cyan-500 ring-1 ring-cyan-500/30" : "border-slate-200 dark:border-zinc-800"}`}>
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium">{p.name}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{p.status || 'Active'}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600 dark:text-slate-400'}`}>{p.status || 'Active'}</span>
                 </div>
                 
                 <div className="mt-3">
@@ -234,7 +234,7 @@ export default function MentorDashboard() {
                   </select>
                   <span className="text-xs text-slate-500 dark:text-slate-400">{p.device || 'ESP32'}</span>
                 </div>
-                <p className="text-xs text-slate-600 mt-3"><span className="font-semibold text-slate-800">Team: </span>{[...new Set(team)].join(', ') || 'None'}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-3"><span className="font-semibold text-slate-800 dark:text-slate-200">Team: </span>{[...new Set(team)].join(', ') || 'None'}</p>
               </button>
             );
           })}
@@ -261,7 +261,7 @@ export default function MentorDashboard() {
               {/* Evaluation and Grades Panel */}
               <form onSubmit={handleSaveEvaluation} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 space-y-5 shadow-sm">
                 <div className="flex items-center justify-between border-b pb-3">
-                  <h3 className="font-bold text-slate-900 flex items-center gap-2 text-base">
+                  <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 text-base">
                     <span>📊</span>
                     <span>Project Evaluation & Grades / הערכה וציונים</span>
                   </h3>
@@ -280,7 +280,7 @@ export default function MentorDashboard() {
                 {/* Metric 1 */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-slate-700">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
                       💡 Quality of Interdisciplinary Work / איכות העבודה הבין-תחומית
                     </label>
                     <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 font-bold rounded-md">
@@ -307,7 +307,7 @@ export default function MentorDashboard() {
                 {/* Metric 2 */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-slate-700">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
                       🤝 Cooperation & Collaboration / שיתוף הפעולה
                     </label>
                     <span className="px-2 py-0.5 bg-violet-50 text-violet-700 font-bold rounded-md">
@@ -334,7 +334,7 @@ export default function MentorDashboard() {
                 {/* Metric 3 */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <label className="font-semibold text-slate-700">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
                       ⚙️ Technical Progress / ההתקדמות הטכנית
                     </label>
                     <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-md">
@@ -360,7 +360,7 @@ export default function MentorDashboard() {
 
                 {/* Overall Summary */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-700">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     📝 Overall Summary Notes / הערות סיכום
                   </label>
                   <textarea 
@@ -410,8 +410,8 @@ export default function MentorDashboard() {
                       return (
                         <div key={fb._id} className="bg-slate-50 rounded-lg p-3 text-sm">
                           <div className="text-right text-xs text-slate-500 dark:text-slate-400 mb-1">{new Date(fb.createdAt).toLocaleDateString()}</div>
-                          <div className="text-xs font-semibold text-slate-600 mb-1">📌 {m ? `Task: ${m[1]}` : fb.relatedTaskTitle ? `Task: ${fb.relatedTaskTitle}` : 'General Feedback'}</div>
-                          <p className="text-slate-700">{m ? m[2] : fb.content}</p>
+                          <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">📌 {m ? `Task: ${m[1]}` : fb.relatedTaskTitle ? `Task: ${fb.relatedTaskTitle}` : 'General Feedback'}</div>
+                          <p className="text-slate-700 dark:text-slate-300">{m ? m[2] : fb.content}</p>
                         </div>
                       );
                     })}
