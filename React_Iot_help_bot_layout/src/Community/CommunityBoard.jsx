@@ -224,18 +224,18 @@ export default function CommunityBoard() {
             {showForm ? (
               <form onSubmit={handleCreate} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm rounded-3xl p-8 space-y-6 sticky top-6">
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Create New Post</h3>
-                <LabeledInput label="Title *" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. How to reduce latency in MQTT?" className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" required />
+                <LabeledInput label="Title *" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. How to reduce latency in MQTT?" className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" required />
                 <LabeledInput label="Content *">
                   <textarea 
                     value={content} 
                     onChange={(e) => setContent(e.target.value)} 
                     rows={6} 
                     placeholder="Describe your question, solution, or insight..." 
-                    className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none" 
+                    className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none" 
                     required 
                   />
                 </LabeledInput>
-                <LabeledInput label="Tags (comma-separated)" type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="mqtt, hardware, security" className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                <LabeledInput label="Tags (comma-separated)" type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="mqtt, hardware, security" className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" />
                 <button type="submit" disabled={saving || !title.trim() || !content.trim()} className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-8 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors">
                   {saving ? "⏳ Posting..." : "📢 Publish Post"}
                 </button>
@@ -245,7 +245,7 @@ export default function CommunityBoard() {
                 <div className="px-8 py-6 border-b border-slate-100">
                   <div className="flex items-start justify-between">
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{selectedPost.title}</h2>
-                    <button onClick={() => setSelectedPost(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-2 bg-slate-50 rounded-full transition-colors">✕</button>
+                    <button onClick={() => setSelectedPost(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-2 bg-slate-50 dark:bg-zinc-800/50 rounded-full transition-colors">✕</button>
                   </div>
                   <div className="flex items-center gap-3 mt-4">
                     <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">by <strong className="text-sky-600">{selectedPost.author?.username || "Unknown"}</strong></span>
@@ -257,10 +257,10 @@ export default function CommunityBoard() {
                     ))}
                   </div>
                 </div>
-                <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+                <div className="px-8 py-6 border-b border-slate-100 bg-slate-50 dark:bg-zinc-800/50/50">
                   <p className="text-base text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{selectedPost.content}</p>
                   <div className="flex items-center gap-4 mt-6">
-                    <button onClick={() => handleUpvote(selectedPost._id)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm ${selectedPost.upvotes.includes(currentUserId) ? "bg-sky-100 text-sky-700 border border-sky-200" : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"}`}>
+                    <button onClick={() => handleUpvote(selectedPost._id)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm ${selectedPost.upvotes.includes(currentUserId) ? "bg-sky-100 text-sky-700 border border-sky-200" : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-zinc-800/50"}`}>
                       ▲ {selectedPost.upvotes.length}
                     </button>
                     <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{selectedPost.replies.length} replies</span>
@@ -272,7 +272,7 @@ export default function CommunityBoard() {
                       <div className="w-10 h-10 bg-slate-200 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
                         {reply.author?.username?.charAt(0).toUpperCase() || "?"}
                       </div>
-                      <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                      <div className="flex-1 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-slate-100">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-sm font-bold text-slate-900 dark:text-white">{reply.author?.username || "Unknown"}</span>
                           <span className="text-xs font-medium text-slate-400">{new Date(reply.createdAt).toLocaleString()}</span>
@@ -286,7 +286,7 @@ export default function CommunityBoard() {
                   )}
                 </div>
                 <form onSubmit={handleReply} className="px-8 py-5 border-t border-slate-100 bg-white dark:bg-zinc-900 flex gap-4 items-center">
-                  <input type="text" value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="Write a helpful reply..." className="flex-1 bg-slate-50 border border-slate-200 dark:border-zinc-800 rounded-2xl px-5 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all" />
+                  <input type="text" value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="Write a helpful reply..." className="flex-1 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-800 rounded-2xl px-5 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all" />
                   <button type="submit" disabled={replying || !replyContent.trim()} className="bg-sky-600 text-white px-6 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-sky-700 shadow-sm transition-all">
                     {replying ? "..." : "Reply"}
                   </button>

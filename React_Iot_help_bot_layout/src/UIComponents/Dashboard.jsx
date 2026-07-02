@@ -230,7 +230,7 @@ export default function Dashboard() {
           (dashboard.evaluation.interdisciplinaryScore === 0 && 
            dashboard.evaluation.cooperationScore === 0 && 
            dashboard.evaluation.technicalScore === 0)) ? (
-          <div className="text-center py-10 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
+          <div className="text-center py-10 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
             <span className="text-4xl mb-3 block">🏁</span>
             <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-1">Evaluation Pending / הערכה בהמתנה</h4>
             <p className="text-slate-500 dark:text-slate-400 text-xs max-w-md mx-auto">
@@ -247,7 +247,7 @@ export default function Dashboard() {
             return (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Average Gauge Left */}
-                <div className="md:col-span-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl border border-slate-100 shadow-inner">
+                <div className="md:col-span-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 rounded-2xl border border-slate-100 shadow-inner">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Overall Score / ציון משוקלל</span>
                   <div className="relative w-28 h-28 flex items-center justify-center">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -277,7 +277,7 @@ export default function Dashboard() {
                       <div className="bg-gradient-to-r from-cyan-400 to-cyan-500 h-2.5 rounded-full" style={{ width: `${inter}%` }}></div>
                     </div>
                     {dashboard.evaluation.interdisciplinaryNotes && (
-                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-cyan-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
+                      <div className="bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 border-l-2 border-cyan-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
                         "{dashboard.evaluation.interdisciplinaryNotes}"
                       </div>
                     )}
@@ -293,7 +293,7 @@ export default function Dashboard() {
                       <div className="bg-gradient-to-r from-violet-400 to-violet-500 h-2.5 rounded-full" style={{ width: `${coop}%` }}></div>
                     </div>
                     {dashboard.evaluation.cooperationNotes && (
-                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-violet-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
+                      <div className="bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 border-l-2 border-violet-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
                         "{dashboard.evaluation.cooperationNotes}"
                       </div>
                     )}
@@ -309,7 +309,7 @@ export default function Dashboard() {
                       <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-2.5 rounded-full" style={{ width: `${tech}%` }}></div>
                     </div>
                     {dashboard.evaluation.technicalNotes && (
-                      <div className="bg-slate-50 dark:bg-zinc-800/50 border-l-2 border-emerald-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
+                      <div className="bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 border-l-2 border-emerald-400 p-2 rounded-r-lg text-slate-600 dark:text-slate-400 text-xs italic">
                         "{dashboard.evaluation.technicalNotes}"
                       </div>
                     )}
@@ -345,7 +345,7 @@ export default function Dashboard() {
                 const displayContent = match ? match[2] : fb.content;
 
                 return (
-                <div key={index} className="border border-slate-100 bg-slate-50 dark:bg-zinc-800/50 rounded-3xl p-5">
+                <div key={index} className="border border-slate-100 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 rounded-3xl p-5">
                   <div className="flex items-center justify-end mb-1">
                     <span className="text-xs text-slate-500 dark:text-slate-400">{new Date(fb.createdAt).toLocaleDateString()}</span>
                   </div>
@@ -363,7 +363,7 @@ export default function Dashboard() {
                 );
               })
             ) : (
-              <p className="text-slate-500 dark:text-slate-400 text-center py-8 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl">No feedback received yet.</p>
+              <p className="text-slate-500 dark:text-slate-400 text-center py-8 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 rounded-2xl">No feedback received yet.</p>
             )}
           </div>
         </section>

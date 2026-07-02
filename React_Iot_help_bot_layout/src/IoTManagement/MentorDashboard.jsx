@@ -212,7 +212,7 @@ export default function MentorDashboard() {
             const team = [p.owner, ...(p.members || [])].filter(Boolean).map(s => s.username || s.name || s.email || s);
             const progress = projectProgress[p._id] || { completed: 0, total: 0, percent: 0 };
             return (
-              <button key={p._id} onClick={() => setSelectedProject(p._id)} className={`w-full text-left bg-white dark:bg-zinc-900 border rounded-xl p-4 transition-all hover:bg-slate-50 shadow-sm ${selectedProject === p._id ? "border-cyan-500 ring-1 ring-cyan-500/30" : "border-slate-200 dark:border-zinc-800"}`}>
+              <button key={p._id} onClick={() => setSelectedProject(p._id)} className={`w-full text-left bg-white dark:bg-zinc-900 border rounded-xl p-4 transition-all hover:bg-slate-50 dark:bg-zinc-800/50 shadow-sm ${selectedProject === p._id ? "border-cyan-500 ring-1 ring-cyan-500/30" : "border-slate-200 dark:border-zinc-800"}`}>
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium">{p.name}</p>
                   <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600 dark:text-slate-400'}`}>{p.status || 'Active'}</span>
@@ -391,7 +391,7 @@ export default function MentorDashboard() {
                     <div className="w-full bg-slate-100 rounded-full h-2.5 mb-4"><div className="bg-cyan-500 h-2.5 rounded-full" style={{ width: `${Math.round((projectTasks.filter(t => t.status?.toLowerCase() === 'done').length / projectTasks.length) * 100)}%` }}></div></div>
                     <div className="space-y-2 max-h-40 overflow-auto">
                       {projectTasks.map(t => (
-                        <div key={t._id} className="flex justify-between p-2 bg-slate-50 rounded-lg text-sm">
+                        <div key={t._id} className="flex justify-between p-2 bg-slate-50 dark:bg-zinc-800/50 rounded-lg text-sm">
                           <span className="font-medium">{t.title}</span>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${t.status?.toLowerCase() === 'done' ? 'bg-green-100 text-green-700' : 'bg-slate-200'}`}>{t.status}</span>
                         </div>

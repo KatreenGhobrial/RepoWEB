@@ -162,7 +162,7 @@ export default function TechDocs() {
       <section className="bg-white dark:bg-zinc-900 dark:bg-zinc-800 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 shadow-sm p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <LabeledInput label="Select Project">
           <select
-            className="border border-slate-300 dark:border-zinc-600 rounded-xl px-4 py-2 bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-white dark:text-white focus:outline-none"
+            className="border border-slate-300 dark:border-zinc-600 rounded-xl px-4 py-2 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-900 text-slate-900 dark:text-white dark:text-white focus:outline-none"
             value={selectedProjectId || ''}
             onChange={(e) => {
               setSelectedProjectId(e.target.value);
@@ -177,7 +177,7 @@ export default function TechDocs() {
         </LabeledInput>
         
         {selectedProject && (
-          <div className="text-sm bg-slate-50 dark:bg-zinc-900 px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-700">
+          <div className="text-sm bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-900 px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-700">
             <span className="font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300">Project Team Members (can edit docs):</span>
             <div className="text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-1">
               {(selectedProject.members || []).map(m => m.email || m.username).join(', ') || 'No members'}
@@ -266,7 +266,7 @@ export default function TechDocs() {
                     onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
                     placeholder="Write your markdown here..."
                   />
-                  <div className="border border-slate-200 dark:border-zinc-800 dark:border-zinc-600 rounded-2xl px-5 py-4 bg-slate-50 dark:bg-zinc-900 min-h-[400px] overflow-auto prose prose-sm dark:prose-invert max-w-none">
+                  <div className="border border-slate-200 dark:border-zinc-800 dark:border-zinc-600 rounded-2xl px-5 py-4 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-900 min-h-[400px] overflow-auto prose prose-sm dark:prose-invert max-w-none">
                     <p className="text-xs font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">Preview</p>
                     <div dangerouslySetInnerHTML={{ __html: marked(editForm.content || '') }} />
                   </div>

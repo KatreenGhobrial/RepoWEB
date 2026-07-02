@@ -71,7 +71,7 @@ export default function IoTSolutionLibrary() {
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap border ${
               activeTab === tab.key
                 ? 'bg-slate-900 text-white border-slate-900 shadow-md dark:bg-cyan-600 dark:border-cyan-600 dark:text-white'
-                : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-zinc-800 hover:border-slate-300 hover:bg-slate-50'
+                : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-zinc-800 hover:border-slate-300 hover:bg-slate-50 dark:bg-zinc-800/50'
             }`}
           >
             <span>{tab.icon}</span> {tab.label}
@@ -98,7 +98,7 @@ export default function IoTSolutionLibrary() {
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLOR[hw.difficulty]}`}>{hw.difficulty}</span>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{hw.description}</p>
-              <div className="bg-slate-50 rounded-xl p-3 mb-3">
+              <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-xl p-3 mb-3">
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-1">Specs</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   {Object.entries(hw.specs).map(([k, v]) => (
@@ -143,11 +143,11 @@ export default function IoTSolutionLibrary() {
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{proto.description}</p>
               <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
-                <div className="bg-slate-50 rounded-lg p-2">
+                <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-lg p-2">
                   <p className="text-slate-500 dark:text-slate-400 mb-0.5">Best For</p>
                   <p className="font-medium text-slate-800 dark:text-slate-200">{proto.bestFor}</p>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-2">
+                <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-lg p-2">
                   <p className="text-slate-500 dark:text-slate-400 mb-0.5">Power Usage</p>
                   <p className="font-medium text-slate-800 dark:text-slate-200">{proto.powerUsage}</p>
                 </div>
@@ -222,7 +222,7 @@ export default function IoTSolutionLibrary() {
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLOR[sw.difficulty]}`}>{sw.difficulty}</span>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{sw.description}</p>
-              <div className="bg-slate-50 rounded-lg p-2 mb-3 text-xs">
+              <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-lg p-2 mb-3 text-xs">
                 <span className="text-slate-500 dark:text-slate-400">Use Case: </span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">{sw.useCase}</span>
               </div>

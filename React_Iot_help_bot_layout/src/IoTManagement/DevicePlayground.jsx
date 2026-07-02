@@ -107,15 +107,15 @@ export default function DevicePlayground() {
               🔗 Add Custom MQTT Broker
             </h2>
             <form onSubmit={handleAddBroker} className="flex flex-col gap-3">
-              <input type="text" placeholder="Broker Name (e.g., Factory Sensor A)" required value={newBroker.name} onChange={e => setNewBroker({...newBroker, name: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
-              <input type="text" placeholder="URL (e.g., mqtt://test.mosquitto.org)" required value={newBroker.url} onChange={e => setNewBroker({...newBroker, url: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
-              <input type="number" placeholder="Port (e.g. 1883 or 8883)" value={newBroker.port} onChange={e => setNewBroker({...newBroker, port: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+              <input type="text" placeholder="Broker Name (e.g., Factory Sensor A)" required value={newBroker.name} onChange={e => setNewBroker({...newBroker, name: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 text-sm" />
+              <input type="text" placeholder="URL (e.g., mqtt://test.mosquitto.org)" required value={newBroker.url} onChange={e => setNewBroker({...newBroker, url: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 text-sm" />
+              <input type="number" placeholder="Port (e.g. 1883 or 8883)" value={newBroker.port} onChange={e => setNewBroker({...newBroker, port: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 text-sm" />
               <div className="flex gap-3">
-                <input type="text" placeholder="Username (Optional)" value={newBroker.username} onChange={e => setNewBroker({...newBroker, username: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
-                <input type="password" placeholder="Password (Optional)" value={newBroker.password} onChange={e => setNewBroker({...newBroker, password: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
+                <input type="text" placeholder="Username (Optional)" value={newBroker.username} onChange={e => setNewBroker({...newBroker, username: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 text-sm" />
+                <input type="password" placeholder="Password (Optional)" value={newBroker.password} onChange={e => setNewBroker({...newBroker, password: e.target.value})} className="w-1/2 px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 text-sm" />
               </div>
-              <input type="text" placeholder="Topic (Default: #)" value={newBroker.topic} onChange={e => setNewBroker({...newBroker, topic: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-sm" />
-              <button disabled={brokerLoading} type="submit" className="mt-2 bg-slate-900 hover:bg-slate-800 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold py-2 rounded-xl transition-colors text-sm disabled:opacity-50">
+              <input type="text" placeholder="Topic (Default: #)" value={newBroker.topic} onChange={e => setNewBroker({...newBroker, topic: e.target.value})} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 text-sm" />
+              <button disabled={brokerLoading} type="submit" className="mt-2 bg-slate-900 hover:bg-slate-50 dark:hover:bg-zinc-800/500 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold py-2 rounded-xl transition-colors text-sm disabled:opacity-50">
                 {brokerLoading ? 'Connecting...' : 'Connect (Temporary)'}
               </button>
               <button type="button" onClick={handleDisconnect} className="mt-2 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold py-2 rounded-xl transition-colors text-sm">
@@ -132,7 +132,7 @@ export default function DevicePlayground() {
               ) : (
                 <ul className="space-y-2">
                   {brokers.map(b => (
-                    <li key={b._id} className="text-sm bg-slate-50 dark:bg-zinc-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-zinc-700 flex justify-between items-center group">
+                    <li key={b._id} className="text-sm bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-zinc-700 flex justify-between items-center group">
                       <span className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">{b.name}</span>
                       <div className="flex items-center gap-3">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"></span>
@@ -161,7 +161,7 @@ export default function DevicePlayground() {
             ) : (
               <div className="flex flex-col gap-3">
                 {activeDevices.map(device => (
-                  <div key={device.id} className="flex justify-between items-center bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 px-4 py-3 rounded-xl">
+                  <div key={device.id} className="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 px-4 py-3 rounded-xl">
                     <span className="font-bold text-slate-700 dark:text-slate-300 dark:text-slate-200">{device.id}</span>
                     {device.status === 'online' ? (
                       <span className="flex items-center gap-2 text-emerald-600 text-sm font-bold">
@@ -187,7 +187,7 @@ export default function DevicePlayground() {
             <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200 dark:text-white flex items-center gap-2">
               📡 Live Data Feed
             </h2>
-            <div className="bg-slate-50 dark:bg-zinc-950 rounded-xl p-4 h-96 overflow-y-auto border border-slate-100 dark:border-zinc-800 font-mono text-sm shadow-inner">
+            <div className="bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-950 rounded-xl p-4 h-96 overflow-y-auto border border-slate-100 dark:border-zinc-800 font-mono text-sm shadow-inner">
               {messages.length === 0 ? (
                 <div className="h-full flex items-center justify-center">
                   <p className="text-slate-400 italic">Listening for MQTT messages...</p>
