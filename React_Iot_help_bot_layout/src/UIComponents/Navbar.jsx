@@ -93,13 +93,16 @@ export default function Navbar() {
         </div>
 
         <ul className="hidden lg:flex items-center gap-4 lg:ml-12 font-semibold text-sm text-slate-700 dark:text-slate-200">
-          {currentUser && menuItems.map((item) => (
-            <Link key={item.path} to={item.path}>
-              <li className="p-2 hover:bg-sky-400 hover:text-white rounded-md transition-all cursor-pointer">
-                {item.label}
-              </li>
-            </Link>
-          ))}
+          {currentUser && menuItems.map((item) => {
+            const isActive = location.pathname.includes(item.path);
+            return (
+              <Link key={item.path} to={item.path}>
+                <li className={`px-3 py-2 rounded-xl transition-all cursor-pointer ${isActive ? 'bg-cyan-600 text-white shadow-md font-bold' : 'hover:bg-cyan-50 dark:hover:bg-zinc-800 hover:text-cyan-600 dark:hover:text-cyan-400 font-semibold'}`}>
+                  {item.label}
+                </li>
+              </Link>
+            );
+          })}
           
           <div className="ml-4 flex items-center gap-4">
             {!currentUser ? (

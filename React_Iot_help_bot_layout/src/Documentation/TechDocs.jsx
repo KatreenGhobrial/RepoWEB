@@ -320,7 +320,7 @@ export default function TechDocs() {
                 onClick={() => setFilterType(b.key)}
                 className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-colors ${
                   filterType === b.key
-                    ? 'bg-slate-950 text-white dark:bg-white dark:bg-zinc-900 dark:text-zinc-900'
+                    ? 'bg-slate-950 text-white dark:bg-cyan-600 dark:text-white'
                     : 'bg-slate-100 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:bg-zinc-700 dark:text-slate-300 dark:hover:bg-zinc-600'
                 }`}
               >

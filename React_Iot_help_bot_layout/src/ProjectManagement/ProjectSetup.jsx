@@ -154,7 +154,7 @@ export default function ProjectSetup() {
             <Select label="Power Source" val={formData.powerSource} opts={['Battery','USB Power','Wall Adapter']} onChange={v => handleChange('powerSource', v)} />
             <Input label="Add Members (Emails)" val={formData.membersText} onChange={v => handleChange('membersText', v)} placeholder="student1@example.com" />
             {msg && <p className={`text-sm ${msg.includes('✅')?'text-emerald-500':'text-red-500'}`}>{msg}</p>}
-            <button disabled={isSaving} className="w-full bg-slate-900 dark:bg-sky-600 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 dark:hover:bg-sky-500 disabled:opacity-50 transition-colors">
+            <button disabled={isSaving} className="w-full bg-slate-900 dark:bg-cyan-600 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 dark:hover:bg-sky-500 disabled:opacity-50 transition-colors">
               {isSaving ? '⏳ Saving...' : projectId ? 'Update project' : 'Create project'}
             </button>
           </form>

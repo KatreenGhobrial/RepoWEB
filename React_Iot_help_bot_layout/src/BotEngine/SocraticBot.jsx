@@ -186,13 +186,13 @@ export default function SocraticBot() {
             </LabeledInput>
           </div>
          
-          <button onClick={handleStart} disabled={isLoading} className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed mb-6">
+          <button onClick={handleStart} disabled={isLoading} className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed mb-6">
             {hasStarted ? 'Restart investigation' : 'Start investigation'}
           </button>
 
           <div className="space-y-4 mb-6 max-h-96 overflow-y-auto pr-2">
             {chatHistory.map((msg, idx) => (
-              <div key={idx} className={msg.sender === 'bot' ? 'bg-slate-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 max-w-xl' : 'bg-slate-950 text-white rounded-2xl p-5 max-w-xl ml-auto'}>
+              <div key={idx} className={msg.sender === 'bot' ? 'bg-slate-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 max-w-xl' : 'bg-slate-950 text-white dark:bg-cyan-600 dark:text-white rounded-2xl p-5 max-w-xl ml-auto'}>
                 <p className={`text-sm mb-1 ${msg.sender === 'bot' ? 'text-slate-400' : 'text-slate-300'}`}>{msg.sender === 'bot' ? '🤖 IoT HelpBot' : '👤 Student'}</p>
                 <div
                     className={msg.sender === 'bot' ? 'text-slate-900 dark:text-white' : 'text-white'}
@@ -223,7 +223,7 @@ export default function SocraticBot() {
             <button
               type="submit"
               disabled={isLoading || !hasStarted || !answerInput.trim()}
-              className="bg-slate-950 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? '⏳' : 'Send'}
             </button>

@@ -236,7 +236,7 @@ export default function CommunityBoard() {
                   />
                 </LabeledInput>
                 <LabeledInput label="Tags (comma-separated)" type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="mqtt, hardware, security" className="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" />
-                <button type="submit" disabled={saving || !title.trim() || !content.trim()} className="bg-slate-950 text-white px-8 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors">
+                <button type="submit" disabled={saving || !title.trim() || !content.trim()} className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-8 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors">
                   {saving ? "⏳ Posting..." : "📢 Publish Post"}
                 </button>
               </form>

@@ -164,7 +164,7 @@ export default function TasksTeam() {
           </div>
           <form onSubmit={handleAddMember} className="flex gap-2 w-full md:w-auto">
             <input className="border rounded-xl px-4 py-2 flex-grow md:w-64 outline-none focus:ring-2 focus:ring-slate-950" placeholder="Student email or username" value={newMemberEmail} onChange={e => setNewMemberEmail(e.target.value)} />
-            <button className="bg-slate-950 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-colors">Add</button>
+            <button className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-colors">Add</button>
           </form>
         </div>
         {msg.text && <p className={`mb-4 text-sm font-medium ${msg.isError ? 'text-red-500' : 'text-green-600'}`}>{msg.text}</p>}
@@ -208,7 +208,7 @@ export default function TasksTeam() {
                     </div>
                     <div className="flex gap-2 justify-end mt-1">
                       <button onClick={() => setEditingTaskId(null)} className="px-4 py-1.5 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 font-bold rounded-lg text-sm hover:bg-slate-200 transition-colors">Cancel</button>
-                      <button onClick={() => handleTaskAction(task._id, 'edit', editTaskForm)} className="px-4 py-1.5 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800 transition-colors">Save</button>
+                      <button onClick={() => handleTaskAction(task._id, 'edit', editTaskForm)} className="px-4 py-1.5 bg-slate-900 text-white dark:bg-cyan-600 dark:text-white font-bold rounded-lg text-sm hover:bg-slate-800 transition-colors">Save</button>
                     </div>
                   </div>
                 ) : (
@@ -260,7 +260,7 @@ export default function TasksTeam() {
                 <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
               </select>
             </LabeledInput>
-            <button className="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 transition-colors">Add task</button>
+            <button className="w-full bg-slate-950 text-white dark:bg-cyan-600 dark:text-white py-3 rounded-2xl font-bold hover:bg-slate-800 transition-colors">Add task</button>
           </form>
         </div>
       </section>

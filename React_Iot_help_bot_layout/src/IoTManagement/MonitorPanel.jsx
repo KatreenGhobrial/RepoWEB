@@ -178,7 +178,7 @@ export default function MonitorPanel() {
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-2xl font-bold flex items-center gap-4"><span className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🌡️</span> Sensor readings</h3>
-            <button onClick={handleRefresh} className="bg-slate-950 text-white px-5 py-3 rounded-2xl font-bold hover:bg-slate-800">Ping System</button>
+            <button onClick={handleRefresh} className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-5 py-3 rounded-2xl font-bold hover:bg-slate-800">Ping System</button>
           </div>
           
           {!sensorArray.length ? (

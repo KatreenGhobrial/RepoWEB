@@ -151,7 +151,7 @@ export default function DetectConflict() {
               </select>
             </LabeledInput>
             {message && <p className="text-sm text-green-500">{message}</p>}
-            <button type="submit" disabled={isLoading} className="w-full bg-slate-950 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50">
+            <button type="submit" disabled={isLoading} className="w-full bg-slate-950 text-white dark:bg-cyan-600 dark:text-white py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50">
               {isLoading ? '⏳ Analyzing...' : 'Analyze Architecture'}
             </button>
           </form>

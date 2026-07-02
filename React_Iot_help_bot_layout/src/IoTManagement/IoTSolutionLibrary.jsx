@@ -70,7 +70,7 @@ export default function IoTSolutionLibrary() {
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap border ${
               activeTab === tab.key
-                ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-md dark:bg-cyan-600 dark:border-cyan-600 dark:text-white'
                 : 'bg-white dark:bg-zinc-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-zinc-800 hover:border-slate-300 hover:bg-slate-50'
             }`}
           >
