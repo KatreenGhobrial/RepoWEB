@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
-import { list as listProjects } from '../ProjectManagement/projectService';
 import { listByProject as listTasks } from '../ProjectManagement/taskService';
 import { getFeedback } from '../IoTManagement/iotService';
+import { useProject } from '../hooks/ProjectContext';
 
 export default function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { allProjects, selectedProjectId, selectedProject } = useProject();
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -28,21 +29,10 @@ export default function Dashboard() {
           return;
         }
 
-        const user = JSON.parse(userStr);
-        const userId = user._id;
+        // Use selected project from context
+        const proj = selectedProject;
 
-        // Fetch projects from backend
-        const projects = await listProjects();
-        
-        // Build dashboard from real data
-        const totalProjects = projects.length;
-        const memberCount = projects.reduce((acc, p) => {
-          const members = p.members || [];
-          members.forEach(m => acc.add(m._id || m));
-          return acc;
-        }, new Set()).size;
-
-        // Fetch tasks and feedback for the first project if exists
+        // Fetch tasks and feedback for the selected project
         let totalTasks = 0;
         let completedTasks = 0;
         let inProgressTasks = 0;
@@ -50,9 +40,9 @@ export default function Dashboard() {
         let memberWorkload = {};
         let feedbacks = [];
 
-        if (projects.length > 0) {
+        if (proj) {
           try {
-            const tasks = await listTasks(projects[0]._id);
+            const tasks = await listTasks(proj._id);
             totalTasks = tasks.length;
             
             tasks.forEach(t => {
@@ -73,13 +63,13 @@ export default function Dashboard() {
           } catch (e) { console.error('Tasks fetch error:', e); }
 
           try {
-            feedbacks = await getFeedback(projects[0]._id);
+            feedbacks = await getFeedback(proj._id);
           } catch (e) { console.error('Feedback fetch error:', e); }
         }
 
         const progressPercentage = totalTasks === 0 ? 0 : Math.round(((completedTasks + (inProgressTasks * 0.5)) / totalTasks) * 100);
 
-        const assessment = projects.length > 0 ? projects[0].assessment : null;
+        const assessment = proj ? proj.assessment : null;
 
         // Build live dashboard object
         setDashboard({
@@ -92,12 +82,12 @@ export default function Dashboard() {
             progressPercentage
           },
           workload: Object.entries(memberWorkload).map(([name, stats]) => ({ name, ...stats })),
-          documentationStatus: totalProjects > 0 ? 'Active' : 'No projects',
+          documentationStatus: allProjects.length > 0 ? 'Active' : 'No projects',
           progress: [],
           alerts: [],
           feedbacks: feedbacks,
           assessment: assessment,
-          evaluation: projects[0]?.evaluation || null
+          evaluation: proj?.evaluation || null
         });
       } catch (err) {
         console.error('Dashboard fetch error:', err);
@@ -118,7 +108,7 @@ export default function Dashboard() {
     };
 
     fetchDashboard();
-  }, []);
+  }, [selectedProjectId]);
 
   if (loading || !dashboard) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 text-lg">Loading dashboard...</p></div>;
 
