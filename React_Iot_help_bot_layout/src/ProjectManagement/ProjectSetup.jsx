@@ -1,33 +1,36 @@
 import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
-import { list as listProjects, update as updateProject, create as createProject } from './projectService';
+import { update as updateProject, create as createProject } from './projectService';
 import { detectConflicts } from '../BotEngine/botService';
 import { LuWifi, LuShield, LuZap, LuClock, LuCpu, LuTriangleAlert } from 'react-icons/lu';
 import LabeledInput from '../UIComponents/LabeledInput';
+import { useProject } from '../hooks/ProjectContext';
 const DEFAULT_FORM = { projectName: '', device: 'ESP32', protocol: 'HTTP', database: 'MongoDB', powerSource: 'Battery', membersText: '', requirements: '' };
 
 export default function ProjectSetup() {
+  const { allProjects, selectedProjectId, setSelectedProjectId, selectedProject, updateProjectInCache, addProjectToCache, refreshProjects } = useProject();
+
   const [projectId, setProjectId] = useState(null);
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [summaryData, setSummaryData] = useState(DEFAULT_FORM);
   const [msg, setMsg] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [allProjects, setAllProjects] = useState([]);
   const [conflicts, setConflicts] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisMsg, setAnalysisMsg] = useState('');
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
+  // Sync local state when selectedProject changes (from context)
   useEffect(() => {
-    if (!currentUser) return;
-    listProjects().then(projs => {
-      if (projs?.length) {
-        setAllProjects(projs);
-        loadProj(projs[0]);
-      }
-    }).catch(console.error);
-  }, []);
+    if (selectedProject) {
+      loadProj(selectedProject);
+    } else if (allProjects.length === 0) {
+      setProjectId(null);
+      setFormData(DEFAULT_FORM);
+      setSummaryData(DEFAULT_FORM);
+    }
+  }, [selectedProjectId]);
 
   const loadProj = (p) => {
     const data = {
@@ -61,13 +64,13 @@ export default function ProjectSetup() {
       if (projectId) {
         await updateProject(projectId, payload);
         setMsg('✅ Project updated!');
-        setAllProjects(prev => prev.map(p => p._id === projectId ? { ...p, ...payload } : p));
+        updateProjectInCache(projectId, payload);
       } else {
         const res = await createProject({ ...payload, sensors: ['DHT22'], description: payload.description || `IoT project using ${payload.device}` });
         const newProjId = res.data?._id || res._id;
         setProjectId(newProjId);
         setMsg('✅ New project created!');
-        setAllProjects(prev => [...prev, { _id: newProjId, ...payload }]);
+        addProjectToCache({ _id: newProjId, ...payload });
       }
       setSummaryData(formData);
       setFormData(prev => ({ ...prev, membersText: '' }));
@@ -130,9 +133,9 @@ export default function ProjectSetup() {
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Project details</h3>
             {allProjects.length > 0 && (
-              <select className="border border-slate-300 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-sm font-semibold bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white outline-none" value={projectId || 'new'} onChange={e => {
-                if (e.target.value === 'new') { setProjectId(null); setFormData(DEFAULT_FORM); setSummaryData(DEFAULT_FORM); }
-                else loadProj(allProjects.find(p => p._id === e.target.value));
+              <select className="border border-slate-300 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-sm font-semibold bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white outline-none" value={selectedProjectId || 'new'} onChange={e => {
+                if (e.target.value === 'new') { setSelectedProjectId(null); setProjectId(null); setFormData(DEFAULT_FORM); setSummaryData(DEFAULT_FORM); }
+                else setSelectedProjectId(e.target.value);
               }}>
                 {allProjects.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                 <option value="new">+ New Project</option>
