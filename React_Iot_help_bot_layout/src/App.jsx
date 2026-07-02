@@ -18,10 +18,12 @@ import Register from './UserManagement/Register';
 import DevicePlayground from './IoTManagement/DevicePlayground';
 import TechDocs from './Documentation/TechDocs';
 import ProtectedRoute from './UIComponents/ProtectedRoute';
+import { ProjectProvider } from './hooks/ProjectContext';
 //Including all routes in the app
 function App() {
   return (
     <Router>
+      <ProjectProvider>
       <Routes>
         <Route path="/" element={<Navigate to="/home" />} />
 
@@ -45,6 +47,7 @@ function App() {
           <Route path="/tech-docs" element={<ProtectedRoute><TechDocs /></ProtectedRoute>} />
         </Route>
       </Routes>
+      </ProjectProvider>
     </Router>
   );
 }
