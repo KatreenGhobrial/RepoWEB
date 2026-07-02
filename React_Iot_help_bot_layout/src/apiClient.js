@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE =  "http://localhost:5000/api";
+const API_BASE =  process.env.VITE_SERVER_URL ;
 
 // Helper to grab token and format headers
 function getHeaders() {
