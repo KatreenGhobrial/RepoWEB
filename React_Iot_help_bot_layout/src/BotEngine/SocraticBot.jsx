@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import Header from '../UIComponents/Header';
 import LabeledInput from '../UIComponents/LabeledInput';
 import { marked } from "marked";
-import { list as listProjects } from '../ProjectManagement/projectService';
 import { detectConflicts, chat as chatBot } from './botService';
 import { getAlerts } from '../IoTManagement/alertService';
 import { LuTriangleAlert, LuWifi, LuShield, LuZap, LuClock, LuCpu } from 'react-icons/lu';
+import { useProject } from '../hooks/ProjectContext';
 
 const renderer = new marked.Renderer();
 
@@ -14,6 +14,8 @@ function parseMdText(mdText) {
 }
 
 export default function SocraticBot() {
+  const { selectedProjectId, selectedProject } = useProject();
+
   const [investigationPath, setInvestigationPath] = useState([]);
  
   const [problem, setProblem] = useState('Component does not respond');
@@ -29,7 +31,6 @@ export default function SocraticBot() {
   const [hasStarted, setHasStarted] = useState(false);
   const chatEndRef = useRef(null);
 
-  const [activeProject, setActiveProject] = useState(null);
   const [projectConflicts, setProjectConflicts] = useState([]);
   const [projectAlerts, setProjectAlerts] = useState([]);
 
@@ -39,39 +40,40 @@ export default function SocraticBot() {
       "Verify network connection",
       "Inspect server logs"
     ]);
+  }, []);
 
+  // Re-fetch conflicts and alerts when the selected project changes
+  useEffect(() => {
     const fetchProjectData = async () => {
+      if (!selectedProject) {
+        setProjectConflicts([]);
+        setProjectAlerts([]);
+        return;
+      }
+      const p = selectedProject;
       try {
-        const projs = await listProjects();
-        if (projs && projs.length > 0) {
-          const p = projs[0];
-          setActiveProject(p);
-          
-          try {
-            const conflicts = await detectConflicts({
-              device: p.device,
-              protocol: p.protocol,
-              database: p.database,
-              powerSource: p.powerSource
-            });
-            setProjectConflicts(conflicts || []);
-          } catch (e) {
-            console.error("Conflicts error:", e);
-          }
-
-          try {
-            const alerts = await getAlerts(p._id);
-            setProjectAlerts((alerts || []).filter(a => !a.resolved));
-          } catch (e) {
-            console.error("Alerts error:", e);
-          }
-        }
+        const conflicts = await detectConflicts({
+          device: p.device,
+          protocol: p.protocol,
+          database: p.database,
+          powerSource: p.powerSource
+        });
+        setProjectConflicts(conflicts || []);
       } catch (e) {
-        console.error("Projects error:", e);
+        console.error("Conflicts error:", e);
+        setProjectConflicts([]);
+      }
+
+      try {
+        const alerts = await getAlerts(p._id);
+        setProjectAlerts((alerts || []).filter(a => !a.resolved));
+      } catch (e) {
+        console.error("Alerts error:", e);
+        setProjectAlerts([]);
       }
     };
     fetchProjectData();
-  }, []);
+  }, [selectedProjectId]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
@@ -117,7 +119,7 @@ export default function SocraticBot() {
 
     try {
       const data = await chatBot(
-        activeProject?._id,
+        selectedProject?._id,
         `The problem I am having is: ${currentProblem}. ${answerInput}`,
         sessionId
       );
@@ -139,10 +141,10 @@ export default function SocraticBot() {
     <>
       <Header title="IoT Help Bot" subtitle="Manage architecture, detect IoT risks, and support collaboration." />
 
-      {activeProject && (projectConflicts.length > 0 || projectAlerts.length > 0) && (
+      {selectedProject && (projectConflicts.length > 0 || projectAlerts.length > 0) && (
         <section className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-500/30 rounded-3xl p-6 mb-8">
           <h3 className="text-xl font-bold text-orange-900 dark:text-orange-300 flex items-center gap-2 mb-4">
-            <LuTriangleAlert /> IoT Project Risks Detected ({activeProject.name})
+            <LuTriangleAlert /> IoT Project Risks Detected ({selectedProject.name})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Render alerts first */}
