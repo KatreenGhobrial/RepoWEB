@@ -1,7 +1,7 @@
 import axios from 'axios';
+ 
 
-
-const API_BASE = import.meta.env.VITE_SERVER_URL ;
+const API_BASE = `${import.meta.env.VITE_SERVER_URL}/api`;
 
 // Helper to grab token and format headers
 function getHeaders() {
@@ -12,6 +12,7 @@ function getHeaders() {
     }
     return {
         "Content-Type": "application/json",
+      
         ...(userId && { "x-user-id": userId })
     };
 }
