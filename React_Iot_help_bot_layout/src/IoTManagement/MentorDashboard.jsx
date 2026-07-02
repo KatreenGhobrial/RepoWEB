@@ -19,6 +19,15 @@ export default function MentorDashboard() {
   const [projectProgress, setProjectProgress] = useState({});
   const [assessment, setAssessment] = useState({ interdisciplinary: 0, collaboration: 0, technical: 0, comments: '' });
   const [assessmentSaving, setAssessmentSaving] = useState(false);
+  const [interdisciplinaryScore, setInterdisciplinaryScore] = useState(50);
+  const [interdisciplinaryNotes, setInterdisciplinaryNotes] = useState("");
+  const [cooperationScore, setCooperationScore] = useState(50);
+  const [cooperationNotes, setCooperationNotes] = useState("");
+  const [technicalScore, setTechnicalScore] = useState(50);
+  const [technicalNotes, setTechnicalNotes] = useState("");
+  const [summaryNotes, setSummaryNotes] = useState("");
+  const [evalSaving, setEvalSaving] = useState(false);
+  const [evalSuccess, setEvalSuccess] = useState("");
 
   if (currentUser?.role !== 'mentor') return <Navigate to="/dashboard" replace />;
 
@@ -66,6 +75,55 @@ export default function MentorDashboard() {
       .then(([f, t]) => { setFeedback(f.data || f || []); setProjectTasks(t.data || t || []); })
       .catch(() => {});
   }, [selectedProject, projects]);
+
+  useEffect(() => {
+    if (!selectedProject) return;
+    const proj = projects.find(p => p._id === selectedProject);
+    if (proj && proj.evaluation) {
+      setInterdisciplinaryScore(proj.evaluation.interdisciplinaryScore || 0);
+      setInterdisciplinaryNotes(proj.evaluation.interdisciplinaryNotes || "");
+      setCooperationScore(proj.evaluation.cooperationScore || 0);
+      setCooperationNotes(proj.evaluation.cooperationNotes || "");
+      setTechnicalScore(proj.evaluation.technicalScore || 0);
+      setTechnicalNotes(proj.evaluation.technicalNotes || "");
+      setSummaryNotes(proj.evaluation.summaryNotes || "");
+    } else {
+      setInterdisciplinaryScore(50);
+      setInterdisciplinaryNotes("");
+      setCooperationScore(50);
+      setCooperationNotes("");
+      setTechnicalScore(50);
+      setTechnicalNotes("");
+      setSummaryNotes("");
+    }
+    setEvalSuccess("");
+  }, [selectedProject, projects]);
+
+  const handleSaveEvaluation = async (e) => {
+    e.preventDefault();
+    if (!selectedProject) return;
+    setEvalSaving(true);
+    setEvalSuccess("");
+    try {
+      const response = await mentorService.updateProjectEvaluation(selectedProject, {
+        interdisciplinaryScore,
+        interdisciplinaryNotes,
+        cooperationScore,
+        cooperationNotes,
+        technicalScore,
+        technicalNotes,
+        summaryNotes
+      });
+      const updatedProject = response.data || response;
+      setProjects(prevProjects => prevProjects.map(p => p._id === selectedProject ? updatedProject : p));
+      setEvalSuccess("Evaluation saved successfully! / ההערכה נשמרה בהצלחה!");
+      setTimeout(() => setEvalSuccess(""), 4000);
+    } catch (err) {
+      setError(err.message || "Failed to save evaluation");
+    } finally {
+      setEvalSaving(false);
+    }
+  };
 
   const handleFeedback = async (e) => {
     e.preventDefault();
@@ -195,6 +253,129 @@ export default function MentorDashboard() {
                   </select>
                 </LabeledInput>
                 <button type="submit" disabled={fbSaving} className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold text-sm shadow-lg shadow-cyan-500/20 disabled:opacity-50">{fbSaving ? "Sending..." : "📤 Send Feedback"}</button>
+              </form>
+
+              {/* Evaluation and Grades Panel */}
+              <form onSubmit={handleSaveEvaluation} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
+                <div className="flex items-center justify-between border-b pb-3">
+                  <h3 className="font-bold text-slate-900 flex items-center gap-2 text-base">
+                    <span>📊</span>
+                    <span>Project Evaluation & Grades / הערכה וציונים</span>
+                  </h3>
+                  <div className="bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1.5">
+                    <span>Average Grade:</span>
+                    <span className="text-sm">{Math.round((Number(interdisciplinaryScore) + Number(cooperationScore) + Number(technicalScore)) / 3)}</span>
+                  </div>
+                </div>
+
+                {evalSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-xs font-semibold">
+                    ✓ {evalSuccess}
+                  </div>
+                )}
+
+                {/* Metric 1 */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <label className="font-semibold text-slate-700">
+                      💡 Quality of Interdisciplinary Work / איכות העבודה הבין-תחומית
+                    </label>
+                    <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 font-bold rounded-md">
+                      {interdisciplinaryScore}/100
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    value={interdisciplinaryScore} 
+                    onChange={e => setInterdisciplinaryScore(e.target.value)}
+                    className="w-full accent-cyan-500 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <textarea 
+                    value={interdisciplinaryNotes} 
+                    onChange={e => setInterdisciplinaryNotes(e.target.value)} 
+                    rows={2} 
+                    placeholder="Comments about interdisciplinary work..." 
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-cyan-500 resize-none"
+                  />
+                </div>
+
+                {/* Metric 2 */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <label className="font-semibold text-slate-700">
+                      🤝 Cooperation & Collaboration / שיתוף הפעולה
+                    </label>
+                    <span className="px-2 py-0.5 bg-violet-50 text-violet-700 font-bold rounded-md">
+                      {cooperationScore}/100
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    value={cooperationScore} 
+                    onChange={e => setCooperationScore(e.target.value)}
+                    className="w-full accent-violet-500 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <textarea 
+                    value={cooperationNotes} 
+                    onChange={e => setCooperationNotes(e.target.value)} 
+                    rows={2} 
+                    placeholder="Comments about team cooperation..." 
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-violet-500 resize-none"
+                  />
+                </div>
+
+                {/* Metric 3 */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <label className="font-semibold text-slate-700">
+                      ⚙️ Technical Progress / ההתקדמות הטכנית
+                    </label>
+                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-md">
+                      {technicalScore}/100
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    value={technicalScore} 
+                    onChange={e => setTechnicalScore(e.target.value)}
+                    className="w-full accent-emerald-500 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <textarea 
+                    value={technicalNotes} 
+                    onChange={e => setTechnicalNotes(e.target.value)} 
+                    rows={2} 
+                    placeholder="Comments about technical progress..." 
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-emerald-500 resize-none"
+                  />
+                </div>
+
+                {/* Overall Summary */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    📝 Overall Summary Notes / הערות סיכום
+                  </label>
+                  <textarea 
+                    value={summaryNotes} 
+                    onChange={e => setSummaryNotes(e.target.value)} 
+                    rows={3} 
+                    placeholder="Write a general evaluation summary..." 
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-slate-400 resize-none"
+                  />
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={evalSaving} 
+                  className="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white py-3 rounded-xl font-semibold text-xs shadow-md transition-all disabled:opacity-50"
+                >
+                  {evalSaving ? "Saving..." : "💾 Save Evaluation / שמור הערכה"}
+                </button>
               </form>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">

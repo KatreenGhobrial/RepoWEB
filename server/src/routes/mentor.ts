@@ -17,6 +17,7 @@ router.get('/projects', async (req: Request, res: Response): Promise<void> => {
     const projects = await Project.find(query)
       .populate('owner', 'username email')
       .populate('members', 'username email role expertise')
+      .populate('evaluation.gradedBy', 'username')
       .sort({ updatedAt: -1 });
 
     res.json(projects);
@@ -169,6 +170,55 @@ router.post('/broadcast', async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     console.error('Broadcast error:', error);
     res.status(500).json({ message: 'Server error broadcasting' });
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// PUT /api/mentor/projects/:projectId/evaluation — Evaluate a project
+// ───────────────────────────────────────────────────────────────────────────
+router.put('/projects/:projectId/evaluation', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.headers['x-user-id'];
+    const {
+      interdisciplinaryScore,
+      interdisciplinaryNotes,
+      cooperationScore,
+      cooperationNotes,
+      technicalScore,
+      technicalNotes,
+      summaryNotes
+    } = req.body;
+
+    const project = await Project.findByIdAndUpdate(
+      projectId,
+      {
+        $set: {
+          evaluation: {
+            interdisciplinaryScore: Number(interdisciplinaryScore) || 0,
+            interdisciplinaryNotes: interdisciplinaryNotes || '',
+            cooperationScore: Number(cooperationScore) || 0,
+            cooperationNotes: cooperationNotes || '',
+            technicalScore: Number(technicalScore) || 0,
+            technicalNotes: technicalNotes || '',
+            summaryNotes: summaryNotes || '',
+            gradedBy: userId || null,
+            gradedAt: new Date()
+          }
+        }
+      },
+      { new: true }
+    ).populate('evaluation.gradedBy', 'username');
+
+    if (!project) {
+      res.status(404).json({ message: 'Project not found' });
+      return;
+    }
+
+    res.json(project);
+  } catch (error) {
+    console.error('Project evaluation error:', error);
+    res.status(500).json({ message: 'Server error updating project evaluation' });
   }
 });
 

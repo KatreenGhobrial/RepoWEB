@@ -25,6 +25,14 @@ export async function getFeedback(projectId) {
   return await api.get(`/mentor/feedback/${projectId}`);
 }
 
+export async function broadcast(message) {
+  return await api.post("/mentor/broadcast", { message });
+}
+
+export async function updateProjectEvaluation(projectId, evalData) {
+  return await api.put(`/mentor/projects/${projectId}/evaluation`, evalData);
+}
+
 // Library Endpoints
 export async function getAll() {
   return await api.get("/library");

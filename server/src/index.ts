@@ -14,6 +14,7 @@ import mqttRoutes from './routes/mqtt';
 import alertRoutes from './routes/alerts';
 import docRoutes from './routes/docs';
 import { initMqttService } from './services/mqttService';
+import { startKeepAlive } from './services/keepAliveService';
 
 // Load environment variables
 dotenv.config();
@@ -85,6 +86,9 @@ const startServer = async () => {
     console.log(`🚀 BridgeBot server & WebSocket running on port ${PORT}`);
     console.log(`   API: http://localhost:${PORT}/api`);
     console.log(`   Health: http://localhost:${PORT}/api/health`);
+    
+    // Start keep-alive self-pings
+    startKeepAlive(PORT);
   });
 };
 

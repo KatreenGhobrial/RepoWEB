@@ -21,7 +21,8 @@ export default function Dashboard() {
             alerts: [],
             feedbacks: [],
             tasksStats: { total: 0, done: 0, inProgress: 0, todo: 0, progressPercentage: 0 },
-            workload: []
+            workload: [],
+            evaluation: null
           });
           setLoading(false);
           return;
@@ -95,7 +96,8 @@ export default function Dashboard() {
           progress: [],
           alerts: [],
           feedbacks: feedbacks,
-          assessment: assessment
+          assessment: assessment,
+          evaluation: projects[0]?.evaluation || null
         });
       } catch (err) {
         console.error('Dashboard fetch error:', err);
@@ -107,7 +109,8 @@ export default function Dashboard() {
           progress: [],
           alerts: [],
           feedbacks: [],
-          assessment: null
+          assessment: null,
+          evaluation: null
         });
       } finally {
         setLoading(false);
@@ -221,6 +224,121 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+      </section>
+
+      {/* Evaluation and Grades Section */}
+      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 mb-8">
+        <div className="flex items-center gap-4 mb-6 border-b pb-4">
+          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🏆</div>
+          <div>
+            <h3 className="text-2xl font-bold text-slate-950">Evaluation & Grades / הערכה וציונים</h3>
+            <p className="text-xs text-slate-500">Assessments of interdisciplinary work, cooperation, and technical progress</p>
+          </div>
+        </div>
+
+        {(!dashboard.evaluation || 
+          (dashboard.evaluation.interdisciplinaryScore === 0 && 
+           dashboard.evaluation.cooperationScore === 0 && 
+           dashboard.evaluation.technicalScore === 0)) ? (
+          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+            <span className="text-4xl mb-3 block">🏁</span>
+            <h4 className="font-bold text-slate-800 text-sm mb-1">Evaluation Pending / הערכה בהמתנה</h4>
+            <p className="text-slate-500 text-xs max-w-md mx-auto">
+              Your project evaluation is pending. Once your mentor submits your interdisciplinary, cooperation, and technical grades, they will display here in real-time.
+            </p>
+          </div>
+        ) : (
+          (() => {
+            const inter = dashboard.evaluation.interdisciplinaryScore || 0;
+            const coop = dashboard.evaluation.cooperationScore || 0;
+            const tech = dashboard.evaluation.technicalScore || 0;
+            const avgScore = Math.round((inter + coop + tech) / 3);
+
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Average Gauge Left */}
+                <div className="md:col-span-1 flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Overall Score / ציון משוקלל</span>
+                  <div className="relative w-28 h-28 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                      <path className="text-slate-200" strokeWidth="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path className="text-cyan-500 transition-all duration-1000 ease-out" strokeDasharray={`${avgScore}, 100`} strokeWidth="3.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div className="absolute text-center">
+                      <span className="text-3xl font-extrabold text-slate-800">{avgScore}</span>
+                      <span className="text-slate-400 text-xs block">/ 100</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-5 text-center">
+                    Graded by <span className="font-bold text-slate-700">{dashboard.evaluation.gradedBy?.username || 'Mentor'}</span>
+                    {dashboard.evaluation.gradedAt && ` on ${new Date(dashboard.evaluation.gradedAt).toLocaleDateString()}`}
+                  </p>
+                </div>
+
+                {/* Score Breakdown Right */}
+                <div className="md:col-span-2 space-y-6">
+                  {/* Metric 1 */}
+                  <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-800">💡 Quality of Interdisciplinary Work / איכות העבודה הבין-תחומית</span>
+                      <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 font-bold rounded-md">{inter}/100</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2.5">
+                      <div className="bg-gradient-to-r from-cyan-400 to-cyan-500 h-2.5 rounded-full" style={{ width: `${inter}%` }}></div>
+                    </div>
+                    {dashboard.evaluation.interdisciplinaryNotes && (
+                      <div className="bg-slate-50 border-l-2 border-cyan-400 p-2 rounded-r-lg text-slate-600 text-xs italic">
+                        "{dashboard.evaluation.interdisciplinaryNotes}"
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Metric 2 */}
+                  <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-800">🤝 Cooperation & Collaboration / שיתוף הפעולה</span>
+                      <span className="px-2 py-0.5 bg-violet-100 text-violet-800 font-bold rounded-md">{coop}/100</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2.5">
+                      <div className="bg-gradient-to-r from-violet-400 to-violet-500 h-2.5 rounded-full" style={{ width: `${coop}%` }}></div>
+                    </div>
+                    {dashboard.evaluation.cooperationNotes && (
+                      <div className="bg-slate-50 border-l-2 border-violet-400 p-2 rounded-r-lg text-slate-600 text-xs italic">
+                        "{dashboard.evaluation.cooperationNotes}"
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Metric 3 */}
+                  <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-800">⚙️ Technical Progress / ההתקדמות הטכנית</span>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-md">{tech}/100</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2.5">
+                      <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-2.5 rounded-full" style={{ width: `${tech}%` }}></div>
+                    </div>
+                    {dashboard.evaluation.technicalNotes && (
+                      <div className="bg-slate-50 border-l-2 border-emerald-400 p-2 rounded-r-lg text-slate-600 text-xs italic">
+                        "{dashboard.evaluation.technicalNotes}"
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Summary Notes */}
+                  {dashboard.evaluation.summaryNotes && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-slate-50 to-slate-100/50 rounded-2xl border border-slate-200/60">
+                      <h4 className="text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                        <span>📝</span> Overall Summary / הערות סיכום מהמנטור
+                      </h4>
+                      <p className="text-slate-600 text-xs leading-relaxed whitespace-pre-line">{dashboard.evaluation.summaryNotes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()
+        )}
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

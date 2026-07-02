@@ -70,6 +70,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     const projects = await Project.find(query)
       .populate('owner', 'username email')
       .populate('members', 'username email role expertise')
+      .populate('evaluation.gradedBy', 'username')
       .sort({ updatedAt: -1 });
 
     res.json(projects);
@@ -86,7 +87,8 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('owner', 'username email')
-      .populate('members', 'username email role expertise');
+      .populate('members', 'username email role expertise')
+      .populate('evaluation.gradedBy', 'username');
 
     if (!project) {
       res.status(404).json({ message: 'Project not found' });
@@ -200,7 +202,8 @@ router.post('/:id/members', async (req: Request, res: Response): Promise<void> =
       req.params.id,
       { $addToSet: { members: userId } },
       { new: true }
-    ).populate('members', 'username email role expertise');
+    ).populate('members', 'username email role expertise')
+     .populate('evaluation.gradedBy', 'username');
 
     if (!project) {
       res.status(404).json({ message: 'Project not found' });

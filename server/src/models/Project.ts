@@ -15,6 +15,18 @@ export interface IFlowStep {
   description: string;
 }
 
+export interface IEvaluation {
+  interdisciplinaryScore: number;
+  interdisciplinaryNotes: string;
+  cooperationScore: number;
+  cooperationNotes: string;
+  technicalScore: number;
+  technicalNotes: string;
+  summaryNotes: string;
+  gradedBy: mongoose.Types.ObjectId | null;
+  gradedAt: Date | null;
+}
+
 // ---------------------------------------------------------------------------
 // Main interface
 // ---------------------------------------------------------------------------
@@ -44,6 +56,7 @@ export interface IProject extends Document {
     assessedAt: Date | null;
     assessor: mongoose.Types.ObjectId | null;
   };
+  evaluation?: IEvaluation;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -120,6 +133,17 @@ const projectSchema = new Schema<IProject>(
       comments: { type: String, default: '' },
       assessedAt: { type: Date, default: null },
       assessor: { type: Schema.Types.ObjectId, ref: 'User', default: null }
+    },
+    evaluation: {
+      interdisciplinaryScore: { type: Number, default: 0 },
+      interdisciplinaryNotes: { type: String, default: '' },
+      cooperationScore: { type: Number, default: 0 },
+      cooperationNotes: { type: String, default: '' },
+      technicalScore: { type: Number, default: 0 },
+      technicalNotes: { type: String, default: '' },
+      summaryNotes: { type: String, default: '' },
+      gradedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+      gradedAt: { type: Date, default: null }
     },
   },
   { timestamps: true }
