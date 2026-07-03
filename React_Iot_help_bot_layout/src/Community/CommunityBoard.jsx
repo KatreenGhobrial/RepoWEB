@@ -77,6 +77,19 @@ export default function CommunityBoard() {
     }
   };
 
+  const handleSelectPost = async (post) => {
+    setLoading(true);
+    try {
+      const fullPost = await communityService.get(post._id);
+      setSelectedPost(fullPost);
+      setShowForm(false);
+    } catch (err) {
+      setError("Failed to load post details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -258,10 +271,7 @@ export default function CommunityBoard() {
           {posts.map((post) => (
             <button
               key={post._id}
-              onClick={() => {
-                setSelectedPost(post);
-                setShowForm(false);
-              }}
+              onClick={() => handleSelectPost(post)}
               className={`w-full text-left bg-white dark:bg-zinc-900 border shadow-sm rounded-2xl p-5 transition-all hover:border-sky-300 hover:shadow-md ${selectedPost?._id === post._id ? "border-sky-500 ring-2 ring-sky-100" : "border-slate-200 dark:border-zinc-800"}`}
             >
               <h4 className="text-base font-bold text-slate-900 dark:text-white mb-2 line-clamp-1">{post.title}</h4>
@@ -307,8 +317,7 @@ export default function CommunityBoard() {
                             <button
                               type="button"
                               onClick={() => {
-                                setSelectedPost(p);
-                                setShowForm(false);
+                                handleSelectPost(p);
                                 setSimilarPosts([]);
                               }}
                               className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-200 hover:underline text-left block w-full truncate"
@@ -415,7 +424,7 @@ export default function CommunityBoard() {
                               }}
                               className={`text-xs font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
                             >
-                              💬 {isCapped ? `Replies Full (${replyCount}/10)` : `Reply (${replyCount}/10)`}
+                              💬 Reply ({replyCount}/10)
                             </button>
                           </div>
 
@@ -488,7 +497,7 @@ export default function CommunityBoard() {
                                           }}
                                           className={`text-[11px] font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
                                         >
-                                          💬 Reply
+                                          💬 Reply ({replyCount}/10)
                                         </button>
                                       </div>
                                     </div>

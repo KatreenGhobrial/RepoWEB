@@ -10,6 +10,10 @@ export async function list(tag, search) {
   return await api.get(BASE_URL, { params: { tag, search } });
 }
 
+export async function get(id) {
+  return await api.get(`${BASE_URL}/${id}`);
+}
+
 
 export async function reply(id, content) {
   return await api.post(`${BASE_URL}/${id}/reply`, { content });
