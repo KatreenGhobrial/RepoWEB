@@ -27,6 +27,10 @@ export async function replyToComment(postId, commentId, content) {
   return await api.post(`${BASE_URL}/${postId}/reply/${commentId}`, { content });
 }
 
-export async function rateComment(postId, commentId, value) {
-  return await api.post(`${BASE_URL}/${postId}/reply/${commentId}/rate`, { value });
+export async function rateComment(postId, commentId) {
+  return await api.post(`${BASE_URL}/${postId}/reply/${commentId}/rate`);
+}
+
+export async function rateNestedComment(postId, commentId, nestedReplyId) {
+  return await api.post(`${BASE_URL}/${postId}/reply/${commentId}/nested/${nestedReplyId}/rate`);
 }

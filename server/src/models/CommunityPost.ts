@@ -19,10 +19,16 @@ export interface ICommunityPost extends Document {
       author: mongoose.Types.ObjectId;
       content: string;
       createdAt: Date;
+      ratings: {
+        user: mongoose.Types.ObjectId;
+        value: number; // 1
+        score: number; // weighted value (e.g. +3 or +1)
+      }[];
+      score: number;
     }[];
     ratings: {
       user: mongoose.Types.ObjectId;
-      value: number; // 1 (upvote) or -1 (downvote)
+      value: number; // 1
       score: number; // weighted value (e.g. +3 or +1)
     }[];
     score: number;
@@ -39,6 +45,17 @@ const nestedReplySchema = new Schema(
     author: { type: Schema.Types.ObjectId, ref: 'User', required: false },
     content: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
+    ratings: {
+      type: [
+        {
+          user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+          value: { type: Number, required: true },
+          score: { type: Number, required: true }
+        }
+      ],
+      default: []
+    },
+    score: { type: Number, default: 0 }
   },
   { _id: true }
 );

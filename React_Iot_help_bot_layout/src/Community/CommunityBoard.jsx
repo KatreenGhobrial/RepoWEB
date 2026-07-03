@@ -132,14 +132,25 @@ export default function CommunityBoard() {
     setReplying(false);
   };
 
-  const handleRateComment = async (commentId, value) => {
+  const handleRateComment = async (commentId) => {
     try {
-      const updatedPost = await communityService.rateComment(selectedPost._id, commentId, value);
+      const updatedPost = await communityService.rateComment(selectedPost._id, commentId);
       
       setPosts((prev) => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
       setSelectedPost(updatedPost);
     } catch (err) {
       setError(err.message || "Failed to rate comment");
+    }
+  };
+
+  const handleRateNestedComment = async (commentId, nestedReplyId) => {
+    try {
+      const updatedPost = await communityService.rateNestedComment(selectedPost._id, commentId, nestedReplyId);
+      
+      setPosts((prev) => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
+      setSelectedPost(updatedPost);
+    } catch (err) {
+      setError(err.message || "Failed to rate nested comment");
     }
   };
 
@@ -360,9 +371,7 @@ export default function CommunityBoard() {
                 </div>
                 <div className="px-8 py-6 space-y-6 max-h-[400px] overflow-y-auto">
                   {selectedPost.replies.map((reply) => {
-                    const userRating = reply.ratings?.find(r => (r.user?._id || r.user)?.toString() === currentUserId);
-                    const hasUpvoted = userRating?.value === 1;
-                    const hasDownvoted = userRating?.value === -1;
+                    const hasRatedComment = !!reply.ratings?.find(r => (r.user?._id || r.user)?.toString() === currentUserId);
                     const replyCount = reply.replies?.length || 0;
                     const isCapped = replyCount >= 10;
 
@@ -387,27 +396,15 @@ export default function CommunityBoard() {
                           
                           {/* Comment Ratings and Reply Action Row */}
                           <div className="flex items-center gap-4 mt-3">
-                            <div className="flex items-center bg-slate-100 dark:bg-zinc-800 rounded-lg p-0.5 shadow-sm">
-                              <button
-                                type="button"
-                                onClick={() => handleRateComment(reply._id, 1)}
-                                className={`p-1 px-2 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors text-xs font-bold ${hasUpvoted ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}
-                                title="Upvote comment"
-                              >
-                                ▲
-                              </button>
-                              <span className={`text-xs font-bold px-1.5 ${reply.score > 0 ? "text-emerald-600 dark:text-emerald-400" : reply.score < 0 ? "text-red-500 dark:text-red-400" : "text-slate-500"}`}>
-                                {reply.score || 0}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleRateComment(reply._id, -1)}
-                                className={`p-1 px-2 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors text-xs font-bold ${hasDownvoted ? "text-red-500 dark:text-red-400" : "text-slate-400"}`}
-                                title="Downvote comment"
-                              >
-                                ▼
-                              </button>
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRateComment(reply._id)}
+                              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl transition-all text-xs font-bold border ${hasRatedComment ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400" : "bg-slate-50 border-slate-200 text-slate-500 dark:bg-zinc-800/40 dark:border-zinc-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800/80"}`}
+                              title={hasRatedComment ? "Delete rating" : "Add rating"}
+                            >
+                              <span>👍</span>
+                              <span>{reply.score || 0}</span>
+                            </button>
 
                             <button
                               type="button"
@@ -445,29 +442,58 @@ export default function CommunityBoard() {
                           {/* Threaded/Nested Replies display */}
                           {reply.replies && reply.replies.length > 0 && (
                             <div className="mt-4 space-y-3 border-l-2 border-slate-200 dark:border-zinc-700 pl-4 ml-2 lg:ml-6">
-                              {reply.replies.map((nestedReply) => (
-                                <div key={nestedReply._id} className="flex gap-3 items-start animate-fadeIn">
-                                  <div className="w-8 h-8 bg-sky-50 dark:bg-zinc-800 text-sky-700 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-sm">
-                                    {nestedReply.author?.username?.charAt(0).toUpperCase() || "?"}
-                                  </div>
-                                  <div className="flex-1 bg-white dark:bg-zinc-900/40 rounded-xl p-3 border border-slate-100 dark:border-zinc-800/60 shadow-sm">
-                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                        {nestedReply.author?.username || "Unknown"}
-                                      </span>
-                                      {nestedReply.author?.role === 'mentor' && (
-                                        <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                                          Mentor 🎓
-                                        </span>
-                                      )}
-                                      <span className="text-[10px] font-medium text-slate-400 ml-auto">
-                                        {new Date(nestedReply.createdAt).toLocaleString()}
-                                      </span>
+                              {reply.replies.map((nestedReply) => {
+                                const hasRatedNested = !!nestedReply.ratings?.find(r => (r.user?._id || r.user)?.toString() === currentUserId);
+                                
+                                return (
+                                  <div key={nestedReply._id} className="flex gap-3 items-start animate-fadeIn">
+                                    <div className="w-8 h-8 bg-sky-50 dark:bg-zinc-800 text-sky-700 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-sm">
+                                      {nestedReply.author?.username?.charAt(0).toUpperCase() || "?"}
                                     </div>
-                                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{nestedReply.content}</p>
+                                    <div className="flex-1 bg-white dark:bg-zinc-900/40 rounded-xl p-3 border border-slate-100 dark:border-zinc-800/60 shadow-sm">
+                                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                          {nestedReply.author?.username || "Unknown"}
+                                        </span>
+                                        {nestedReply.author?.role === 'mentor' && (
+                                          <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                            Mentor 🎓
+                                          </span>
+                                        )}
+                                        <span className="text-[10px] font-medium text-slate-400 ml-auto">
+                                          {new Date(nestedReply.createdAt).toLocaleString()}
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{nestedReply.content}</p>
+                                      
+                                      {/* Nested reply actions: Rate and Reply */}
+                                      <div className="flex items-center gap-3 mt-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRateNestedComment(reply._id, nestedReply._id)}
+                                          className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg transition-all text-[11px] font-bold border ${hasRatedNested ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400" : "bg-slate-50 border-slate-200 text-slate-500 dark:bg-zinc-800/30 dark:border-zinc-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800/60"}`}
+                                          title={hasRatedNested ? "Delete rating" : "Add rating"}
+                                        >
+                                          <span>👍</span>
+                                          <span>{nestedReply.score || 0}</span>
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          disabled={isCapped}
+                                          onClick={() => {
+                                            setActiveReplyCommentId(reply._id);
+                                            setNestedReplyContent(`@${nestedReply.author?.username || "user"} `);
+                                          }}
+                                          className={`text-[11px] font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
+                                        >
+                                          💬 Reply
+                                        </button>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </div>
