@@ -18,3 +18,15 @@ export async function reply(id, content) {
 export async function upvote(id) {
   return await api.post(`${BASE_URL}/${id}/upvote`);
 }
+
+export async function checkSimilar(title) {
+  return await api.get(`${BASE_URL}/similar`, { params: { title } });
+}
+
+export async function replyToComment(postId, commentId, content) {
+  return await api.post(`${BASE_URL}/${postId}/reply/${commentId}`, { content });
+}
+
+export async function rateComment(postId, commentId, value) {
+  return await api.post(`${BASE_URL}/${postId}/reply/${commentId}/rate`, { value });
+}

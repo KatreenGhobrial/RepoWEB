@@ -1,5 +1,6 @@
 import { Router, Response, Request } from 'express';
 import CommunityPost from '../models/CommunityPost';
+import User from '../models/User';
 import { io } from '../index';
 const router = Router();
 
@@ -57,13 +58,53 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────
+// GET /api/forum/similar — Check for similar posts
+// ───────────────────────────────────────────────────────────────────────────
+router.get('/similar', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { title } = req.query;
+    if (!title || typeof title !== 'string') {
+      res.json([]);
+      return;
+    }
+
+    const words = title
+      .split(/\s+/)
+      .map(w => w.replace(/[^\w]/g, '').trim())
+      .filter(w => w.length > 3);
+
+    if (words.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    const regexQueries = words.map(word => ({
+      $or: [
+        { title: { $regex: word, $options: 'i' } },
+        { content: { $regex: word, $options: 'i' } }
+      ]
+    }));
+
+    const posts = await CommunityPost.find({ $or: regexQueries })
+      .populate('author', 'username avatar role')
+      .limit(5);
+
+    res.json(posts);
+  } catch (error) {
+    console.error('Similar posts error:', error);
+    res.status(500).json({ message: 'Server error listing similar posts' });
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────────
 // GET /api/forum/:id — Get a single post with replies
 // ───────────────────────────────────────────────────────────────────────────
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const post = await CommunityPost.findById(req.params.id)
       .populate('author', 'username avatar role')
-      .populate('replies.author', 'username avatar role');
+      .populate('replies.author', 'username avatar role')
+      .populate('replies.replies.author', 'username avatar role');
 
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
@@ -99,7 +140,8 @@ router.post('/:id/reply', async (req: Request, res: Response): Promise<void> => 
       { new: true }
     )
       .populate('author', 'username avatar role')
-      .populate('replies.author', 'username avatar role');
+      .populate('replies.author', 'username avatar role')
+      .populate('replies.replies.author', 'username avatar role');
 
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
@@ -112,6 +154,138 @@ router.post('/:id/reply', async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     console.error('Reply error:', error);
     res.status(500).json({ message: 'Server error adding reply' });
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// POST /api/forum/:id/reply/:replyId — Add a nested reply to a comment
+// ───────────────────────────────────────────────────────────────────────────
+router.post('/:id/reply/:replyId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { content } = req.body;
+    const userId = req.headers['x-user-id'];
+
+    const post = await CommunityPost.findById(req.params.id);
+    if (!post) {
+      res.status(404).json({ message: 'Post not found' });
+      return;
+    }
+
+    const comment = post.replies.find((r: any) => r._id.toString() === req.params.replyId);
+    if (!comment) {
+      res.status(404).json({ message: 'Comment not found' });
+      return;
+    }
+
+    if (comment.replies && comment.replies.length >= 10) {
+      res.status(400).json({ message: 'Maximum of 10 replies reached for this comment' });
+      return;
+    }
+
+    if (!comment.replies) {
+      comment.replies = [];
+    }
+
+    comment.replies.push({
+      author: userId || null,
+      content,
+      createdAt: new Date(),
+    } as any);
+
+    await post.save();
+
+    const populatedPost = await CommunityPost.findById(post._id)
+      .populate('author', 'username avatar role')
+      .populate('replies.author', 'username avatar role')
+      .populate('replies.replies.author', 'username avatar role');
+
+    io.emit('post_updated', populatedPost);
+
+    res.json(populatedPost);
+  } catch (error) {
+    console.error('Nested reply error:', error);
+    res.status(500).json({ message: 'Server error adding nested reply' });
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// POST /api/forum/:id/reply/:replyId/rate — Rate a comment (upvote/downvote)
+// ───────────────────────────────────────────────────────────────────────────
+router.post('/:id/reply/:replyId/rate', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { value } = req.body; // 1 or -1
+    const userId = req.headers['x-user-id'];
+
+    if (value !== 1 && value !== -1) {
+      res.status(400).json({ message: 'Invalid rating value' });
+      return;
+    }
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const post = await CommunityPost.findById(req.params.id);
+    if (!post) {
+      res.status(404).json({ message: 'Post not found' });
+      return;
+    }
+
+    const comment = post.replies.find((r: any) => r._id.toString() === req.params.replyId);
+    if (!comment) {
+      res.status(404).json({ message: 'Comment not found' });
+      return;
+    }
+
+    const user = await User.findById(userId);
+    const isMentor = user && user.role === 'mentor';
+    const weight = isMentor ? 3 : 1;
+    const ratingScore = value * weight;
+
+    if (!comment.ratings) {
+      comment.ratings = [];
+    }
+
+    const existingIndex = comment.ratings.findIndex(
+      (r: any) => r.user && r.user.toString() === userId.toString()
+    );
+
+    if (existingIndex > -1) {
+      const existing = comment.ratings[existingIndex];
+      if (existing.value === value) {
+        // Toggle off if same vote
+        comment.ratings.splice(existingIndex, 1);
+      } else {
+        // Change vote
+        existing.value = value;
+        existing.score = ratingScore;
+      }
+    } else {
+      // New vote
+      comment.ratings.push({
+        user: userId as any,
+        value,
+        score: ratingScore,
+      });
+    }
+
+    // Recalculate score
+    comment.score = comment.ratings.reduce((sum: number, r: any) => sum + r.score, 0);
+
+    await post.save();
+
+    const populatedPost = await CommunityPost.findById(post._id)
+      .populate('author', 'username avatar role')
+      .populate('replies.author', 'username avatar role')
+      .populate('replies.replies.author', 'username avatar role');
+
+    io.emit('post_updated', populatedPost);
+
+    res.json(populatedPost);
+  } catch (error) {
+    console.error('Rate comment error:', error);
+    res.status(500).json({ message: 'Server error rating comment' });
   }
 });
 

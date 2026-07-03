@@ -37,9 +37,33 @@ export default function CommunityBoard() {
   const [replyContent, setReplyContent] = useState("");
   const [replying, setReplying] = useState(false);
 
+  // States for duplicate question check and threaded replies
+  const [similarPosts, setSimilarPosts] = useState([]);
+  const [activeReplyCommentId, setActiveReplyCommentId] = useState(null);
+  const [nestedReplyContent, setNestedReplyContent] = useState("");
+  const [submittingNestedReply, setSubmittingNestedReply] = useState(false);
+
   useEffect(() => {
     loadPosts();
   }, [tagFilter, searchQuery]);
+
+  // Debounced check for similar posts
+  useEffect(() => {
+    if (!title.trim() || title.trim().length < 4) {
+      setSimilarPosts([]);
+      return;
+    }
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const data = await communityService.checkSimilar(title);
+        setSimilarPosts(data || []);
+      } catch (err) {
+        console.error("Failed to check similar posts", err);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [title]);
 
   const loadPosts = async () => {
     setLoading(true);
@@ -73,6 +97,7 @@ export default function CommunityBoard() {
       setTitle("");
       setContent("");
       setTags("");
+      setSimilarPosts([]);
       
     } catch (err) {
       setError("שגיאה ביצירת הפוסט");
@@ -107,6 +132,36 @@ export default function CommunityBoard() {
     setReplying(false);
   };
 
+  const handleRateComment = async (commentId, value) => {
+    try {
+      const updatedPost = await communityService.rateComment(selectedPost._id, commentId, value);
+      
+      setPosts((prev) => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
+      setSelectedPost(updatedPost);
+    } catch (err) {
+      setError(err.message || "Failed to rate comment");
+    }
+  };
+
+  const handleNestedReply = async (e, commentId) => {
+    e.preventDefault();
+    if (!nestedReplyContent.trim()) return;
+
+    setSubmittingNestedReply(true);
+    try {
+      const updatedPost = await communityService.replyToComment(selectedPost._id, commentId, nestedReplyContent);
+      
+      setPosts((prev) => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
+      setSelectedPost(updatedPost);
+      setNestedReplyContent("");
+      setActiveReplyCommentId(null);
+    } catch (err) {
+      setError(err.message || "Failed to add reply");
+    } finally {
+      setSubmittingNestedReply(false);
+    }
+  };
+
   const handleUpvote = async (postId) => {
     try {
       const res = await communityService.upvote(postId);
@@ -138,7 +193,10 @@ export default function CommunityBoard() {
         <button
           onClick={() => {
             setShowForm(!showForm);
-            if (!showForm) setSelectedPost(null);
+            if (!showForm) {
+              setSelectedPost(null);
+              setSimilarPosts([]);
+            }
           }}
           className="bg-sky-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-sky-700 transition-all shadow-sm"
         >
@@ -224,7 +282,34 @@ export default function CommunityBoard() {
             {showForm ? (
               <form onSubmit={handleCreate} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm rounded-3xl p-8 space-y-6 sticky top-6">
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Create New Post</h3>
-                <LabeledInput label="Title *" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. How to reduce latency in MQTT?" className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" required />
+                <div>
+                  <LabeledInput label="Title *" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. How to reduce latency in MQTT?" className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" required />
+                  
+                  {similarPosts.length > 0 && (
+                    <div className="bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 rounded-2xl p-4 mt-3 space-y-2 animate-fadeIn transition-all shadow-inner">
+                      <div className="flex items-center gap-2 text-sky-800 dark:text-sky-300 font-bold text-xs">
+                        <span>💡 Similar posts already exist:</span>
+                      </div>
+                      <ul className="space-y-1.5 max-h-36 overflow-y-auto">
+                        {similarPosts.map(p => (
+                          <li key={p._id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedPost(p);
+                                setShowForm(false);
+                                setSimilarPosts([]);
+                              }}
+                              className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-200 hover:underline text-left block w-full truncate"
+                            >
+                              • {p.title}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
                 <LabeledInput label="Content *">
                   <textarea 
                     value={content} 
@@ -248,7 +333,14 @@ export default function CommunityBoard() {
                     <button onClick={() => setSelectedPost(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-2 bg-slate-50 dark:bg-zinc-800/50 rounded-full transition-colors">✕</button>
                   </div>
                   <div className="flex items-center gap-3 mt-4">
-                    <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">by <strong className="text-sky-600">{selectedPost.author?.username || "Unknown"}</strong></span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2">
+                      by <strong className="text-sky-600">{selectedPost.author?.username || "Unknown"}</strong>
+                      {selectedPost.author?.role === 'mentor' && (
+                        <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                          Mentor 🎓
+                        </span>
+                      )}
+                    </span>
                     <span className="text-sm text-slate-400">{new Date(selectedPost.createdAt).toLocaleString()}</span>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-5">
@@ -267,20 +359,121 @@ export default function CommunityBoard() {
                   </div>
                 </div>
                 <div className="px-8 py-6 space-y-6 max-h-[400px] overflow-y-auto">
-                  {selectedPost.replies.map((reply) => (
-                    <div key={reply._id} className="flex gap-4">
-                      <div className="w-10 h-10 bg-slate-200 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
-                        {reply.author?.username?.charAt(0).toUpperCase() || "?"}
-                      </div>
-                      <div className="flex-1 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-slate-100">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-bold text-slate-900 dark:text-white">{reply.author?.username || "Unknown"}</span>
-                          <span className="text-xs font-medium text-slate-400">{new Date(reply.createdAt).toLocaleString()}</span>
+                  {selectedPost.replies.map((reply) => {
+                    const userRating = reply.ratings?.find(r => (r.user?._id || r.user)?.toString() === currentUserId);
+                    const hasUpvoted = userRating?.value === 1;
+                    const hasDownvoted = userRating?.value === -1;
+                    const replyCount = reply.replies?.length || 0;
+                    const isCapped = replyCount >= 10;
+
+                    return (
+                      <div key={reply._id} className="flex gap-4 items-start">
+                        <div className="w-10 h-10 bg-slate-200 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                          {reply.author?.username?.charAt(0).toUpperCase() || "?"}
                         </div>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{reply.content}</p>
+                        <div className="flex-1 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-slate-100">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              {reply.author?.username || "Unknown"}
+                            </span>
+                            {reply.author?.role === 'mentor' && (
+                              <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                Mentor 🎓
+                              </span>
+                            )}
+                            <span className="text-xs font-medium text-slate-400 ml-auto">{new Date(reply.createdAt).toLocaleString()}</span>
+                          </div>
+                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{reply.content}</p>
+                          
+                          {/* Comment Ratings and Reply Action Row */}
+                          <div className="flex items-center gap-4 mt-3">
+                            <div className="flex items-center bg-slate-100 dark:bg-zinc-800 rounded-lg p-0.5 shadow-sm">
+                              <button
+                                type="button"
+                                onClick={() => handleRateComment(reply._id, 1)}
+                                className={`p-1 px-2 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors text-xs font-bold ${hasUpvoted ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}
+                                title="Upvote comment"
+                              >
+                                ▲
+                              </button>
+                              <span className={`text-xs font-bold px-1.5 ${reply.score > 0 ? "text-emerald-600 dark:text-emerald-400" : reply.score < 0 ? "text-red-500 dark:text-red-400" : "text-slate-500"}`}>
+                                {reply.score || 0}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleRateComment(reply._id, -1)}
+                                className={`p-1 px-2 rounded-md hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors text-xs font-bold ${hasDownvoted ? "text-red-500 dark:text-red-400" : "text-slate-400"}`}
+                                title="Downvote comment"
+                              >
+                                ▼
+                              </button>
+                            </div>
+
+                            <button
+                              type="button"
+                              disabled={isCapped}
+                              onClick={() => {
+                                setActiveReplyCommentId(reply._id === activeReplyCommentId ? null : reply._id);
+                                setNestedReplyContent("");
+                              }}
+                              className={`text-xs font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
+                            >
+                              💬 {isCapped ? `Replies Full (${replyCount}/10)` : `Reply (${replyCount}/10)`}
+                            </button>
+                          </div>
+
+                          {/* Nested reply input inline */}
+                          {activeReplyCommentId === reply._id && (
+                            <form onSubmit={(e) => handleNestedReply(e, reply._id)} className="mt-3 flex gap-3 items-center ml-2 lg:ml-6">
+                              <input 
+                                type="text" 
+                                value={nestedReplyContent} 
+                                onChange={(e) => setNestedReplyContent(e.target.value)} 
+                                placeholder="Write a reply..." 
+                                className="flex-1 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                                required
+                              />
+                              <button type="submit" disabled={submittingNestedReply || !nestedReplyContent.trim()} className="bg-sky-600 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-sky-700 shadow-sm transition-all whitespace-nowrap">
+                                {submittingNestedReply ? "..." : "Send"}
+                              </button>
+                              <button type="button" onClick={() => { setActiveReplyCommentId(null); setNestedReplyContent(""); }} className="text-slate-400 hover:text-slate-600 text-xs font-medium px-2 py-1">
+                                Cancel
+                              </button>
+                            </form>
+                          )}
+
+                          {/* Threaded/Nested Replies display */}
+                          {reply.replies && reply.replies.length > 0 && (
+                            <div className="mt-4 space-y-3 border-l-2 border-slate-200 dark:border-zinc-700 pl-4 ml-2 lg:ml-6">
+                              {reply.replies.map((nestedReply) => (
+                                <div key={nestedReply._id} className="flex gap-3 items-start animate-fadeIn">
+                                  <div className="w-8 h-8 bg-sky-50 dark:bg-zinc-800 text-sky-700 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-sm">
+                                    {nestedReply.author?.username?.charAt(0).toUpperCase() || "?"}
+                                  </div>
+                                  <div className="flex-1 bg-white dark:bg-zinc-900/40 rounded-xl p-3 border border-slate-100 dark:border-zinc-800/60 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                        {nestedReply.author?.username || "Unknown"}
+                                      </span>
+                                      {nestedReply.author?.role === 'mentor' && (
+                                        <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                          Mentor 🎓
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] font-medium text-slate-400 ml-auto">
+                                        {new Date(nestedReply.createdAt).toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{nestedReply.content}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {selectedPost.replies.length === 0 && (
                     <p className="text-sm font-medium text-slate-400 text-center py-6">No replies yet. Be the first to help out!</p>
                   )}
