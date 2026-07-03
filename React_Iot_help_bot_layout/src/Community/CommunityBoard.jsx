@@ -155,96 +155,7 @@ export default function CommunityBoard() {
       setError(err.message || "Failed to rate comment");
     }
   };
-  const CommentNode = ({ reply }) => {
-    const hasRated = !!reply.ratings?.find(r => (r.user?._id || r.user)?.toString() === currentUserId);
-    const replyCount = reply.replies?.length || 0;
-    const isCapped = replyCount >= 10;
-    const displayName = reply.author?.role === 'mentor' ? reply.author.username : "Unknown";
 
-    return (
-      <div className="relative flex gap-4 mt-4 animate-fadeIn">
-        {/* Vertical visual hierarchy line connecting replies */}
-        {reply.replies && reply.replies.length > 0 && (
-          <div className="absolute left-[19px] top-[40px] bottom-0 w-0.5 bg-slate-200 dark:bg-zinc-800"></div>
-        )}
-
-        {/* Avatar */}
-        <div className="w-10 h-10 bg-slate-200 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm z-10">
-          {reply.author?.role === 'mentor' ? (reply.author?.username?.charAt(0).toUpperCase() || "?") : "?"}
-        </div>
-
-        {/* Reply Body */}
-        <div className="flex-1 bg-slate-50 dark:bg-zinc-800/40 rounded-2xl p-4 border border-slate-100 dark:border-zinc-800/60 shadow-sm">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-              {displayName}
-            </span>
-            {reply.author?.role === 'mentor' && (
-              <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                Mentor 🎓
-              </span>
-            )}
-            <span className="text-xs font-medium text-slate-400 ml-auto">{new Date(reply.createdAt).toLocaleString()}</span>
-          </div>
-          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
-
-          {/* Action Row */}
-          <div className="flex items-center gap-4 mt-3">
-            <button
-              type="button"
-              onClick={() => handleRateComment(reply._id)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl transition-all text-xs font-bold border ${hasRated ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400" : "bg-slate-50 border-slate-200 text-slate-500 dark:bg-zinc-800/40 dark:border-zinc-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800/80"}`}
-              title={hasRated ? "Delete rating" : "Add rating"}
-            >
-              <span>👍</span>
-              <span>{reply.score || 0}</span>
-            </button>
-
-            <button
-              type="button"
-              disabled={isCapped}
-              onClick={() => {
-                setActiveReplyCommentId(reply._id === activeReplyCommentId ? null : reply._id);
-                setNestedReplyContent(reply.author?.role === 'mentor' ? `@${reply.author.username} ` : "");
-              }}
-              className={`text-xs font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
-            >
-              💬 Reply ({replyCount}/10)
-            </button>
-          </div>
-
-          {/* Inline reply editor */}
-          {activeReplyCommentId === reply._id && (
-            <form onSubmit={(e) => handleNestedReply(e, reply._id)} className="mt-3 flex gap-3 items-center ml-2 lg:ml-6">
-              <input
-                type="text"
-                value={nestedReplyContent}
-                onChange={(e) => setNestedReplyContent(e.target.value)}
-                placeholder="Write a reply..."
-                className="flex-1 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                required
-              />
-              <button type="submit" disabled={submittingNestedReply || !nestedReplyContent.trim()} className="bg-sky-600 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-sky-700 shadow-sm transition-all whitespace-nowrap">
-                {submittingNestedReply ? "..." : "Send"}
-              </button>
-              <button type="button" onClick={() => { setActiveReplyCommentId(null); setNestedReplyContent(""); }} className="text-slate-400 hover:text-slate-600 text-xs font-medium px-2 py-1">
-                Cancel
-              </button>
-            </form>
-          )}
-
-          {/* Recursive Child Comments rendering */}
-          {reply.replies && reply.replies.length > 0 && (
-            <div className="mt-2 pl-4 border-l border-slate-200 dark:border-zinc-800 space-y-2">
-              {reply.replies.map((child) => (
-                <CommentNode key={child._id} reply={child} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   const handleNestedReply = async (e, commentId) => {
     e.preventDefault();
@@ -459,7 +370,18 @@ export default function CommunityBoard() {
                 </div>
                 <div className="px-8 py-6 space-y-4 max-h-[400px] overflow-y-auto">
                   {selectedPost.replies.map((reply) => (
-                    <CommentNode key={reply._id} reply={reply} />
+                    <CommentNode
+                      key={reply._id}
+                      reply={reply}
+                      currentUserId={currentUserId}
+                      activeReplyCommentId={activeReplyCommentId}
+                      setActiveReplyCommentId={setActiveReplyCommentId}
+                      nestedReplyContent={nestedReplyContent}
+                      setNestedReplyContent={setNestedReplyContent}
+                      submittingNestedReply={submittingNestedReply}
+                      handleNestedReply={handleNestedReply}
+                      handleRateComment={handleRateComment}
+                    />
                   ))}
                   {selectedPost.replies.length === 0 && (
                     <p className="text-sm font-medium text-slate-400 text-center py-6">No replies yet. Be the first to help out!</p>
@@ -479,3 +401,116 @@ export default function CommunityBoard() {
     </>
   );
 }
+
+const CommentNode = ({
+  reply,
+  currentUserId,
+  activeReplyCommentId,
+  setActiveReplyCommentId,
+  nestedReplyContent,
+  setNestedReplyContent,
+  submittingNestedReply,
+  handleNestedReply,
+  handleRateComment
+}) => {
+  const hasRated = !!reply.ratings?.find(r => (r.user?._id || r.user)?.toString() === currentUserId);
+  const replyCount = reply.replies?.length || 0;
+  const isCapped = replyCount >= 10;
+  const displayName = reply.author?.role === 'mentor' ? reply.author.username : "Unknown";
+
+  return (
+    <div className="relative flex gap-4 mt-4 animate-fadeIn">
+      {/* Vertical visual hierarchy line connecting replies */}
+      {reply.replies && reply.replies.length > 0 && (
+        <div className="absolute left-[19px] top-[40px] bottom-0 w-0.5 bg-slate-200 dark:bg-zinc-800"></div>
+      )}
+
+      {/* Avatar */}
+      <div className="w-10 h-10 bg-slate-200 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm z-10">
+        {reply.author?.role === 'mentor' ? (reply.author?.username?.charAt(0).toUpperCase() || "?") : "?"}
+      </div>
+
+      {/* Reply Body */}
+      <div className="flex-1 bg-slate-50 dark:bg-zinc-800/40 rounded-2xl p-4 border border-slate-100 dark:border-zinc-800/60 shadow-sm">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            {displayName}
+          </span>
+          {reply.author?.role === 'mentor' && (
+            <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+              Mentor 🎓
+            </span>
+          )}
+          <span className="text-xs font-medium text-slate-400 ml-auto">{new Date(reply.createdAt).toLocaleString()}</span>
+        </div>
+        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+
+        {/* Action Row */}
+        <div className="flex items-center gap-4 mt-3">
+          <button
+            type="button"
+            onClick={() => handleRateComment(reply._id)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl transition-all text-xs font-bold border ${hasRated ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400" : "bg-slate-50 border-slate-200 text-slate-500 dark:bg-zinc-800/40 dark:border-zinc-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800/80"}`}
+            title={hasRated ? "Delete rating" : "Add rating"}
+          >
+            <span>👍</span>
+            <span>{reply.score || 0}</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={isCapped}
+            onClick={() => {
+              setActiveReplyCommentId(reply._id === activeReplyCommentId ? null : reply._id);
+              setNestedReplyContent(reply.author?.role === 'mentor' ? `@${reply.author.username} ` : "");
+            }}
+            className={`text-xs font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
+          >
+            💬 Reply ({replyCount}/10)
+          </button>
+        </div>
+
+        {/* Inline reply editor */}
+        {activeReplyCommentId === reply._id && (
+          <form onSubmit={(e) => handleNestedReply(e, reply._id)} className="mt-3 flex gap-3 items-center ml-2 lg:ml-6">
+            <input
+              type="text"
+              value={nestedReplyContent}
+              onChange={(e) => setNestedReplyContent(e.target.value)}
+              placeholder="Write a reply..."
+              className="flex-1 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              required
+            />
+            <button type="submit" disabled={submittingNestedReply || !nestedReplyContent.trim()} className="bg-sky-600 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-sky-700 shadow-sm transition-all whitespace-nowrap">
+              {submittingNestedReply ? "..." : "Send"}
+            </button>
+            <button type="button" onClick={() => { setActiveReplyCommentId(null); setNestedReplyContent(""); }} className="text-slate-400 hover:text-slate-600 text-xs font-medium px-2 py-1">
+              Cancel
+            </button>
+          </form>
+        )}
+
+        {/* Recursive Child Comments rendering */}
+        {reply.replies && reply.replies.length > 0 && (
+          <div className="mt-2 pl-4 border-l border-slate-200 dark:border-zinc-800 space-y-2">
+            {reply.replies.map((child) => (
+              <CommentNode
+                key={child._id}
+                reply={child}
+                currentUserId={currentUserId}
+                activeReplyCommentId={activeReplyCommentId}
+                setActiveReplyCommentId={setActiveReplyCommentId}
+                nestedReplyContent={nestedReplyContent}
+                setNestedReplyContent={setNestedReplyContent}
+                submittingNestedReply={submittingNestedReply}
+                handleNestedReply={handleNestedReply}
+                handleRateComment={handleRateComment}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
