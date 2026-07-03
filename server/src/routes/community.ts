@@ -299,6 +299,57 @@ router.post('/:id/reply/:replyId/rate', async (req: Request, res: Response): Pro
   }
 });
 
+// ───────────────────────────────────────────────────────────────────────────
+// PUT /api/forum/:id/reply/:replyId — Edit a comment/reply at any depth
+// ───────────────────────────────────────────────────────────────────────────
+router.put('/:id/reply/:replyId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { content } = req.body;
+    const userId = req.headers['x-user-id'];
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const post = await CommunityPost.findById(req.params.id);
+    if (!post) {
+      res.status(404).json({ message: 'Post not found' });
+      return;
+    }
+
+    const comment = findReplyInTree(post.replies, req.params.replyId as string);
+    if (!comment) {
+      res.status(404).json({ message: 'Comment not found' });
+      return;
+    }
+
+    // Security check: Only the author can edit their comment
+    if (!comment.author || comment.author.toString() !== userId.toString()) {
+      res.status(403).json({ message: 'Forbidden: You can only edit your own comments' });
+      return;
+    }
+
+    comment.content = content;
+
+    await post.save();
+
+    const populatedPost = await CommunityPost.findById(post._id)
+      .populate('author', 'username avatar role')
+      .populate('replies.author', 'username avatar role')
+      .populate('replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.replies.author', 'username avatar role');
+
+    io.emit('post_updated', populatedPost);
+
+    res.json(populatedPost);
+  } catch (error) {
+    console.error('Edit comment error:', error);
+    res.status(500).json({ message: 'Server error editing comment' });
+  }
+});
+
 
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/forum/:id/upvote — Toggle upvote on a post

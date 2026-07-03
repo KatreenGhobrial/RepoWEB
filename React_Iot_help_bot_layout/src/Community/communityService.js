@@ -38,3 +38,7 @@ export async function rateComment(postId, commentId) {
 export async function rateNestedComment(postId, commentId, nestedReplyId) {
   return await api.post(`${BASE_URL}/${postId}/reply/${commentId}/nested/${nestedReplyId}/rate`);
 }
+
+export async function editComment(postId, commentId, content) {
+  return await api.put(`${BASE_URL}/${postId}/reply/${commentId}`, { content });
+}

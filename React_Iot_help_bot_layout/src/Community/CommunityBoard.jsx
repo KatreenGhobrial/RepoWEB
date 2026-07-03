@@ -42,6 +42,8 @@ export default function CommunityBoard() {
   const [activeReplyCommentId, setActiveReplyCommentId] = useState(null);
   const [nestedReplyContent, setNestedReplyContent] = useState("");
   const [submittingNestedReply, setSubmittingNestedReply] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editContent, setEditContent] = useState("");
 
   useEffect(() => {
     loadPosts();
@@ -153,6 +155,19 @@ export default function CommunityBoard() {
       setSelectedPost(updatedPost);
     } catch (err) {
       setError(err.message || "Failed to rate comment");
+    }
+  };
+
+  const handleEditComment = async (commentId, newContent) => {
+    try {
+      const updatedPost = await communityService.editComment(selectedPost._id, commentId, newContent);
+      
+      setPosts((prev) => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
+      setSelectedPost(updatedPost);
+      setEditingCommentId(null);
+      setEditContent("");
+    } catch (err) {
+      setError(err.message || "Failed to edit comment");
     }
   };
 
@@ -381,6 +396,11 @@ export default function CommunityBoard() {
                       submittingNestedReply={submittingNestedReply}
                       handleNestedReply={handleNestedReply}
                       handleRateComment={handleRateComment}
+                      editingCommentId={editingCommentId}
+                      setEditingCommentId={setEditingCommentId}
+                      editContent={editContent}
+                      setEditContent={setEditContent}
+                      handleEditComment={handleEditComment}
                     />
                   ))}
                   {selectedPost.replies.length === 0 && (
@@ -411,12 +431,18 @@ const CommentNode = ({
   setNestedReplyContent,
   submittingNestedReply,
   handleNestedReply,
-  handleRateComment
+  handleRateComment,
+  editingCommentId,
+  setEditingCommentId,
+  editContent,
+  setEditContent,
+  handleEditComment
 }) => {
   const hasRated = !!reply.ratings?.find(r => (r.user?._id || r.user)?.toString() === currentUserId);
   const replyCount = reply.replies?.length || 0;
   const isCapped = replyCount >= 10;
   const displayName = reply.author?.role === 'mentor' ? reply.author.username : "Unknown";
+  const isAuthor = (reply.author?._id || reply.author)?.toString() === currentUserId;
 
   return (
     <div className="relative flex gap-4 mt-4 animate-fadeIn">
@@ -443,7 +469,34 @@ const CommentNode = ({
           )}
           <span className="text-xs font-medium text-slate-400 ml-auto">{new Date(reply.createdAt).toLocaleString()}</span>
         </div>
-        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+
+        {/* Text content or edit input */}
+        {editingCommentId === reply._id ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleEditComment(reply._id, editContent);
+            }}
+            className="mt-2 flex gap-3 items-center"
+          >
+            <input
+              type="text"
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="flex-1 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              required
+              autoFocus
+            />
+            <button type="submit" className="bg-sky-600 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-sky-700 shadow-sm transition-all whitespace-nowrap">
+              Save
+            </button>
+            <button type="button" onClick={() => { setEditingCommentId(null); setEditContent(""); }} className="text-slate-400 hover:text-slate-600 text-xs font-medium px-2 py-1">
+              Cancel
+            </button>
+          </form>
+        ) : (
+          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+        )}
 
         {/* Action Row */}
         <div className="flex items-center gap-4 mt-3">
@@ -468,6 +521,19 @@ const CommentNode = ({
           >
             💬 Reply ({replyCount}/10)
           </button>
+
+          {isAuthor && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingCommentId(reply._id);
+                setEditContent(reply.content);
+              }}
+              className="text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1 transition-all"
+            >
+              ✏️ Edit
+            </button>
+          )}
         </div>
 
         {/* Inline reply editor */}
@@ -505,6 +571,11 @@ const CommentNode = ({
                 submittingNestedReply={submittingNestedReply}
                 handleNestedReply={handleNestedReply}
                 handleRateComment={handleRateComment}
+                editingCommentId={editingCommentId}
+                setEditingCommentId={setEditingCommentId}
+                editContent={editContent}
+                setEditContent={setEditContent}
+                handleEditComment={handleEditComment}
               />
             ))}
           </div>
