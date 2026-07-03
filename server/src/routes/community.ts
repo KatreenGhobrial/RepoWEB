@@ -362,26 +362,44 @@ router.post('/:id/upvote', async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const userId = req.headers['x-user-id'] || "anonymous";
+    const userId = req.headers['x-user-id'];
+    if (!userId || typeof userId !== 'string') {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const user = await User.findById(userId);
+    const isMentor = user && user.role === 'mentor';
+    const weight = isMentor ? 3 : 1;
+
     const alreadyUpvoted = post.upvotes.some(
       (id) => id.toString() === userId.toString()
     );
 
     if (alreadyUpvoted) {
       post.upvotes = post.upvotes.filter(
-        (id) => id.toString() !== userId
+        (id) => id.toString() !== userId.toString()
       );
+      post.score = Math.max(0, (post.score || 0) - weight);
     } else {
-      post.upvotes.push(userId as unknown as mongoose.Types.ObjectId);
+      post.upvotes.push(userId as any);
+      post.score = (post.score || 0) + weight;
     }
 
     await post.save();
     
-    // We emit post_updated with the entire post populated (optional, or clients can refetch)
-    // To keep it simple, just emit the basic upvote event
-    io.emit('upvote_update', { postId: post._id, upvotes: post.upvotes.length });
+    io.emit('upvote_update', { postId: post._id, upvotes: post.upvotes.length, score: post.score });
+    
+    const populatedPost = await CommunityPost.findById(post._id)
+      .populate('author', 'username avatar role')
+      .populate('replies.author', 'username avatar role')
+      .populate('replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.replies.author', 'username avatar role');
+      
+    io.emit('post_updated', populatedPost);
 
-    res.json({ upvotes: post.upvotes.length, upvoted: !alreadyUpvoted });
+    res.json({ upvotes: post.upvotes.length, score: post.score, upvoted: !alreadyUpvoted });
   } catch (error) {
     console.error('Upvote error:', error);
     res.status(500).json({ message: 'Server error toggling upvote' });

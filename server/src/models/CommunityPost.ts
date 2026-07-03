@@ -23,6 +23,7 @@ export interface ICommunityPost extends Document {
   content: string;
   tags: string[];                // discipline / topic tags
   upvotes: mongoose.Types.ObjectId[];
+  score: number;
   replies: IReply[];
   createdAt: Date;
   updatedAt: Date;
@@ -76,6 +77,10 @@ const communityPostSchema = new Schema<ICommunityPost>(
         ref: 'User',
       },
     ],
+    score: {
+      type: Number,
+      default: 0,
+    },
     replies: {
       type: [replySchema],
       default: [],

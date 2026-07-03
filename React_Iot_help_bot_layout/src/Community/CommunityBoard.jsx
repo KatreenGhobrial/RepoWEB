@@ -196,13 +196,14 @@ export default function CommunityBoard() {
       const res = await communityService.upvote(postId);
       setPosts(
         (prev) => prev.map(
-          (p) => p._id === postId ? { ...p, upvotes: res.upvoted ? [...p.upvotes, currentUserId] : p.upvotes.filter((id) => id !== currentUserId) } : p
+          (p) => p._id === postId ? { ...p, upvotes: res.upvoted ? [...p.upvotes, currentUserId] : p.upvotes.filter((id) => id !== currentUserId), score: res.score } : p
         )
       );
       if (selectedPost && selectedPost._id === postId) {
         setSelectedPost(prev => ({
           ...prev,
-          upvotes: res.upvoted ? [...prev.upvotes, currentUserId] : prev.upvotes.filter((id) => id !== currentUserId)
+          upvotes: res.upvoted ? [...prev.upvotes, currentUserId] : prev.upvotes.filter((id) => id !== currentUserId),
+          score: res.score
         }));
       }
     } catch {
@@ -290,7 +291,7 @@ export default function CommunityBoard() {
                   ))}
                 </div>
                 <div className="flex items-center gap-3 text-xs font-bold text-slate-400">
-                  <span className="flex items-center gap-1">▲ {post.upvotes.length}</span>
+                  <span className="flex items-center gap-1">▲ {post.score || 0}</span>
                   <span className="flex items-center gap-1">💬 {post.replies.length}</span>
                 </div>
               </div>
@@ -378,7 +379,7 @@ export default function CommunityBoard() {
                   <p className="text-base text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{selectedPost.content}</p>
                   <div className="flex items-center gap-4 mt-6">
                     <button onClick={() => handleUpvote(selectedPost._id)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm ${selectedPost.upvotes.includes(currentUserId) ? "bg-sky-100 text-sky-700 border border-sky-200" : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-zinc-800/50"}`}>
-                      ▲ {selectedPost.upvotes.length}
+                      ▲ {selectedPost.score || 0}
                     </button>
                     <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{selectedPost.replies.length} replies</span>
                   </div>
