@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
 import { listByProject as listTasks } from '../ProjectManagement/taskService';
-import { getFeedback } from '../IoTManagement/iotService';
+import { getMentorFeedback as getFeedback } from '../ProjectManagement/projectService';
 import { useProject } from '../hooks/ProjectContext';
 
 export default function Dashboard() {
@@ -441,3 +441,4 @@ export default function Dashboard() {
     </>
   );
 }
+

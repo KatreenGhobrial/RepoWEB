@@ -10,7 +10,7 @@ import Home from './UIComponents/Home';
 import About from './UIComponents/About';
 import Profile from './UserManagement/Profile';
 import IoTSolutionLibrary from './IoTManagement/IoTSolutionLibrary';
-import MentorDashboard from './IoTManagement/MentorDashboard';
+import MentorDashboard from './ProjectManagement/MentorDashboard';
 import CommunityBoard from "./Community/CommunityBoard";
 import ManageUsers from './UserManagement/ManageUsers';
 import Login from './UserManagement/Login';

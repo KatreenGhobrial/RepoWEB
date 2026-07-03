@@ -5,7 +5,7 @@ import Header from '../UIComponents/Header';
 import { getUsers } from '../UserManagement/usersService';
 import { update as updateProject } from './projectService';
 import { listByProject as listTasks, create as createTask, update as updateTask, deleteTask } from './taskService';
-import { getFeedback } from '../IoTManagement/iotService';
+import { getMentorFeedback as getFeedback } from './projectService';
 import { useProject } from '../hooks/ProjectContext';
 
 
@@ -288,3 +288,4 @@ export default function TasksTeam() {
     </>
   );
 }
+
