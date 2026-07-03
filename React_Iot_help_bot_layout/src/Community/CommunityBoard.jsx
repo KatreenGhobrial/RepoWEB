@@ -280,7 +280,7 @@ export default function CommunityBoard() {
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-4 text-xs font-medium text-slate-400">
-                <span>by {post.author?.username || "Unknown"}</span>
+                <span>by {post.author?.role === 'mentor' ? post.author.username : "Unknown"}</span>
                 <span>•</span>
                 <span>{new Date(post.createdAt).toLocaleDateString()}</span>
               </div>
@@ -345,7 +345,7 @@ export default function CommunityBoard() {
                   </div>
                   <div className="flex items-center gap-3 mt-4">
                     <span className="text-sm text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2">
-                      by <strong className="text-sky-600">{selectedPost.author?.username || "Unknown"}</strong>
+                      by <strong className="text-sky-600">{selectedPost.author?.role === 'mentor' ? selectedPost.author.username : "Unknown"}</strong>
                       {selectedPost.author?.role === 'mentor' && (
                         <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold px-2 py-0.5 rounded-full">
                           Mentor 🎓
@@ -378,12 +378,12 @@ export default function CommunityBoard() {
                     return (
                       <div key={reply._id} className="flex gap-4 items-start">
                         <div className="w-10 h-10 bg-slate-200 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
-                          {reply.author?.username?.charAt(0).toUpperCase() || "?"}
+                          {reply.author?.role === 'mentor' ? (reply.author?.username?.charAt(0).toUpperCase() || "?") : "?"}
                         </div>
                         <div className="flex-1 bg-slate-50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-slate-100">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                              {reply.author?.username || "Unknown"}
+                              {reply.author?.role === 'mentor' ? reply.author.username : "Unknown"}
                             </span>
                             {reply.author?.role === 'mentor' && (
                               <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
@@ -448,12 +448,12 @@ export default function CommunityBoard() {
                                 return (
                                   <div key={nestedReply._id} className="flex gap-3 items-start animate-fadeIn">
                                     <div className="w-8 h-8 bg-sky-50 dark:bg-zinc-800 text-sky-700 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-sm">
-                                      {nestedReply.author?.username?.charAt(0).toUpperCase() || "?"}
+                                      {nestedReply.author?.role === 'mentor' ? (nestedReply.author?.username?.charAt(0).toUpperCase() || "?") : "?"}
                                     </div>
                                     <div className="flex-1 bg-white dark:bg-zinc-900/40 rounded-xl p-3 border border-slate-100 dark:border-zinc-800/60 shadow-sm">
                                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                          {nestedReply.author?.username || "Unknown"}
+                                          {nestedReply.author?.role === 'mentor' ? nestedReply.author.username : "Unknown"}
                                         </span>
                                         {nestedReply.author?.role === 'mentor' && (
                                           <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
@@ -483,7 +483,8 @@ export default function CommunityBoard() {
                                           disabled={isCapped}
                                           onClick={() => {
                                             setActiveReplyCommentId(reply._id);
-                                            setNestedReplyContent(`@${nestedReply.author?.username || "user"} `);
+                                            const mentionName = nestedReply.author?.role === 'mentor' ? nestedReply.author.username : "Unknown";
+                                            setNestedReplyContent(`@${mentionName} `);
                                           }}
                                           className={`text-[11px] font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
                                         >
