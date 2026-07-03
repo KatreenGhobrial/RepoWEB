@@ -3,36 +3,27 @@ import mongoose, { Schema, Document } from 'mongoose';
 // ---------------------------------------------------------------------------
 // Interface
 // ---------------------------------------------------------------------------
+export interface IReply {
+  _id: mongoose.Types.ObjectId;
+  author: mongoose.Types.ObjectId;
+  content: string;
+  createdAt: Date;
+  ratings: {
+    user: mongoose.Types.ObjectId;
+    value: number; // 1
+    score: number; // weighted value (e.g. +3 or +1)
+  }[];
+  score: number;
+  replies: IReply[];
+}
+
 export interface ICommunityPost extends Document {
   author: mongoose.Types.ObjectId;
   title: string;
   content: string;
   tags: string[];                // discipline / topic tags
   upvotes: mongoose.Types.ObjectId[];
-  replies: {
-    _id: mongoose.Types.ObjectId;
-    author: mongoose.Types.ObjectId;
-    content: string;
-    createdAt: Date;
-    replies: {
-      _id: mongoose.Types.ObjectId;
-      author: mongoose.Types.ObjectId;
-      content: string;
-      createdAt: Date;
-      ratings: {
-        user: mongoose.Types.ObjectId;
-        value: number; // 1
-        score: number; // weighted value (e.g. +3 or +1)
-      }[];
-      score: number;
-    }[];
-    ratings: {
-      user: mongoose.Types.ObjectId;
-      value: number; // 1
-      score: number; // weighted value (e.g. +3 or +1)
-    }[];
-    score: number;
-  }[];
+  replies: IReply[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,46 +31,24 @@ export interface ICommunityPost extends Document {
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
-const nestedReplySchema = new Schema(
-  {
-    author: { type: Schema.Types.ObjectId, ref: 'User', required: false },
-    content: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-    ratings: {
-      type: [
-        {
-          user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-          value: { type: Number, required: true },
-          score: { type: Number, required: true }
-        }
-      ],
-      default: []
-    },
-    score: { type: Number, default: 0 }
+const replySchema = new Schema();
+replySchema.add({
+  author: { type: Schema.Types.ObjectId, ref: 'User', required: false },
+  content: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  ratings: {
+    type: [
+      {
+        user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        value: { type: Number, required: true },
+        score: { type: Number, required: true }
+      }
+    ],
+    default: []
   },
-  { _id: true }
-);
-
-const replySchema = new Schema(
-  {
-    author: { type: Schema.Types.ObjectId, ref: 'User', required: false },
-    content: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-    replies: { type: [nestedReplySchema], default: [] },
-    ratings: {
-      type: [
-        {
-          user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-          value: { type: Number, required: true },
-          score: { type: Number, required: true }
-        }
-      ],
-      default: []
-    },
-    score: { type: Number, default: 0 }
-  },
-  { _id: true }
-);
+  score: { type: Number, default: 0 },
+  replies: { type: [replySchema], default: [] }
+});
 
 const communityPostSchema = new Schema<ICommunityPost>(
   {

@@ -104,7 +104,9 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     const post = await CommunityPost.findById(req.params.id)
       .populate('author', 'username avatar role')
       .populate('replies.author', 'username avatar role')
-      .populate('replies.replies.author', 'username avatar role');
+      .populate('replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.replies.author', 'username avatar role');
 
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
@@ -117,6 +119,20 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: 'Server error fetching post' });
   }
 });
+
+// Helper function to find a comment recursively anywhere in the nested reply tree
+function findReplyInTree(replies: any[], replyId: string): any {
+  for (const reply of replies) {
+    if (reply._id.toString() === replyId) {
+      return reply;
+    }
+    if (reply.replies && reply.replies.length > 0) {
+      const found = findReplyInTree(reply.replies, replyId);
+      if (found) return found;
+    }
+  }
+  return null;
+}
 
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/forum/:id/reply — Add a reply to a post
@@ -134,6 +150,7 @@ router.post('/:id/reply', async (req: Request, res: Response): Promise<void> => 
             author: userId || null,
             content,
             createdAt: new Date(),
+            replies: [],
           },
         },
       },
@@ -141,7 +158,9 @@ router.post('/:id/reply', async (req: Request, res: Response): Promise<void> => 
     )
       .populate('author', 'username avatar role')
       .populate('replies.author', 'username avatar role')
-      .populate('replies.replies.author', 'username avatar role');
+      .populate('replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.replies.author', 'username avatar role');
 
     if (!post) {
       res.status(404).json({ message: 'Post not found' });
@@ -158,7 +177,7 @@ router.post('/:id/reply', async (req: Request, res: Response): Promise<void> => 
 });
 
 // ───────────────────────────────────────────────────────────────────────────
-// POST /api/forum/:id/reply/:replyId — Add a nested reply to a comment
+// POST /api/forum/:id/reply/:replyId — Add a nested reply to a comment at any depth
 // ───────────────────────────────────────────────────────────────────────────
 router.post('/:id/reply/:replyId', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -171,7 +190,7 @@ router.post('/:id/reply/:replyId', async (req: Request, res: Response): Promise<
       return;
     }
 
-    const comment = post.replies.find((r: any) => r._id.toString() === req.params.replyId);
+    const comment = findReplyInTree(post.replies, req.params.replyId as string);
     if (!comment) {
       res.status(404).json({ message: 'Comment not found' });
       return;
@@ -190,6 +209,7 @@ router.post('/:id/reply/:replyId', async (req: Request, res: Response): Promise<
       author: userId || null,
       content,
       createdAt: new Date(),
+      replies: [],
     } as any);
 
     await post.save();
@@ -197,7 +217,9 @@ router.post('/:id/reply/:replyId', async (req: Request, res: Response): Promise<
     const populatedPost = await CommunityPost.findById(post._id)
       .populate('author', 'username avatar role')
       .populate('replies.author', 'username avatar role')
-      .populate('replies.replies.author', 'username avatar role');
+      .populate('replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.replies.author', 'username avatar role');
 
     io.emit('post_updated', populatedPost);
 
@@ -209,7 +231,7 @@ router.post('/:id/reply/:replyId', async (req: Request, res: Response): Promise<
 });
 
 // ───────────────────────────────────────────────────────────────────────────
-// POST /api/forum/:id/reply/:replyId/rate — Rate a comment (toggle)
+// POST /api/forum/:id/reply/:replyId/rate — Rate a comment/reply at any depth (toggle)
 // ───────────────────────────────────────────────────────────────────────────
 router.post('/:id/reply/:replyId/rate', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -226,7 +248,7 @@ router.post('/:id/reply/:replyId/rate', async (req: Request, res: Response): Pro
       return;
     }
 
-    const comment = post.replies.find((r: any) => r._id.toString() === req.params.replyId);
+    const comment = findReplyInTree(post.replies, req.params.replyId as string);
     if (!comment) {
       res.status(404).json({ message: 'Comment not found' });
       return;
@@ -264,7 +286,9 @@ router.post('/:id/reply/:replyId/rate', async (req: Request, res: Response): Pro
     const populatedPost = await CommunityPost.findById(post._id)
       .populate('author', 'username avatar role')
       .populate('replies.author', 'username avatar role')
-      .populate('replies.replies.author', 'username avatar role');
+      .populate('replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.author', 'username avatar role')
+      .populate('replies.replies.replies.replies.author', 'username avatar role');
 
     io.emit('post_updated', populatedPost);
 
@@ -275,78 +299,6 @@ router.post('/:id/reply/:replyId/rate', async (req: Request, res: Response): Pro
   }
 });
 
-// ───────────────────────────────────────────────────────────────────────────
-// POST /api/forum/:id/reply/:replyId/nested/:nestedReplyId/rate — Rate a nested reply
-// ───────────────────────────────────────────────────────────────────────────
-router.post('/:id/reply/:replyId/nested/:nestedReplyId/rate', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const userId = req.headers['x-user-id'];
-
-    if (!userId) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return;
-    }
-
-    const post = await CommunityPost.findById(req.params.id);
-    if (!post) {
-      res.status(404).json({ message: 'Post not found' });
-      return;
-    }
-
-    const comment = post.replies.find((r: any) => r._id.toString() === req.params.replyId);
-    if (!comment) {
-      res.status(404).json({ message: 'Comment not found' });
-      return;
-    }
-
-    const nestedReply = comment.replies.find((nr: any) => nr._id.toString() === req.params.nestedReplyId);
-    if (!nestedReply) {
-      res.status(404).json({ message: 'Nested reply not found' });
-      return;
-    }
-
-    const user = await User.findById(userId);
-    const isMentor = user && user.role === 'mentor';
-    const weight = isMentor ? 3 : 1;
-
-    if (!nestedReply.ratings) {
-      nestedReply.ratings = [];
-    }
-
-    const existingIndex = nestedReply.ratings.findIndex(
-      (r: any) => r.user && r.user.toString() === userId.toString()
-    );
-
-    if (existingIndex > -1) {
-      // Toggle off / delete rating
-      nestedReply.ratings.splice(existingIndex, 1);
-    } else {
-      // Add rating
-      nestedReply.ratings.push({
-        user: userId as any,
-        value: 1,
-        score: weight,
-      });
-    }
-
-    // Recalculate score
-    nestedReply.score = nestedReply.ratings.reduce((sum: number, r: any) => sum + r.score, 0);
-
-    await post.save();
-
-    const populatedPost = await CommunityPost.findById(post._id)
-      .populate('author', 'username avatar role')
-      .populate('replies.author', 'username avatar role')
-      .populate('replies.replies.author', 'username avatar role');
-
-    io.emit('post_updated', populatedPost);
-
-    res.json(populatedPost);
-  } catch (error) {
-    console.error('Rate nested reply error:', error);
-    res.status(500).json({ message: 'Server error rating nested reply' });
-  }
-});
 
 // ───────────────────────────────────────────────────────────────────────────
 // POST /api/forum/:id/upvote — Toggle upvote on a post
