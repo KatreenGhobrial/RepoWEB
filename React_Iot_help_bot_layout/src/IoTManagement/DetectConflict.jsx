@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
 import LabeledInput from '../UIComponents/LabeledInput';
-import api from '../apiClient';
+import { detectConflicts } from './iotService';
 
 export default function DetectConflict() {
   const [results, setResults] = useState([]);
@@ -22,7 +22,7 @@ export default function DetectConflict() {
     setResults([]);
 
     try {
-      const data = await api.post('/bot/detect-conflicts', {
+      const data = await detectConflicts({
         device,
         protocol,
         database,

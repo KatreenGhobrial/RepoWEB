@@ -24,3 +24,7 @@ export async function deleteAllBrokers() {
 export async function getHealth() {
   return await api.get('/health');
 }
+
+export async function detectConflicts(payload) {
+  return await api.post('/bot/detect-conflicts', payload);
+}
