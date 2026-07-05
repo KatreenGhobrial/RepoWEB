@@ -19,7 +19,11 @@ import DevicePlayground from './IoTManagement/DevicePlayground';
 import TechDocs from './Documentation/TechDocs';
 import ProtectedRoute from './UIComponents/ProtectedRoute';
 import { ProjectProvider } from './hooks/ProjectContext';
-//Including all routes in the app
+/**
+ * Main Application Component.
+ * Sets up React Router, wraps the app in global providers (ProjectProvider), 
+ * and defines all public and protected routes.
+ */
 function App() {
   return (
     <Router>

@@ -7,6 +7,11 @@ import LabeledInput from '../UIComponents/LabeledInput';
 import { useProject } from '../hooks/ProjectContext';
 const DEFAULT_FORM = { projectName: '', device: 'ESP32', protocol: 'HTTP', database: 'MongoDB', powerSource: 'Battery', membersText: '', requirements: '' };
 
+/**
+ * ProjectSetup Component.
+ * Allows teams to configure their IoT architecture (MCU, Protocol, Database, etc.)
+ * and analyzes the setup for potential hardware/software conflicts.
+ */
 export default function ProjectSetup() {
   const { allProjects, selectedProjectId, setSelectedProjectId, selectedProject, updateProjectInCache, addProjectToCache, refreshProjects } = useProject();
 

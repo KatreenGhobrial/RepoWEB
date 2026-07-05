@@ -6,6 +6,12 @@ import LabeledInput from '../UIComponents/LabeledInput';
 import { getDocs, createDoc, updateDoc, deleteDoc } from './docService';
 import { list as listProjects } from '../ProjectManagement/projectService';
 
+/**
+ * TechDocs Component.
+ * Manages project documentation including requirements, API specs, hardware lists,
+ * and meeting notes. Supports creating, editing, filtering, and markdown rendering.
+ */
+
 const TYPE_CONFIG = {
   requirements:    { label: 'Requirements',    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
   work_plan:       { label: 'Work Plan',       badge: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' },

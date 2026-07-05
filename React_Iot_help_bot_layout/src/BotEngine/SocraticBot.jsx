@@ -7,6 +7,12 @@ import { getAlerts } from '../IoTManagement/alertService';
 import { LuTriangleAlert, LuWifi, LuShield, LuZap, LuClock, LuCpu } from 'react-icons/lu';
 import { useProject } from '../hooks/ProjectContext';
 
+/**
+ * SocraticBot Component.
+ * An AI-driven chat interface that helps students debug and design their IoT projects
+ * using Socratic questioning (guiding instead of giving direct answers).
+ */
+
 const renderer = new marked.Renderer();
 
 function parseMdText(mdText) {

@@ -5,6 +5,11 @@ import { getAlerts, simulateAlert, resolveAlert } from '../IoTManagement/alertSe
 import AlertToast from './AlertToast';
 import useDarkMode from '../hooks/useDarkMode';
 
+/**
+ * Navbar Component.
+ * The top navigation bar containing the project selector, theme toggle (dark/light mode),
+ * global alert notifications, and user profile menu.
+ */
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();

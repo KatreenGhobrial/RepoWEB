@@ -1,9 +1,18 @@
 import axios from 'axios';
  
 
+/**
+ * API Client Utility.
+ * Provides a standardized Axios wrapper for making HTTP requests to the backend API.
+ * Automatically handles attaching the user token/ID to request headers and standardizing error handling.
+ */
+
 const API_BASE = `${import.meta.env.VITE_SERVER_URL}/api`;
 
-// Helper to grab token and format headers
+/**
+ * Retrieves the current user's ID from local storage and formats it into request headers.
+ * @returns {Object} Headers object containing Content-Type and x-user-id.
+ */
 function getHeaders() {
     const userStr = localStorage.getItem('currentUser');
     let userId = null;

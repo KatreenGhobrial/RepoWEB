@@ -3,6 +3,11 @@ import { io } from 'socket.io-client';
 import Header from '../UIComponents/Header';
 import { getHealth, getBrokers } from './iotService';
 
+/**
+ * MonitorPanel Component.
+ * A live dashboard that subscribes to MQTT messages via WebSockets,
+ * displaying real-time sensor data, device status, and system alerts.
+ */
 export default function MonitorPanel() {
   const [monitorData, setMonitorData] = useState({ summary: { health: 'Loading...' }, services: [] });
   const [activeDevices, setActiveDevices] = useState([]);

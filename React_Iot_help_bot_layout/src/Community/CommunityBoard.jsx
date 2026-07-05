@@ -14,7 +14,12 @@ const TAG_COLORS = {
   sensor: "bg-pink-100 text-pink-700",
   integration: "bg-orange-100 text-orange-700"
 };
-
+/**
+ * CommunityBoard Component.
+ * Serves as the main forum interface for users to post questions, share solutions,
+ * and interact with other community members. Supports tag filtering, search, nested replies,
+ * upvotes, and marking posts as similar.
+ */
 export default function CommunityBoard() {
   const userStr = localStorage.getItem('currentUser');
   let currentUser = null;

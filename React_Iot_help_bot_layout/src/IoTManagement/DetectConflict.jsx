@@ -3,6 +3,11 @@ import Header from '../UIComponents/Header';
 import LabeledInput from '../UIComponents/LabeledInput';
 import { detectConflicts } from './iotService';
 
+/**
+ * DetectConflict Component.
+ * Evaluates the current IoT architecture for interdisciplinary conflicts 
+ * (e.g., protocol overhead on battery power) and provides Socratic guidance.
+ */
 export default function DetectConflict() {
   const [results, setResults] = useState([]);
   const [conflictCount, setConflictCount] = useState(0);

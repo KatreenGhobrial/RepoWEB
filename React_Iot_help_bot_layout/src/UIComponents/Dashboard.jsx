@@ -4,6 +4,11 @@ import { listByProject as listTasks } from '../ProjectManagement/taskService';
 import { getMentorFeedback as getFeedback } from '../ProjectManagement/projectService';
 import { useProject } from '../hooks/ProjectContext';
 
+/**
+ * Dashboard Component.
+ * Provides an overview of the current project's progress, task distribution,
+ * recent feedback from mentors, and a timeline.
+ */
 export default function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);

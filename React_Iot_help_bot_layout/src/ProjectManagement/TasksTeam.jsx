@@ -8,7 +8,11 @@ import { listByProject as listTasks, create as createTask, update as updateTask,
 import { getMentorFeedback as getFeedback } from './projectService';
 import { useProject } from '../hooks/ProjectContext';
 
-
+/**
+ * TasksTeam Component.
+ * Kanban-style board for managing project tasks across different disciplines
+ * (Hardware, Software, Design, etc.). Supports dragging, editing, and deleting tasks.
+ */
 export default function TasksTeam() {
   const { selectedProjectId, selectedProject, updateProjectInCache } = useProject();
 

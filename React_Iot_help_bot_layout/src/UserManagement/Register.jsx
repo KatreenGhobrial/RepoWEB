@@ -3,6 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import * as usersService from './usersService';
 import LabeledInput from '../UIComponents/LabeledInput';
 
+/**
+ * Register Component.
+ * Allows new users to sign up by providing their credentials, selected expertise,
+ * and role (e.g., student, mentor).
+ */
 export default function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');

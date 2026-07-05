@@ -1,5 +1,11 @@
 import { io } from 'socket.io-client';
 
+/**
+ * Global Socket.io Client Instance.
+ * Initializes the WebSocket connection to the server.
+ * Attaches the current user's ID to the connection query for server-side identification.
+ */
+
 const userStr = localStorage.getItem('currentUser');
 let currentUser = null;
 try {

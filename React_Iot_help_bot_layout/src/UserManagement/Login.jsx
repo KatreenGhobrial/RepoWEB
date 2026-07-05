@@ -3,6 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import * as usersService from './usersService';
 import LabeledInput from '../UIComponents/LabeledInput';
 
+/**
+ * Login Component.
+ * Handles user authentication, capturing email/password and storing the
+ * received token/user object in local storage upon success.
+ */
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
