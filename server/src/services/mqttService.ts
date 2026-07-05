@@ -202,6 +202,10 @@ export const connectToDynamicBroker = (config: { url: string, port?: string | nu
 
   const client = mqtt.connect(config.url, options);
 
+  // Register immediately so the UI can show it (even if connecting/failed)
+  mqttClients.set(id, client);
+  transientBrokers.set(id, { _id: id, name: config.name, url: config.url, port: config.port, status: 'connecting' });
+
   client.on('connect', () => {
     console.log(`[MQTT] Successfully connected to ${config.name}!`);
     const listenTopic = config.topic || '#';
@@ -209,13 +213,18 @@ export const connectToDynamicBroker = (config: { url: string, port?: string | nu
       if (!err) console.log(`[MQTT - ${config.name}] Subscribed to topic: ${listenTopic}`);
       else console.error(`[MQTT - ${config.name}] Failed to subscribe:`, err);
     });
-    mqttClients.set(id, client);
-    transientBrokers.set(id, { _id: id, name: config.name, url: config.url, port: config.port });
+    
+    if (transientBrokers.has(id)) {
+      transientBrokers.get(id).status = 'connected';
+    }
     broadcastBrokerStatus();
   });
 
   client.on('error', (err) => {
     console.error(`[MQTT - ${config.name}] Connection error:`, err.message);
+    if (transientBrokers.has(id)) {
+      transientBrokers.get(id).status = 'error';
+    }
     broadcastBrokerStatus();
   });
   

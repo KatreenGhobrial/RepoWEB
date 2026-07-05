@@ -42,6 +42,11 @@ export default function DevicePlayground() {
       setActiveDevices(devicesArray);
     });
 
+    socket.on('mqtt_broker_status', () => {
+      // Whenever a broker connects, disconnects, or errors, refetch the list
+      fetchBrokers();
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -135,7 +140,15 @@ export default function DevicePlayground() {
                     <li key={b._id} className="text-sm bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-zinc-700 flex justify-between items-center group">
                       <span className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">{b.name}</span>
                       <div className="flex items-center gap-3">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]"></span>
+                        {b.status === 'connecting' ? (
+                           <span className="text-xs text-slate-400 animate-pulse">Connecting...</span>
+                        ) : b.status === 'error' ? (
+                           <span className="text-xs font-bold text-red-500" title="Connection Error">Failed</span>
+                        ) : !b.connected ? (
+                           <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_#ef4444]" title="Offline"></span>
+                        ) : (
+                           <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]" title="Connected"></span>
+                        )}
                         <button 
                           onClick={() => handleDeleteBroker(b._id)} 
                           className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity" 
