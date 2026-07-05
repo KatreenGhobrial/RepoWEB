@@ -174,7 +174,7 @@ export default function TasksTeam() {
         {msg.text && <p className={`mb-4 text-sm font-medium ${msg.isError ? 'text-red-500' : 'text-green-600'}`}>{msg.text}</p>}
         
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {team.map((m, i) => (
+          {team.filter(m => m).map((m, i) => (
             <div key={i} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 relative hover:bg-slate-50 dark:bg-zinc-800/50 transition-colors">
               <button onClick={() => handleRemoveMember(m.email || m.username || m)} className="absolute top-3 right-3 text-slate-400 hover:text-red-500 transition-colors" title="Remove Member">✕</button>
               <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl mb-3">{m.icon || '👤'}</div>
@@ -201,7 +201,7 @@ export default function TasksTeam() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <select className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm" value={editTaskForm.owner} onChange={e => setEditTaskForm({...editTaskForm, owner: e.target.value})}>
                         <option value="">-- Owner --</option>
-                        {team.filter(m => m.role !== 'mentor').map((m, i) => { const nm = m.username||m.email||m; return <option key={i} value={nm}>{nm}</option>; })}
+                        {team.filter(m => m && m.role !== 'mentor').map((m, i) => { const nm = m.username||m.email||m; return <option key={i} value={nm}>{nm}</option>; })}
                       </select>
                       <select className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm" value={editTaskForm.status} onChange={e => setEditTaskForm({...editTaskForm, status: e.target.value})}>
                         <option value="todo">To Do</option><option value="in-progress">In Progress</option><option value="done">Done</option>
@@ -251,7 +251,7 @@ export default function TasksTeam() {
             <LabeledInput label="Assign To (Partner)">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" value={taskForm.discipline} onChange={e => setTaskForm({...taskForm, discipline: e.target.value})}>
                 <option value="">-- Select Partner --</option>
-                {team.filter(m => m.role !== 'mentor').map((m, i) => { const nm = m.username||m.name||m.email||m; return <option key={i} value={nm}>{nm}</option>; })}
+                {team.filter(m => m && m.role !== 'mentor').map((m, i) => { const nm = m.username||m.name||m.email||m; return <option key={i} value={nm}>{nm}</option>; })}
               </select>
             </LabeledInput>
             <LabeledInput label="Status">
