@@ -10,8 +10,6 @@ export interface IUser extends Document {
   role: 'student' | 'mentor' | 'admin';
   expertise: string[];          // e.g. ["hardware", "firmware", "backend"]
   discipline: string;           // e.g. "Electrical Engineering"
-  avatar: string;
-  bio: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,14 +51,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: '',
     },
-    avatar: {
-      type: String,
-      default: '',
-    },
-    bio: {
-      type: String,
-      default: '',
-    },
+
   },
   { timestamps: true }
 );

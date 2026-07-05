@@ -19,7 +19,6 @@ export interface IChatHistory extends Document {
   messages: IChatMessage[];
   detectedPhase: string;         // auto-detected project phase
   detectedIssues: string[];      // IoT issues found during conversation
-  reflectionScore: number;       // NLP quality score 0-100
   createdAt: Date;
   updatedAt: Date;
 }
@@ -73,12 +72,7 @@ const chatHistorySchema = new Schema<IChatHistory>(
       type: [String],
       default: [],
     },
-    reflectionScore: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 100,
-    },
+
   },
   { timestamps: true }
 );

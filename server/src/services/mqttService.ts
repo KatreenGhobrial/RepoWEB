@@ -1,3 +1,8 @@
+/**
+ * MQTT Integration Service.
+ * Manages connections to MQTT brokers, listens for incoming sensor data,
+ * performs anomaly detection, and broadcasts live events via WebSockets.
+ */
 import mqtt from 'mqtt';
 import { Server } from 'socket.io';
 import Alert from '../models/Alert';

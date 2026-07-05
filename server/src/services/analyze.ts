@@ -1,3 +1,8 @@
+/**
+ * Architecture Analysis Service.
+ * Evaluates IoT architectures for potential conflicts (e.g., protocol vs power).
+ * Utilizes a rule-based engine and AI fallback to provide Socratic feedback to students.
+ */
 import { getClient } from './openaiService';
 import OpenAI from 'openai';
 

@@ -1,3 +1,8 @@
+/**
+ * Express Server Entry Point.
+ * Sets up the HTTP server, Socket.io for real-time communication, connects to MongoDB,
+ * and initializes all API routes and background services (e.g., MQTT).
+ */
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';

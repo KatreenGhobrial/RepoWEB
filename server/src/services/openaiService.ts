@@ -1,3 +1,8 @@
+/**
+ * AI Bot Integration Service.
+ * Provides Socratic assistance for projects, guiding students without giving direct answers.
+ * Features a fallback rule-based engine if the primary AI service is offline.
+ */
 import OpenAI from 'openai';
 
 // ---------------------------------------------------------------------------

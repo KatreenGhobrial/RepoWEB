@@ -7,8 +7,7 @@ export interface IFeedback extends Document {
   project: mongoose.Types.ObjectId;
   mentor: mongoose.Types.ObjectId;
   content: string;
-  category: 'general' | 'architecture' | 'collaboration' | 'technical' | 'milestone';
-  rating: number;                // 1-5
+
   createdAt: Date;
 }
 
@@ -31,17 +30,7 @@ const feedbackSchema = new Schema<IFeedback>(
       type: String,
       required: true,
     },
-    category: {
-      type: String,
-      enum: ['general', 'architecture', 'collaboration', 'technical', 'milestone'],
-      default: 'general',
-    },
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5,
-      default: 3,
-    },
+
   },
   { timestamps: true }
 );
