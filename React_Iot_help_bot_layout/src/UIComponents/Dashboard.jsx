@@ -226,7 +226,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-4 mb-6 border-b pb-4">
           <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">🏆</div>
           <div>
-            <h3 className="text-2xl font-bold text-slate-950 dark:text-white">Evaluation & Grades / הערכה וציונים</h3>
+            <h3 className="text-2xl font-bold text-slate-950 dark:text-white">Evaluation & Grades</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">Assessments of interdisciplinary work, cooperation, and technical progress</p>
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function Dashboard() {
            dashboard.evaluation.technicalScore === 0)) ? (
           <div className="text-center py-10 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
             <span className="text-4xl mb-3 block">🏁</span>
-            <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-1">Evaluation Pending / הערכה בהמתנה</h4>
+            <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-1">Evaluation Pending</h4>
             <p className="text-slate-500 dark:text-slate-400 text-xs max-w-md mx-auto">
               Your project evaluation is pending. Once your mentor submits your interdisciplinary, cooperation, and technical grades, they will display here in real-time.
             </p>
@@ -253,7 +253,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Average Gauge Left */}
                 <div className="md:col-span-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 rounded-2xl border border-slate-100 shadow-inner">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Overall Score / ציון משוקלל</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Overall Score</span>
                   <div className="relative w-28 h-28 flex items-center justify-center">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                       <path className="text-slate-200" strokeWidth="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -275,7 +275,7 @@ export default function Dashboard() {
                   {/* Metric 1 */}
                   <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-800 dark:text-slate-200">💡 Quality of Interdisciplinary Work / איכות העבודה הבין-תחומית</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">💡 Quality of Interdisciplinary Work</span>
                       <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 font-bold rounded-md">{inter}/100</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-2.5">
@@ -291,7 +291,7 @@ export default function Dashboard() {
                   {/* Metric 2 */}
                   <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-800 dark:text-slate-200">🤝 Cooperation & Collaboration / שיתוף הפעולה</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">🤝 Cooperation & Collaboration</span>
                       <span className="px-2 py-0.5 bg-violet-100 text-violet-800 font-bold rounded-md">{coop}/100</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-2.5">
@@ -307,7 +307,7 @@ export default function Dashboard() {
                   {/* Metric 3 */}
                   <div className="space-y-2 hover:scale-[1.01] transition-transform duration-200">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-800 dark:text-slate-200">⚙️ Technical Progress / ההתקדמות הטכנית</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">⚙️ Technical Progress</span>
                       <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-md">{tech}/100</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-2.5">
@@ -324,7 +324,7 @@ export default function Dashboard() {
                   {dashboard.evaluation.summaryNotes && (
                     <div className="mt-4 p-4 bg-gradient-to-r from-slate-50 to-slate-100/50 rounded-2xl border border-slate-200 dark:border-zinc-800/60">
                       <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1.5">
-                        <span>📝</span> Overall Summary / הערות סיכום מהמנטור
+                        <span>📝</span> Overall Summary
                       </h4>
                       <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed whitespace-pre-line">{dashboard.evaluation.summaryNotes}</p>
                     </div>

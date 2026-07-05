@@ -120,7 +120,7 @@ export default function CommunityBoard() {
       setSimilarPosts([]);
       
     } catch (err) {
-      setError("שגיאה ביצירת הפוסט");
+      setError("Failed to create post. Please try again.");
     }
     
     setSaving(false);

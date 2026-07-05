@@ -120,7 +120,7 @@ export default function MentorDashboard() {
       });
       const updatedProject = response.data || response;
       setProjects(prevProjects => prevProjects.map(p => p._id === selectedProject ? updatedProject : p));
-      setEvalSuccess("Evaluation saved successfully! / ההערכה נשמרה בהצלחה!");
+      setEvalSuccess("Evaluation saved successfully!");
       setTimeout(() => setEvalSuccess(""), 4000);
     } catch (err) {
       setError(err.message || "Failed to save evaluation");
@@ -264,7 +264,7 @@ export default function MentorDashboard() {
                 <div className="flex items-center justify-between border-b pb-3">
                   <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 text-base">
                     <span>📊</span>
-                    <span>Project Evaluation & Grades / הערכה וציונים</span>
+                    <span>Project Evaluation & Grades</span>
                   </h3>
                   <div className="bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1.5">
                     <span>Average Grade:</span>
@@ -282,7 +282,7 @@ export default function MentorDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <label className="font-semibold text-slate-700 dark:text-slate-300">
-                      💡 Quality of Interdisciplinary Work / איכות העבודה הבין-תחומית
+                      💡 Quality of Interdisciplinary Work
                     </label>
                     <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 font-bold rounded-md">
                       {interdisciplinaryScore}/100
@@ -309,7 +309,7 @@ export default function MentorDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <label className="font-semibold text-slate-700 dark:text-slate-300">
-                      🤝 Cooperation & Collaboration / שיתוף הפעולה
+                      🤝 Cooperation & Collaboration
                     </label>
                     <span className="px-2 py-0.5 bg-violet-50 text-violet-700 font-bold rounded-md">
                       {cooperationScore}/100
@@ -336,7 +336,7 @@ export default function MentorDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <label className="font-semibold text-slate-700 dark:text-slate-300">
-                      ⚙️ Technical Progress / ההתקדמות הטכנית
+                      ⚙️ Technical Progress
                     </label>
                     <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-md">
                       {technicalScore}/100
@@ -362,7 +362,7 @@ export default function MentorDashboard() {
                 {/* Overall Summary */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    📝 Overall Summary Notes / הערות סיכום
+                    📝 Overall Summary Notes
                   </label>
                   <textarea 
                     value={summaryNotes} 
@@ -378,7 +378,7 @@ export default function MentorDashboard() {
                   disabled={evalSaving} 
                   className="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white py-3 rounded-xl font-semibold text-xs shadow-md transition-all disabled:opacity-50"
                 >
-                  {evalSaving ? "Saving..." : "💾 Save Evaluation / שמור הערכה"}
+                  {evalSaving ? "Saving..." : "💾 Save Evaluation"}
                 </button>
               </form>
 
