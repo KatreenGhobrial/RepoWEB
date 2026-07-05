@@ -21,7 +21,7 @@ export default function TasksTeam() {
   const [projectId, setProjectId] = useState(null);
   const [projectStatus, setProjectStatus] = useState('Active');
   
-  const [taskForm, setTaskForm] = useState({ title: '', discipline: '', status: 'todo', priority: 'medium' });
+  const [taskForm, setTaskForm] = useState({ title: '', assignedTo: '', discipline: '', status: 'todo', priority: 'medium' });
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [msg, setMsg] = useState({ text: '', isError: false });
   const [loading, setLoading] = useState(true);
@@ -48,7 +48,9 @@ export default function TasksTeam() {
 
           const backendTasks = await listTasks(proj._id) || [];
           setTasks(backendTasks.map(t => ({
-            ...t, owner: t.owner?.username || t.discipline || 'Unassigned',
+            ...t, 
+            ownerName: t.owner?.username || t.owner?.name || 'System',
+            assignedTo: t.assignedTo || 'Unassigned',
             status: t.status === 'todo' ? 'To Do' : t.status === 'in-progress' ? 'In Progress' : 'Done'
           })));
 
@@ -78,13 +80,13 @@ export default function TasksTeam() {
     try {
       if (projectId) {
         const newTask = await createTask({ project: projectId, ...taskForm });
-        setTasks([...tasks, { ...newTask, owner: newTask.discipline, status: taskForm.status === 'todo' ? 'To Do' : taskForm.status === 'in-progress' ? 'In Progress' : 'Done' }]);
+        setTasks([...tasks, { ...newTask, ownerName: currentUser?.username || 'Me', assignedTo: taskForm.assignedTo, discipline: taskForm.discipline, status: taskForm.status === 'todo' ? 'To Do' : taskForm.status === 'in-progress' ? 'In Progress' : 'Done' }]);
         showMsg('Task saved!');
       } else {
-        setTasks([...tasks, { ...taskForm, owner: taskForm.discipline }]);
+        setTasks([...tasks, { ...taskForm, ownerName: currentUser?.username || 'Me', assignedTo: taskForm.assignedTo, discipline: taskForm.discipline }]);
         showMsg('Task added locally.');
       }
-      setTaskForm({ title: '', discipline: '', status: 'todo', priority: 'medium' });
+      setTaskForm({ title: '', assignedTo: '', discipline: '', status: 'todo', priority: 'medium' });
     } catch (err) { showMsg('Add task error', true); }
   };
 
@@ -100,9 +102,9 @@ export default function TasksTeam() {
         if (taskId) await deleteTask(taskId);
       } else if (action === 'edit') {
         const dStat = data.status === 'todo' ? 'To Do' : data.status === 'in-progress' ? 'In Progress' : 'Done';
-        setTasks(tasks.map(t => t._id === taskId ? { ...t, title: data.title, owner: data.owner, status: dStat, priority: data.priority } : t));
+        setTasks(tasks.map(t => t._id === taskId ? { ...t, title: data.title, assignedTo: data.assignedTo, discipline: data.discipline, status: dStat, priority: data.priority } : t));
         setEditingTaskId(null);
-        if (taskId) await updateTask(taskId, { title: data.title, discipline: data.owner, status: data.status, priority: data.priority });
+        if (taskId) await updateTask(taskId, { title: data.title, assignedTo: data.assignedTo, discipline: data.discipline, status: data.status, priority: data.priority });
       }
     } catch (err) { console.error('Task action failed', err); }
   };
@@ -199,10 +201,17 @@ export default function TasksTeam() {
                 {editingTaskId === task._id ? (
                   <div className="flex flex-col gap-3">
                     <input className="border border-slate-300 rounded-lg px-3 py-2 font-bold w-full" value={editTaskForm.title} onChange={e => setEditTaskForm({...editTaskForm, title: e.target.value})} />
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <select className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm" value={editTaskForm.owner} onChange={e => setEditTaskForm({...editTaskForm, owner: e.target.value})}>
-                        <option value="">-- Owner --</option>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                      <select className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm" value={editTaskForm.assignedTo} onChange={e => setEditTaskForm({...editTaskForm, assignedTo: e.target.value})}>
+                        <option value="">-- Assign To --</option>
                         {team.filter(m => m && m.role !== 'mentor').map((m, i) => { const nm = m.username||m.email||m; return <option key={i} value={nm}>{nm}</option>; })}
+                      </select>
+                      <select className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm" value={editTaskForm.discipline} onChange={e => setEditTaskForm({...editTaskForm, discipline: e.target.value})}>
+                        <option value="">-- Discipline --</option>
+                        <option value="hardware">Hardware</option>
+                        <option value="software">Software</option>
+                        <option value="design">Design</option>
+                        <option value="ai">AI</option>
                       </select>
                       <select className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm" value={editTaskForm.status} onChange={e => setEditTaskForm({...editTaskForm, status: e.target.value})}>
                         <option value="todo">To Do</option><option value="in-progress">In Progress</option><option value="done">Done</option>
@@ -219,8 +228,18 @@ export default function TasksTeam() {
                 ) : (
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white text-lg">{task.title}</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Owner: {task.owner}</p>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-slate-900 dark:text-white text-lg">{task.title}</h4>
+                        {task.discipline && (
+                          <span className="text-[10px] uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold">
+                            {task.discipline}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-slate-500 dark:text-slate-400 mt-2 space-y-0.5">
+                        <p><span className="font-semibold">Assigned To:</span> {task.assignedTo}</p>
+                        <p><span className="font-semibold">Created By:</span> {task.ownerName}</p>
+                      </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <select 
@@ -233,7 +252,7 @@ export default function TasksTeam() {
                       </select>
                       {task._id && (
                         <div className="flex gap-3 mt-1 text-xs font-semibold">
-                          <button onClick={() => { setEditingTaskId(task._id); setEditTaskForm({title: task.title, owner: task.owner, status: task.status==='Done'?'done':task.status==='In Progress'?'in-progress':'todo', priority: task.priority||'medium'}); }} className="text-blue-600 hover:text-blue-800">Edit</button>
+                          <button onClick={() => { setEditingTaskId(task._id); setEditTaskForm({title: task.title, assignedTo: task.assignedTo, discipline: task.discipline || '', status: task.status==='Done'?'done':task.status==='In Progress'?'in-progress':'todo', priority: task.priority||'medium'}); }} className="text-blue-600 hover:text-blue-800">Edit</button>
                           <button onClick={() => handleTaskAction(task._id, 'delete')} className="text-red-500 hover:text-red-700">Delete</button>
                         </div>
                       )}
@@ -250,9 +269,18 @@ export default function TasksTeam() {
           <form onSubmit={handleAddTask} className="space-y-5">
             <LabeledInput label="Task title" type="text" placeholder="Enter task description" value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" />
             <LabeledInput label="Assign To (Partner)">
-              <select className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" value={taskForm.discipline} onChange={e => setTaskForm({...taskForm, discipline: e.target.value})}>
+              <select className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" value={taskForm.assignedTo} onChange={e => setTaskForm({...taskForm, assignedTo: e.target.value})}>
                 <option value="">-- Select Partner --</option>
                 {team.filter(m => m && m.role !== 'mentor').map((m, i) => { const nm = m.username||m.name||m.email||m; return <option key={i} value={nm}>{nm}</option>; })}
+              </select>
+            </LabeledInput>
+            <LabeledInput label="Discipline">
+              <select className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" value={taskForm.discipline} onChange={e => setTaskForm({...taskForm, discipline: e.target.value})}>
+                <option value="">-- Select Discipline --</option>
+                <option value="hardware">Hardware</option>
+                <option value="software">Software</option>
+                <option value="design">Design</option>
+                <option value="ai">AI</option>
               </select>
             </LabeledInput>
             <LabeledInput label="Status">

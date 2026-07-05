@@ -13,7 +13,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       project,
       title,
       description,
-      owner: null,
+      owner: req.headers['x-user-id'] || null,
       assignedTo,
       status: status || 'todo',
       priority: priority || 'medium',
