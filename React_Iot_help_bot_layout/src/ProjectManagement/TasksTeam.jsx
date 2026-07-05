@@ -124,7 +124,7 @@ export default function TasksTeam() {
       const isExist = team.some(m => (m.email || m.username) === newMemberEmail);
       if (isExist) return showMsg('Member already in team.', true);
 
-      const newMember = { username: user.username, name: user.name || user.bio, email: user.email, role: user.role, expertise: user.expertise };
+      const newMember = { username: user.username, name: user.name || user.username, email: user.email, role: user.role, expertise: user.expertise };
       const newTeam = [...team, newMember];
       setTeam(newTeam);
       await updateTeamDB(newTeam);

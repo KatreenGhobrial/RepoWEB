@@ -101,7 +101,7 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     // Update user
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { username, email, role, ...(name ? { bio: name } : {}) }, // Mapping name to bio if provided, or we can just ignore it since User model doesn't have 'name'
+      { username, email, role },
       { new: true, runValidators: true }
     ).select('-password');
 
@@ -200,12 +200,6 @@ router.get('/mentor/dashboard', async (req: Request, res: Response): Promise<voi
       }
     });
 
-    // Average reflection score
-    const avgReflection =
-      chatSessions.length > 0
-        ? chatSessions.reduce((sum, s) => sum + s.reflectionScore, 0) / chatSessions.length
-        : 0;
-
     res.json({
       totalProjects,
       activeProjects,
@@ -215,7 +209,6 @@ router.get('/mentor/dashboard', async (req: Request, res: Response): Promise<voi
       totalStudents,
       phaseDistribution,
       disciplineCount,
-      avgReflection: Math.round(avgReflection),
     });
   } catch (error) {
     console.error('Mentor dashboard error:', error);
@@ -234,8 +227,6 @@ router.post('/mentor/feedback', async (req: Request, res: Response): Promise<voi
       project: projectId,
       mentor: null,
       content,
-      category: category || 'general',
-      rating: rating || 3,
     });
 
     res.status(201).json(feedback);

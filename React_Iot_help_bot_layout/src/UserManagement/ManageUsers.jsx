@@ -29,7 +29,7 @@ export default function ManageUsers() {
     const handleEdit = (user) => {
         setEditingId(user._id);
         setEditForm({ 
-            name: user.bio || '', // Using bio as name in backend
+            name: user.username || '',
             email: user.email || '',
             role: user.role === 'student' ? 'Student' : user.role === 'mentor' ? 'Mentor' : 'Admin'
         });
@@ -45,7 +45,7 @@ export default function ManageUsers() {
             
             // Optimistic update locally
             const updated = users.map(u => 
-                u._id === editingId ? { ...u, bio: payload.name, email: payload.email, role: payload.role } : u
+                u._id === editingId ? { ...u, username: payload.name, email: payload.email, role: payload.role } : u
             );
             setUsers(updated);
             
@@ -140,7 +140,7 @@ export default function ManageUsers() {
                                 ) : (
                                     <>
                                         <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{user.username}</td>
-                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{user.bio || '—'}</td>
+                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{user.username || '—'}</td>
                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{user.email}</td>
                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
