@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { list as listProjects } from '../ProjectManagement/projectService';
 
 const ProjectContext = createContext(null);
@@ -8,50 +8,63 @@ export function ProjectProvider({ children }) {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all projects on mount (only if user is logged in)
-  useEffect(() => {
-    let currentUser = null;
-    try {
-      currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    } catch (e) {
-      currentUser = null;
-    }
+  const getCurrentUser = () => {
+    try { return JSON.parse(localStorage.getItem('currentUser') || 'null'); }
+    catch { return null; }
+  };
 
+  // Core fetch function — always gets fresh data from server
+  const fetchProjects = useCallback(async () => {
+    const currentUser = getCurrentUser();
     if (!currentUser) {
+      setAllProjects([]);
+      setSelectedProjectId(null);
       setLoading(false);
       return;
     }
 
-    listProjects()
-      .then(projs => {
-        const list = Array.isArray(projs) ? projs : [];
-        setAllProjects(list);
-        if (list.length > 0 && !selectedProjectId) {
-          setSelectedProjectId(list[0]._id);
-        }
-      })
-      .catch(err => {
-        console.error('ProjectContext: failed to fetch projects', err);
-      })
-      .finally(() => setLoading(false));
+    setLoading(true);
+    try {
+      const projs = await listProjects();
+      const list = Array.isArray(projs) ? projs : [];
+      setAllProjects(list);
+      // Auto-select first project if none selected or selected one no longer exists
+      setSelectedProjectId(prev => {
+        if (prev && list.some(p => p._id === prev)) return prev;
+        return list.length > 0 ? list[0]._id : null;
+      });
+    } catch (err) {
+      console.error('ProjectContext: failed to fetch projects', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Fetch on mount
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  // Re-fetch when user logs in or out (storage event from other tabs/components)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'currentUser') {
+        fetchProjects();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [fetchProjects]);
 
   const selectedProject = allProjects.find(p => p._id === selectedProjectId) || null;
 
   // Helper to refresh the projects list from backend
   const refreshProjects = async () => {
-    try {
-      const projs = await listProjects();
-      const list = Array.isArray(projs) ? projs : [];
-      setAllProjects(list);
-      return list;
-    } catch (err) {
-      console.error(err);
-      return allProjects;
-    }
+    await fetchProjects();
+    return allProjects;
   };
 
-  // Helper to update a project in the local cache
+  // Helper to update a single project in the local cache without a full refetch
   const updateProjectInCache = (id, data) => {
     setAllProjects(prev => prev.map(p => p._id === id ? { ...p, ...data } : p));
   };
@@ -71,6 +84,7 @@ export function ProjectProvider({ children }) {
       selectedProject,
       loading,
       refreshProjects,
+      fetchProjects,
       updateProjectInCache,
       addProjectToCache
     }}>

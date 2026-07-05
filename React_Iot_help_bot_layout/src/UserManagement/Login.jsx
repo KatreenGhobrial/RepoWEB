@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import * as usersService from './usersService';
 import LabeledInput from '../UIComponents/LabeledInput';
+import { useProject } from '../hooks/ProjectContext';
 
 /**
  * Login Component.
@@ -13,12 +14,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { fetchProjects } = useProject();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const user = await usersService.login({ email, password });
       localStorage.setItem('currentUser', JSON.stringify(user));
+      await fetchProjects(); // Immediately load projects without page refresh
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Login failed');
