@@ -14,7 +14,7 @@ import { useProject } from '../hooks/ProjectContext';
  * (Hardware, Software, Design, etc.). Supports dragging, editing, and deleting tasks.
  */
 export default function TasksTeam() {
-  const { selectedProjectId, selectedProject, updateProjectInCache } = useProject();
+  const { selectedProjectId, selectedProject, updateProjectInCache, refreshProjects } = useProject();
 
   const [team, setTeam] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -111,6 +111,7 @@ export default function TasksTeam() {
     if (!projectId) return;
     const emails = updatedTeam.map(m => m.email || m.username || m).filter(Boolean);
     await updateProject(projectId, { memberEmails: emails });
+    await refreshProjects();
   };
 
   const handleAddMember = async (e) => {

@@ -72,13 +72,14 @@ export default function ProjectSetup() {
       if (projectId) {
         await updateProject(projectId, payload);
         setMsg('✅ Project updated!');
-        updateProjectInCache(projectId, payload);
+        await refreshProjects();
       } else {
         const res = await createProject({ ...payload, sensors: ['DHT22'], description: payload.description || `IoT project using ${payload.device}` });
         const newProjId = res.data?._id || res._id;
         setProjectId(newProjId);
         setMsg('✅ New project created!');
-        addProjectToCache({ _id: newProjId, ...payload });
+        await refreshProjects();
+        setSelectedProjectId(newProjId);
       }
       setSummaryData(formData);
       setFormData(prev => ({ ...prev, membersText: '' }));
