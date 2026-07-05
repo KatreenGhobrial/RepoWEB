@@ -182,7 +182,7 @@ export default function MonitorPanel() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="text-2xl font-bold flex items-center gap-4"><span className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🌡️</span> Sensor readings</h3>
+            <h3 className="text-2xl font-bold flex items-center gap-4 text-slate-900 dark:text-white"><span className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">🌡️</span> Sensor readings</h3>
             <button onClick={handleRefresh} className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-5 py-3 rounded-2xl font-bold hover:bg-slate-800">Ping System</button>
           </div>
           
@@ -193,10 +193,10 @@ export default function MonitorPanel() {
               {sensorArray.map(s => (
                 <div key={s.id} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 hover:bg-slate-50 dark:bg-zinc-800/50">
                   <div className="flex justify-between items-start mb-4">
-                    <div><h4 className="font-bold text-lg">{s.name}</h4><p className="text-sm text-slate-500 dark:text-slate-400">ID: {s.location}</p></div>
+                    <div><h4 className="font-bold text-lg text-slate-900 dark:text-white">{s.name}</h4><p className="text-sm text-slate-500 dark:text-slate-400">ID: {s.location}</p></div>
                     <span className={`text-xs px-3 py-1 rounded-full font-bold ${s.status === 'Warning' ? 'bg-yellow-100 text-orange-600' : s.status === 'Offline' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{s.status}</span>
                   </div>
-                  <p className="text-4xl font-bold">{s.value}<span className="text-2xl text-slate-500 dark:text-slate-400">{s.unit}</span></p>
+                  <p className="text-4xl font-bold text-slate-900 dark:text-white">{s.value}<span className="text-2xl text-slate-500 dark:text-slate-400">{s.unit}</span></p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-100 inline-block px-2 py-1 rounded">Last seen: {s.lastUpdate}</p>
                 </div>
               ))}
@@ -206,11 +206,11 @@ export default function MonitorPanel() {
         </div>
 
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
-          <h3 className="text-2xl font-bold mb-8 flex items-center gap-4"><span className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">🖥️</span> System services</h3>
+          <h3 className="text-2xl font-bold mb-8 flex items-center gap-4 text-slate-900 dark:text-white"><span className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">🖥️</span> System services</h3>
           <div className="space-y-4">
             {monitorData.services.map((svc, i) => (
               <div key={i} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 flex justify-between items-start">
-                <div><h4 className="font-bold text-lg">{svc.name}</h4><p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{svc.description}</p></div>
+                <div><h4 className="font-bold text-lg text-slate-900 dark:text-white">{svc.name}</h4><p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{svc.description}</p></div>
                 <span className={`text-xs px-3 py-1 rounded-full font-bold ${svc.status === 'Down' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{svc.status}</span>
               </div>
             ))}
@@ -254,12 +254,12 @@ export default function MonitorPanel() {
 
       <section className="grid grid-cols-1 gap-6">
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
-          <h3 className="text-2xl font-bold mb-8 flex items-center gap-4"><span className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl">📋</span> System Logs</h3>
+          <h3 className="text-2xl font-bold mb-8 flex items-center gap-4 text-slate-900 dark:text-white"><span className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">📋</span> System Logs</h3>
           <div className="space-y-3">
             {!logs.length ? <p className="text-slate-500 dark:text-slate-400 italic text-center py-6">No logs yet.</p> : logs.map(l => (
-              <div key={l.id} className="border border-slate-100 rounded-2xl p-4 bg-slate-50 dark:bg-zinc-800/50 flex justify-between items-start">
-                <div><h4 className="font-bold text-sm">{l.title}</h4><p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{l.message}</p></div>
-                <span className="text-xs text-slate-400 bg-white dark:bg-zinc-900 border px-2 py-1 rounded">{l.time}</span>
+              <div key={l.id} className="border border-slate-100 dark:border-zinc-700 rounded-2xl p-4 bg-slate-50 dark:bg-zinc-800/50 flex justify-between items-start">
+                <div><h4 className="font-bold text-sm text-slate-900 dark:text-white">{l.title}</h4><p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{l.message}</p></div>
+                <span className="text-xs text-slate-400 bg-white dark:bg-zinc-900 border dark:border-zinc-700 px-2 py-1 rounded">{l.time}</span>
               </div>
             ))}
           </div>
