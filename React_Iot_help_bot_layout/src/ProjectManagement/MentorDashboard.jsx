@@ -75,9 +75,13 @@ export default function MentorDashboard() {
       setAssessment({ interdisciplinary: 0, collaboration: 0, technical: 0, comments: '' });
     }
 
-    Promise.all([projectService.getMentorFeedback(selectedProject), taskService.listByProject(selectedProject)])
-      .then(([f, t]) => { setFeedback(f.data || f || []); setProjectTasks(t.data || t || []); })
-      .catch(() => {});
+    projectService.getMentorFeedback(selectedProject)
+      .then(f => setFeedback(f.data || f || []))
+      .catch(err => console.error("Failed to fetch feedback", err));
+
+    taskService.listByProject(selectedProject)
+      .then(t => setProjectTasks(t.data || t || []))
+      .catch(err => console.error("Failed to fetch tasks", err));
   }, [selectedProject, projects]);
 
   useEffect(() => {
