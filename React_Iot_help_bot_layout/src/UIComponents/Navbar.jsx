@@ -94,7 +94,7 @@ export default function Navbar() {
           <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-xl">
             🤖
           </div>
-          <Link to="/home"><h1 className="font-bold text-lg hidden md:block whitespace-nowrap text-black dark:text-white hover:text-sky-400 transition-colors">IoT Project Hub</h1></Link>
+          <Link to="/home"><h1 className="font-bold text-lg hidden md:block whitespace-nowrap text-black dark:text-white hover:text-sky-400 transition-colors">IoT Help Bot</h1></Link>
         </div>
 
         <ul className="hidden lg:flex items-center gap-4 lg:ml-12 font-semibold text-sm text-slate-700 dark:text-slate-200">
