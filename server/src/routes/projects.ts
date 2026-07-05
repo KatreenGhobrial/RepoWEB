@@ -126,36 +126,43 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
       setOperators.owner = ownerUser._id;
     }
 
-    let addToSetOperators: any = {};
+    let finalMemberIds: any[] | undefined = undefined;
 
-    if (memberEmails && Array.isArray(memberEmails) && memberEmails.length > 0) {
-      const users = await User.find({
-        $or: [
-          { email: { $in: memberEmails } },
-          { username: { $in: memberEmails } }
-        ]
-      });
+    if (memberEmails && Array.isArray(memberEmails)) {
+      if (memberEmails.length > 0) {
+        // Remove duplicates
+        const uniqueEmails = [...new Set(memberEmails)];
+        const users = await User.find({
+          $or: [
+            { email: { $in: uniqueEmails } },
+            { username: { $in: uniqueEmails } }
+          ]
+        });
 
-      if (users.length !== memberEmails.length) {
-        const foundIdentifiers = users.flatMap(u => [u.email, u.username]);
-        const missing = memberEmails.filter(email => !foundIdentifiers.includes(email));
-        res.status(404).json({ message: `One or more users not found: ${missing.join(', ')}` });
-        return;
-      }
+        if (users.length !== uniqueEmails.length) {
+          const foundIdentifiers = users.flatMap(u => [u.email, u.username]);
+          const missing = uniqueEmails.filter(e => !foundIdentifiers.includes(e));
+          res.status(404).json({ message: `One or more users not found: ${missing.join(', ')}` });
+          return;
+        }
 
-      if (users.length > 0) {
-        addToSetOperators.members = { $each: users.map(u => u._id) };
+        finalMemberIds = users.map(u => u._id);
+      } else {
+        finalMemberIds = [];
       }
     }
 
-    const updateQuery: any = { $set: setOperators };
-    if (Object.keys(addToSetOperators).length > 0) {
-      updateQuery.$addToSet = addToSetOperators;
+    if (finalMemberIds !== undefined) {
+      // If we are setting members, make sure owner is also included if ownerEmail exists
+      if (setOperators.owner && !finalMemberIds.some(id => id.toString() === setOperators.owner.toString())) {
+        finalMemberIds.push(setOperators.owner);
+      }
+      setOperators.members = finalMemberIds;
     }
 
     const project = await Project.findByIdAndUpdate(
       req.params.id,
-      updateQuery,
+      { $set: setOperators },
       { new: true, runValidators: true }
     );
 
