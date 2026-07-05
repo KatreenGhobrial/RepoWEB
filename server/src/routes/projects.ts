@@ -43,6 +43,13 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       memberIds = users.map(u => u._id);
     }
 
+    if (ownerId) {
+      const ownerExists = memberIds.some(id => id.toString() === ownerId.toString());
+      if (!ownerExists) {
+        memberIds.push(ownerId);
+      }
+    }
+
     const project = await Project.create({
       name,
       description,
