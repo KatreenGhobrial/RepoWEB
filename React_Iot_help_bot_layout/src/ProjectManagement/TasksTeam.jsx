@@ -21,7 +21,7 @@ export default function TasksTeam() {
   const [projectId, setProjectId] = useState(null);
   const [projectStatus, setProjectStatus] = useState('Active');
   
-  const [taskForm, setTaskForm] = useState({ title: '', assignedTo: '', discipline: '', status: 'todo', priority: 'medium' });
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignedTo: '', discipline: '', status: 'todo', priority: 'medium' });
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [msg, setMsg] = useState({ text: '', isError: false });
   const [loading, setLoading] = useState(true);
@@ -80,13 +80,13 @@ export default function TasksTeam() {
     try {
       if (projectId) {
         const newTask = await createTask({ project: projectId, ...taskForm });
-        setTasks([...tasks, { ...newTask, ownerName: currentUser?.username || 'Me', assignedTo: taskForm.assignedTo, discipline: taskForm.discipline, status: taskForm.status === 'todo' ? 'To Do' : taskForm.status === 'in-progress' ? 'In Progress' : 'Done' }]);
+        setTasks([...tasks, { ...newTask, ownerName: currentUser?.username || 'Me', description: taskForm.description, assignedTo: taskForm.assignedTo, discipline: taskForm.discipline, status: taskForm.status === 'todo' ? 'To Do' : taskForm.status === 'in-progress' ? 'In Progress' : 'Done' }]);
         showMsg('Task saved!');
       } else {
-        setTasks([...tasks, { ...taskForm, ownerName: currentUser?.username || 'Me', assignedTo: taskForm.assignedTo, discipline: taskForm.discipline }]);
+        setTasks([...tasks, { ...taskForm, ownerName: currentUser?.username || 'Me', description: taskForm.description, assignedTo: taskForm.assignedTo, discipline: taskForm.discipline }]);
         showMsg('Task added locally.');
       }
-      setTaskForm({ title: '', assignedTo: '', discipline: '', status: 'todo', priority: 'medium' });
+      setTaskForm({ title: '', description: '', assignedTo: '', discipline: '', status: 'todo', priority: 'medium' });
     } catch (err) { showMsg('Add task error', true); }
   };
 
@@ -102,9 +102,9 @@ export default function TasksTeam() {
         if (taskId) await deleteTask(taskId);
       } else if (action === 'edit') {
         const dStat = data.status === 'todo' ? 'To Do' : data.status === 'in-progress' ? 'In Progress' : 'Done';
-        setTasks(tasks.map(t => t._id === taskId ? { ...t, title: data.title, assignedTo: data.assignedTo, discipline: data.discipline, status: dStat, priority: data.priority } : t));
+        setTasks(tasks.map(t => t._id === taskId ? { ...t, title: data.title, description: data.description, assignedTo: data.assignedTo, discipline: data.discipline, status: dStat, priority: data.priority } : t));
         setEditingTaskId(null);
-        if (taskId) await updateTask(taskId, { title: data.title, assignedTo: data.assignedTo, discipline: data.discipline, status: data.status, priority: data.priority });
+        if (taskId) await updateTask(taskId, { title: data.title, description: data.description, assignedTo: data.assignedTo, discipline: data.discipline, status: data.status, priority: data.priority });
       }
     } catch (err) { console.error('Task action failed', err); }
   };
@@ -200,7 +200,8 @@ export default function TasksTeam() {
               <div key={task._id || idx} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5">
                 {editingTaskId === task._id ? (
                   <div className="flex flex-col gap-3">
-                    <input className="border border-slate-300 rounded-lg px-3 py-2 font-bold w-full" value={editTaskForm.title} onChange={e => setEditTaskForm({...editTaskForm, title: e.target.value})} />
+                    <input className="border border-slate-300 rounded-lg px-3 py-2 font-bold w-full" value={editTaskForm.title} onChange={e => setEditTaskForm({...editTaskForm, title: e.target.value})} placeholder="Task title" />
+                    <textarea className="border border-slate-300 rounded-lg px-3 py-2 text-sm w-full" rows="2" value={editTaskForm.description} onChange={e => setEditTaskForm({...editTaskForm, description: e.target.value})} placeholder="Task description..." />
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                       <select className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm" value={editTaskForm.assignedTo} onChange={e => setEditTaskForm({...editTaskForm, assignedTo: e.target.value})}>
                         <option value="">-- Assign To --</option>
@@ -240,6 +241,9 @@ export default function TasksTeam() {
                         <p><span className="font-semibold">Assigned To:</span> {task.assignedTo}</p>
                         <p><span className="font-semibold">Created By:</span> {task.ownerName}</p>
                       </div>
+                      {task.description && (
+                        <p className="text-sm text-slate-700 dark:text-slate-300 mt-3 p-3 bg-slate-50 dark:bg-zinc-800/50 rounded-xl whitespace-pre-wrap border border-slate-100 dark:border-zinc-800/80">{task.description}</p>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <select 
@@ -252,7 +256,7 @@ export default function TasksTeam() {
                       </select>
                       {task._id && (
                         <div className="flex gap-3 mt-1 text-xs font-semibold">
-                          <button onClick={() => { setEditingTaskId(task._id); setEditTaskForm({title: task.title, assignedTo: task.assignedTo, discipline: task.discipline || '', status: task.status==='Done'?'done':task.status==='In Progress'?'in-progress':'todo', priority: task.priority||'medium'}); }} className="text-blue-600 hover:text-blue-800">Edit</button>
+                          <button onClick={() => { setEditingTaskId(task._id); setEditTaskForm({title: task.title, description: task.description || '', assignedTo: task.assignedTo, discipline: task.discipline || '', status: task.status==='Done'?'done':task.status==='In Progress'?'in-progress':'todo', priority: task.priority||'medium'}); }} className="text-blue-600 hover:text-blue-800">Edit</button>
                           <button onClick={() => handleTaskAction(task._id, 'delete')} className="text-red-500 hover:text-red-700">Delete</button>
                         </div>
                       )}
@@ -267,7 +271,10 @@ export default function TasksTeam() {
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 p-7 shadow-sm">
           <h3 className="text-2xl font-bold mb-6 text-slate-950 dark:text-white">Add new task</h3>
           <form onSubmit={handleAddTask} className="space-y-5">
-            <LabeledInput label="Task title" type="text" placeholder="Enter task description" value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" />
+            <LabeledInput label="Task title" type="text" placeholder="Enter task title" value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" />
+            <LabeledInput label="Description">
+              <textarea className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" rows="3" placeholder="Add more details about the task..." value={taskForm.description} onChange={e => setTaskForm({...taskForm, description: e.target.value})} />
+            </LabeledInput>
             <LabeledInput label="Assign To (Partner)">
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3 outline-none focus:border-slate-400" value={taskForm.assignedTo} onChange={e => setTaskForm({...taskForm, assignedTo: e.target.value})}>
                 <option value="">-- Select Partner --</option>
