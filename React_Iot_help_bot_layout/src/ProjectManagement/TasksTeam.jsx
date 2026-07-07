@@ -16,26 +16,40 @@ import { useProject } from '../hooks/ProjectContext';
 export default function TasksTeam() {
   const { selectedProjectId, selectedProject, updateProjectInCache, refreshProjects } = useProject();
 
+  // list of team members for the current project
   const [team, setTeam] = useState([]);
+  // list of tasks belonging to the current project
   const [tasks, setTasks] = useState([]);
+  // ID of the currently loaded project
   const [projectId, setProjectId] = useState(null);
+  // overall status label of the project (e.g. Active)
   const [projectStatus, setProjectStatus] = useState('Active');
   
+  // form fields for creating a new task
   const [taskForm, setTaskForm] = useState({ title: '', description: '', assignedTo: '', discipline: '', status: 'todo', priority: 'medium' });
+  // email or username typed in the add-member input
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  // text feedback message shown after actions
   const [msg, setMsg] = useState({ text: '', isError: false });
+  // whether the page is still fetching initial data
   const [loading, setLoading] = useState(true);
+  // feedback messages from the mentor for this project
   const [feedbacks, setFeedbacks] = useState([]);
+  // ID of the task currently being edited inline
   const [editingTaskId, setEditingTaskId] = useState(null);
+  // form values for the task currently being edited
   const [editTaskForm, setEditTaskForm] = useState({});
 
+  // read the logged-in user from localStorage
   let currentUser = null;
   try {
     currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
   } catch(e) {}
 
+  // mentors have their own dashboard, redirect them away
   if (currentUser?.role === 'mentor') return <Navigate to="/mentor-dashboard" replace />;
 
+  // load project data, tasks, and mentor feedback when the selected project changes
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -47,7 +61,8 @@ export default function TasksTeam() {
           setTeam(proj.members || proj.students || []);
 
           const backendTasks = await listTasks(proj._id) || [];
-          setTasks(backendTasks.map(t => ({
+          // normalise status strings from backend format to display format
+          setTasks(backendTasks.map(t => ({  
             ...t, 
             ownerName: t.owner?.username || t.owner?.name || 'System',
             assignedTo: t.assignedTo || 'Unassigned',
@@ -68,11 +83,13 @@ export default function TasksTeam() {
     fetchData();
   }, [selectedProjectId]);
 
+  // show a temporary status message that disappears after 3 seconds
   const showMsg = (text, isError = false) => {
     setMsg({ text, isError });
     setTimeout(() => setMsg({ text: '', isError: false }), 3000);
   };
 
+  // create a new task on the server and add it to the local list
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!taskForm.title) return showMsg('Please enter a task title.', true);
@@ -90,6 +107,7 @@ export default function TasksTeam() {
     } catch (err) { showMsg('Add task error', true); }
   };
 
+  // handle status change, delete, or inline edit of an existing task
   const handleTaskAction = async (taskId, action, data = {}) => {
     if (action === 'delete' && !confirm('Delete task?')) return;
     try {
@@ -109,6 +127,7 @@ export default function TasksTeam() {
     } catch (err) { console.error('Task action failed', err); }
   };
 
+  // persist the updated team member list to the database
   const updateTeamDB = async (updatedTeam) => {
     if (!projectId) return;
     const emails = updatedTeam.map(m => m.email || m.username || m).filter(Boolean);
@@ -116,6 +135,7 @@ export default function TasksTeam() {
     await refreshProjects();
   };
 
+  // look up the user by email/username and add them to the team
   const handleAddMember = async (e) => {
     e.preventDefault();
     if (!newMemberEmail) return;
@@ -124,6 +144,7 @@ export default function TasksTeam() {
       const user = allUsers.find(u => u.username === newMemberEmail || u.email === newMemberEmail);
       if (!user) return showMsg('User not found.', true);
       
+      // prevent adding a duplicate team member
       const isExist = team.some(m => (m.email || m.username) === newMemberEmail);
       if (isExist) return showMsg('Member already in team.', true);
 
@@ -136,6 +157,7 @@ export default function TasksTeam() {
     } catch (err) { showMsg('Failed to add member.', true); }
   };
 
+  // remove a team member after confirmation and sync with the database
   const handleRemoveMember = async (email) => {
     if (!confirm('Remove this member?')) return;
     const newTeam = team.filter(m => (m.email || m.username || m) !== email);

@@ -1,3 +1,4 @@
+// Reusable page header that displays a title and subtitle passed in as props
 export default function Header({ title, subtitle }) {
   return (
     <header className="mb-10">

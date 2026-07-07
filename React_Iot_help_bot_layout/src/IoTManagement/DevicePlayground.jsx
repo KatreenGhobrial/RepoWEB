@@ -2,17 +2,26 @@ import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { getBrokers, addBroker, deleteBroker, deleteAllBrokers } from './iotService';
 
+// DevicePlayground — lets users connect custom MQTT brokers and view live device messages
 export default function DevicePlayground() {
+  // last 15 incoming MQTT messages
   const [messages, setMessages] = useState([]);
+  // the active socket.io connection instance
   const [socketInstance, setSocketInstance] = useState(null);
+  // list of devices with their online/offline status
   const [activeDevices, setActiveDevices] = useState([]);
 
   // Dynamic Brokers State (Transient)
+  // list of saved MQTT broker configs fetched from the server
   const [brokers, setBrokers] = useState([]);
+  // form fields for adding a new custom broker
   const [newBroker, setNewBroker] = useState({ name: '', url: '', port: '', username: '', password: '', topic: '#' });
+  // true while a broker add/connect request is in progress
   const [brokerLoading, setBrokerLoading] = useState(false);
+  // status/feedback message for broker operations
   const [brokerMsg, setBrokerMsg] = useState('');
 
+  // fetch the current list of saved brokers from the server
   const fetchBrokers = async () => {
     try {
       const data = await getBrokers();
@@ -22,15 +31,18 @@ export default function DevicePlayground() {
     }
   };
 
+  // on mount: load brokers and open a socket.io connection for live data
   useEffect(() => {
     fetchBrokers();
 
+    // connect to the backend WebSocket server
     const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
       withCredentials: true,
     });
     
     setSocketInstance(socket);
 
+    // append each incoming MQTT message to the top of the list, keeping max 15
     socket.on('mqtt_message', (data) => {
       setMessages((prevMessages) => {
         const newMessages = [data, ...prevMessages];
@@ -38,6 +50,7 @@ export default function DevicePlayground() {
       });
     });
 
+    // update the active devices list when the server broadcasts a status change
     socket.on('device_status_update', (devicesArray) => {
       setActiveDevices(devicesArray);
     });
@@ -47,11 +60,13 @@ export default function DevicePlayground() {
       fetchBrokers();
     });
 
+    // disconnect the socket when the component unmounts
     return () => {
       socket.disconnect();
     };
   }, []);
 
+  // send the new broker form data to the server to establish an MQTT connection
   const handleAddBroker = async (e) => {
     e.preventDefault();
     setBrokerLoading(true);
@@ -59,6 +74,7 @@ export default function DevicePlayground() {
     try {
       await addBroker(newBroker);
       setBrokerMsg('✅ Broker connected successfully!');
+      // reset form fields after successful addition
       setNewBroker({ name: '', url: '', port: '', username: '', password: '', topic: '#' });
       fetchBrokers();
     } catch (err) {
@@ -68,6 +84,7 @@ export default function DevicePlayground() {
     }
   };
 
+  // remove a specific broker by ID and refresh the list
   const handleDeleteBroker = async (id) => {
     try {
       await deleteBroker(id);
@@ -78,6 +95,7 @@ export default function DevicePlayground() {
     }
   };
 
+  // remove all brokers and close the socket.io connection
   const handleDisconnect = async () => {
     try {
       await deleteAllBrokers();
@@ -123,6 +141,7 @@ export default function DevicePlayground() {
               <button disabled={brokerLoading} type="submit" className="mt-2 bg-slate-900 hover:bg-slate-800 dark:hover:bg-cyan-700 dark:bg-cyan-600 text-white font-bold py-2 rounded-xl transition-colors text-sm disabled:opacity-50">
                 {brokerLoading ? 'Connecting...' : 'Connect (Temporary)'}
               </button>
+              {/* disconnect button removes all brokers and closes the socket */}
               <button type="button" onClick={handleDisconnect} className="mt-2 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold py-2 rounded-xl transition-colors text-sm">
                 Disconnect
               </button>
@@ -140,6 +159,7 @@ export default function DevicePlayground() {
                     <li key={b._id} className="text-sm bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 px-3 py-2 rounded-lg border border-slate-100 dark:border-zinc-700 flex justify-between items-center group">
                       <span className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">{b.name}</span>
                       <div className="flex items-center gap-3">
+                        {/* show connection status indicator for each broker */}
                         {b.status === 'connecting' ? (
                            <span className="text-xs text-slate-400 animate-pulse">Connecting...</span>
                         ) : b.status === 'error' ? (
@@ -176,6 +196,7 @@ export default function DevicePlayground() {
                 {activeDevices.map(device => (
                   <div key={device.id} className="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 px-4 py-3 rounded-xl">
                     <span className="font-bold text-slate-700 dark:text-slate-300 dark:text-slate-200">{device.id}</span>
+                    {/* show online/offline badge per device */}
                     {device.status === 'online' ? (
                       <span className="flex items-center gap-2 text-emerald-600 text-sm font-bold">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Online

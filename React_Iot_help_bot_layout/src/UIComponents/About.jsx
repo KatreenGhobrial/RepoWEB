@@ -1,5 +1,6 @@
 import Header from './Header';
 
+// Shows the "About" page with the project mission statement and core features list
 export default function About() {
   return (
     <>

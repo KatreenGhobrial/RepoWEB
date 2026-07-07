@@ -15,15 +15,24 @@ const DEFAULT_FORM = { projectName: '', device: 'ESP32', protocol: 'HTTP', datab
 export default function ProjectSetup() {
   const { allProjects, selectedProjectId, setSelectedProjectId, selectedProject, updateProjectInCache, addProjectToCache, refreshProjects } = useProject();
 
+  // the ID of the project being edited (null means creating a new one)
   const [projectId, setProjectId] = useState(null);
+  // current values in the project form fields
   const [formData, setFormData] = useState(DEFAULT_FORM);
+  // saved/committed values shown in the summary panel
   const [summaryData, setSummaryData] = useState(DEFAULT_FORM);
+  // success or error message shown below the form
   const [msg, setMsg] = useState('');
+  // whether the save request is in progress
   const [isSaving, setIsSaving] = useState(false);
+  // list of detected architecture conflicts from the bot
   const [conflicts, setConflicts] = useState([]);
+  // whether conflict analysis is running
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // summary text of the analysis result
   const [analysisMsg, setAnalysisMsg] = useState('');
 
+  // read the logged-in user from localStorage
   let currentUser = null;
   try {
     currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
@@ -32,8 +41,10 @@ export default function ProjectSetup() {
   // Sync local state when selectedProject changes (from context)
   useEffect(() => {
     if (selectedProject) {
+      // load form fields from the newly selected project
       loadProj(selectedProject);
     } else if (allProjects.length === 0) {
+      // reset form if there are no projects at all
       setProjectId(null);
       setFormData(DEFAULT_FORM);
       setSummaryData(DEFAULT_FORM);
@@ -54,11 +65,13 @@ export default function ProjectSetup() {
     handleAnalyze(data);
   };
 
+  // handle form submit — creates a new project or updates the existing one
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     setMsg('');
     try {
+      // parse comma-separated emails and always include the current user
       const emails = formData.membersText.split(',').map(n => n.trim()).filter(Boolean);
       const ident = currentUser?.email || currentUser?.username;
       if (ident && !emails.includes(ident)) emails.push(ident);
@@ -79,6 +92,7 @@ export default function ProjectSetup() {
         setProjectId(newProjId);
         setMsg('✅ New project created!');
         await refreshProjects();
+        // select the new project in context so other tabs see it
         setSelectedProjectId(newProjId);
       }
       setSummaryData(formData);
@@ -91,6 +105,7 @@ export default function ProjectSetup() {
     } finally { setIsSaving(false); }
   };
 
+  // send the current architecture config to the bot and get back conflict warnings
   const handleAnalyze = async (dataToAnalyze = formData) => {
     setIsAnalyzing(true);
     setConflicts([]);
@@ -102,7 +117,7 @@ export default function ProjectSetup() {
         setAnalysisMsg(`Found ${data.conflicts.filter(c => c.level !== 'LOW').length} issue(s).`);
       } else throw new Error();
     } catch {
-      // Fallback
+      // Fallback — run simple local checks if the API call fails
       const local = [];
       if (dataToAnalyze.powerSource === 'Battery' && dataToAnalyze.protocol === 'HTTP')
         local.push({ title: 'HTTP on Battery is power-hungry', level: 'HIGH', reason: 'HTTP has large overhead vs MQTT.', suggestion: 'Consider MQTT.', category: 'Power' });
@@ -113,6 +128,7 @@ export default function ProjectSetup() {
     } finally { setIsAnalyzing(false); }
   };
 
+  // generic change handler for all form fields
   const handleChange = (f, v) => setFormData(p => ({ ...p, [f]: v }));
 
   return (
@@ -141,8 +157,10 @@ export default function ProjectSetup() {
         <div className="bg-white dark:bg-zinc-900 dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 dark:border-zinc-800 shadow-sm p-7 transition-colors">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Project details</h3>
+        {/* dropdown to switch between existing projects or create a new one */}
             {allProjects.length > 0 && (
               <select className="border border-slate-300 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-sm font-semibold bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800 text-slate-900 dark:text-white dark:text-white outline-none" value={selectedProjectId || 'new'} onChange={e => {
+                // selecting "new" resets the form; otherwise loads the chosen project
                 if (e.target.value === 'new') { setSelectedProjectId(null); setProjectId(null); setFormData(DEFAULT_FORM); setSummaryData(DEFAULT_FORM); }
                 else setSelectedProjectId(e.target.value);
               }}>
@@ -226,6 +244,7 @@ export default function ProjectSetup() {
   );
 }
 
+// small helper: reusable labeled text input or textarea
 const Input = ({label, val, onChange, placeholder, isArea}) => (
   <LabeledInput label={label}>
     {isArea ? <textarea className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-900 dark:bg-zinc-800 text-slate-900 dark:text-white dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 font-medium transition-colors" rows="3" value={val} onChange={e=>onChange(e.target.value)} placeholder={placeholder} />
@@ -233,6 +252,7 @@ const Input = ({label, val, onChange, placeholder, isArea}) => (
   </LabeledInput>
 );
 
+// small helper: reusable labeled select dropdown
 const Select = ({label, val, opts, onChange}) => (
   <LabeledInput label={label}>
     <select className="w-full border border-slate-300 dark:border-zinc-700 rounded-xl px-4 py-2 outline-none focus:border-sky-500 dark:focus:border-sky-500 bg-white dark:bg-zinc-900 dark:bg-zinc-800 text-slate-900 dark:text-white dark:text-white font-medium transition-colors" value={val} onChange={e=>onChange(e.target.value)}>
@@ -241,6 +261,7 @@ const Select = ({label, val, opts, onChange}) => (
   </LabeledInput>
 );
 
+// small helper: displays a single key-value summary card
 const SummaryBox = ({title, val, pre}) => (
   <div className="border border-slate-200 dark:border-zinc-800 dark:border-zinc-700 rounded-2xl p-5 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800/50 transition-colors">
     <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1 font-semibold uppercase tracking-wider">{title}</p>

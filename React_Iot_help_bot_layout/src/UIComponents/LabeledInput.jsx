@@ -9,6 +9,7 @@
  *     <select value={role} onChange={...}>...</select>
  *   </LabeledInput>
  */
+// Wraps any form control with a consistent label style; falls back to a styled <input> when no children are given
 export default function LabeledInput({ label, children, className, ...inputProps }) {
   // If children are provided, render them directly under the label (supports select, textarea, etc.)
   if (children) {

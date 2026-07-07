@@ -13,33 +13,51 @@ import { useProject } from '../hooks/ProjectContext';
  * using Socratic questioning (guiding instead of giving direct answers).
  */
 
+// custom markdown renderer instance used for parsing bot replies
 const renderer = new marked.Renderer();
 
+// converts a markdown string into HTML for display in chat bubbles
 function parseMdText(mdText) {
   return marked(mdText, { renderer });
 }
 
 export default function SocraticBot() {
+  // get the currently selected project and its ID from global context
   const { selectedProjectId, selectedProject } = useProject();
 
+  // ordered list of suggested debug steps shown at the bottom of the page
   const [investigationPath, setInvestigationPath] = useState([]);
- 
+
+  // the problem type the user selects before starting the chat
   const [problem, setProblem] = useState('Component does not respond');
+  // the problem that was active when the investigation was started
   const [currentProblem, setCurrentProblem] = useState('Not selected yet');
+  // label showing the current investigation area (e.g. hardware, network)
   const [areaText, setAreaText] = useState('Waiting for answers');
+  // short status label shown in the diagnosis panel
   const [statusText, setStatusText] = useState('Ready');
- 
+
+  // full list of chat messages exchanged between user and bot
   const [chatHistory, setChatHistory] = useState([]);
+  // current value of the user's reply input field
   const [answerInput, setAnswerInput] = useState('');
+  // tracks how many answers the user has submitted in this session
   const [answerCounter, setAnswerCounter] = useState(0);
+  // feedback message shown below the chat form (errors or confirmations)
   const [botMessage, setBotMessage] = useState('');
+  // true when botMessage is an error that should be shown in red
   const [isError, setIsError] = useState(false);
+  // true once the user has clicked "Start investigation" at least once
   const [hasStarted, setHasStarted] = useState(false);
+  // ref used to auto-scroll to the latest chat message
   const chatEndRef = useRef(null);
 
+  // list of architecture conflicts detected for the selected project
   const [projectConflicts, setProjectConflicts] = useState([]);
+  // list of unresolved IoT alerts for the selected project
   const [projectAlerts, setProjectAlerts] = useState([]);
 
+  // set the default investigation path steps when the component first mounts
   useEffect(() => {
     setInvestigationPath([
       "Check power supply",
@@ -58,6 +76,7 @@ export default function SocraticBot() {
       }
       const p = selectedProject;
       try {
+        // send the project's architecture details to detect potential conflicts
         const conflicts = await detectConflicts({
           device: p.device,
           protocol: p.protocol,
@@ -71,6 +90,7 @@ export default function SocraticBot() {
       }
 
       try {
+        // fetch alerts and keep only unresolved ones
         const alerts = await getAlerts(p._id);
         setProjectAlerts((alerts || []).filter(a => !a.resolved));
       } catch (e) {
@@ -81,7 +101,9 @@ export default function SocraticBot() {
     fetchProjectData();
   }, [selectedProjectId]);
 
+  // true while waiting for the bot's reply from the server
   const [isLoading, setIsLoading] = useState(false);
+  // unique ID for the current chat session, used by the backend to maintain context
   const [sessionId, setSessionId] = useState(null);
 
   // Auto-scroll chat to bottom when messages change
@@ -89,12 +111,14 @@ export default function SocraticBot() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isLoading]);
 
+  // resets the chat and starts a new investigation session
   const handleStart = async () => {
     setChatHistory([]);
     setAnswerCounter(0);
     setCurrentProblem(problem);
     setAreaText('Checking hardware, communication and server');
     setStatusText('Investigation started');
+    // create a unique session ID based on current timestamp
     setSessionId(`session_${Date.now()}`);
 
     const newChat = [
@@ -106,8 +130,10 @@ export default function SocraticBot() {
     setHasStarted(true);
   };
 
+  // sends the user's message to the bot and appends the bot's reply to the chat
   const handleSend = async (e) => {
     e.preventDefault();
+    // block submission if the input is empty
     if (!answerInput) {
       setBotMessage('Please write an answer.');
       setIsError(true);
@@ -124,12 +150,14 @@ export default function SocraticBot() {
     setIsError(false);
 
     try {
+      // call the bot API with the project ID, user message, and current session
       const data = await chatBot(
         selectedProject?._id,
         `The problem I am having is: ${currentProblem}. ${answerInput}`,
         sessionId
       );
 
+      // append the bot's reply and update session metadata
       setChatHistory([...newChat, { sender: 'bot', text: data.reply }]);
       setStatusText('Waiting for your response');
       setAreaText(data.phase || 'Investigation');
@@ -147,6 +175,7 @@ export default function SocraticBot() {
     <>
       <Header title="IoT Help Bot" subtitle="Manage architecture, detect IoT risks, and support collaboration." />
 
+      {/* Show risk panel only if the selected project has conflicts or alerts */}
       {selectedProject && (projectConflicts.length > 0 || projectAlerts.length > 0) && (
         <section className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-500/30 rounded-3xl p-6 mb-8">
           <h3 className="text-xl font-bold text-orange-900 dark:text-orange-300 flex items-center gap-2 mb-4">
@@ -183,6 +212,7 @@ export default function SocraticBot() {
          
           <div className="mb-6">
             <LabeledInput label="Select problem type">
+              {/* dropdown lets the user pick the type of IoT problem to investigate */}
               <select className="w-full border border-slate-300 rounded-2xl px-4 py-3" value={problem} onChange={e => setProblem(e.target.value)}>
                 <option>Component does not respond</option>
                 <option>No data in database</option>
@@ -192,14 +222,17 @@ export default function SocraticBot() {
             </LabeledInput>
           </div>
          
+          {/* clicking this resets the session and sends the opening bot message */}
           <button onClick={handleStart} disabled={isLoading} className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed mb-6">
             {hasStarted ? 'Restart investigation' : 'Start investigation'}
           </button>
 
+          {/* scrollable chat bubble area */}
           <div className="space-y-4 mb-6 max-h-96 overflow-y-auto pr-2">
             {chatHistory.map((msg, idx) => (
               <div key={idx} className={msg.sender === 'bot' ? 'bg-slate-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 max-w-xl' : 'bg-slate-950 text-white dark:bg-cyan-600 dark:text-white rounded-2xl p-5 max-w-xl ml-auto'}>
                 <p className={`text-sm mb-1 ${msg.sender === 'bot' ? 'text-slate-400' : 'text-slate-300'}`}>{msg.sender === 'bot' ? '🤖 IoT HelpBot' : '👤 Student'}</p>
+                {/* render bot reply as HTML since it may contain markdown */}
                 <div
                     className={msg.sender === 'bot' ? 'text-slate-900 dark:text-white' : 'text-white'}
                     dangerouslySetInnerHTML={{
@@ -208,12 +241,14 @@ export default function SocraticBot() {
                 />
               </div>
             ))}
+            {/* show a pulsing "Thinking..." indicator while waiting for the bot */}
             {isLoading && (
               <div className="bg-slate-100 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 max-w-xl">
                 <p className="text-sm mb-1 text-slate-400">🤖 IoT HelpBot</p>
                 <p className="font-bold text-slate-500 dark:text-slate-400 animate-pulse">Thinking...</p>
               </div>
             )}
+            {/* invisible element used as the scroll target */}
             <div ref={chatEndRef} />
           </div>
 
@@ -234,9 +269,11 @@ export default function SocraticBot() {
               {isLoading ? '⏳' : 'Send'}
             </button>
           </form>
+          {/* show feedback message in red for errors, green for success */}
           {botMessage && <p className={`text-sm mt-4 ${isError ? 'text-red-500' : 'text-green-500'}`}>{botMessage}</p>}
         </div>
 
+        {/* sidebar panel showing current diagnosis state */}
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold text-slate-950 dark:text-white mb-6">Current diagnosis</h3>
           <div className="space-y-4">
@@ -256,6 +293,7 @@ export default function SocraticBot() {
         </div>
       </section>
 
+      {/* section listing the suggested step-by-step investigation path */}
       <section className="grid grid-cols-1 gap-6">
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">

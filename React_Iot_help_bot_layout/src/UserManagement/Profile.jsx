@@ -1,11 +1,13 @@
 import Header from '../UIComponents/Header';
 import LabeledInput from '../UIComponents/LabeledInput';
 
+// Static profile page showing the current user's info and notification preferences
 export default function Profile() {
   return (
     <>
       <Header title="User Profile" subtitle="Manage your account settings and preferences." />
       <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 mb-8 max-w-3xl">
+        {/* Avatar and display name */}
         <div className="flex items-center gap-6 mb-8">
           <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl shadow-inner border border-slate-200">
             👤
@@ -16,11 +18,13 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Read-only account detail fields */}
         <div className="space-y-6">
           <LabeledInput label="Full Name" type="text" value="Student" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
           <LabeledInput label="Email Address" type="email" value="student@university.edu" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
           <LabeledInput label="Role" type="text" value="IoT Developer" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
           
+          {/* Preferences section with an email notification toggle */}
           <div className="pt-4 mt-6 border-t border-slate-200">
             <h3 className="text-xl font-bold text-slate-950 mb-4">Preferences</h3>
             <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl">
@@ -28,6 +32,7 @@ export default function Profile() {
                 <p className="font-bold text-slate-900">Email Notifications</p>
                 <p className="text-sm text-slate-500">Receive alerts about project updates and team tasks</p>
               </div>
+              {/* Toggle switch – checked by default */}
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" className="sr-only peer" defaultChecked />
                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-950"></div>

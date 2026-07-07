@@ -10,10 +10,13 @@ import { useProject } from '../hooks/ProjectContext';
  * recent feedback from mentors, and a timeline.
  */
 export default function Dashboard() {
+  // holds the fully-assembled dashboard data object
   const [dashboard, setDashboard] = useState(null);
+  // tracks whether the async data fetch is still in progress
   const [loading, setLoading] = useState(true);
   const { allProjects, selectedProjectId, selectedProject } = useProject();
 
+  // fetch tasks and feedback whenever the selected project changes
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -47,9 +50,11 @@ export default function Dashboard() {
 
         if (proj) {
           try {
+            // load all tasks belonging to this project
             const tasks = await listTasks(proj._id);
             totalTasks = tasks.length;
             
+            // tally tasks per status and per team member
             tasks.forEach(t => {
                const st = (t.status || 'todo').toLowerCase();
                if (st === 'done') completedTasks++;
@@ -68,10 +73,12 @@ export default function Dashboard() {
           } catch (e) { console.error('Tasks fetch error:', e); }
 
           try {
+            // load mentor feedback comments for this project
             feedbacks = await getFeedback(proj._id);
           } catch (e) { console.error('Feedback fetch error:', e); }
         }
 
+        // in-progress tasks count as 50% done towards the overall percentage
         const progressPercentage = totalTasks === 0 ? 0 : Math.round(((completedTasks + (inProgressTasks * 0.5)) / totalTasks) * 100);
 
         const assessment = proj ? proj.assessment : null;
@@ -115,12 +122,14 @@ export default function Dashboard() {
     fetchDashboard();
   }, [selectedProjectId]);
 
+  // Show a loading placeholder until data is ready
   if (loading || !dashboard) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 dark:text-slate-400 text-lg">Loading dashboard...</p></div>;
 
   return (
     <>
       <Header title="IoT Help Bot" subtitle="Manage architecture, detect IoT risks, and support collaboration." />
 
+      {/* Top summary cards: detected issues, project progress, documentation status */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex justify-between items-start">
@@ -140,6 +149,7 @@ export default function Dashboard() {
               <h3 className="text-5xl font-bold text-slate-950 dark:text-white">{dashboard.tasksStats?.progressPercentage || 0}%</h3>
               <p className="text-slate-500 dark:text-slate-400 text-lg mt-3">{dashboard.tasksStats?.done || 0}/{dashboard.tasksStats?.total || 0} tasks done</p>
             </div>
+            {/* SVG circular progress ring showing task completion percentage */}
             <div className="relative w-16 h-16 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <path className="text-slate-100" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -168,6 +178,7 @@ export default function Dashboard() {
             <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">📊</div>
             <h3 className="text-2xl font-bold text-slate-950 dark:text-white">Task Distribution</h3>
           </div>
+          {/* Progress bars for each task status category */}
           <div className="space-y-4">
             <div className="flex justify-between text-sm font-semibold">
               <span className="text-slate-500 dark:text-slate-400">To Do</span>
@@ -201,6 +212,7 @@ export default function Dashboard() {
             <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">👥</div>
             <h3 className="text-2xl font-bold text-slate-950 dark:text-white">Team Workload</h3>
           </div>
+          {/* Stacked bar per member showing done/in-progress/todo proportions */}
           <div className="space-y-6">
             {dashboard.workload && dashboard.workload.length > 0 ? dashboard.workload.map((wl, idx) => (
               <div key={idx}>
@@ -231,6 +243,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Show a placeholder if all scores are zero or evaluation hasn't been submitted yet */}
         {(!dashboard.evaluation || 
           (dashboard.evaluation.interdisciplinaryScore === 0 && 
            dashboard.evaluation.cooperationScore === 0 && 
@@ -247,6 +260,7 @@ export default function Dashboard() {
             const inter = dashboard.evaluation.interdisciplinaryScore || 0;
             const coop = dashboard.evaluation.cooperationScore || 0;
             const tech = dashboard.evaluation.technicalScore || 0;
+            // calculate the average of all three scores
             const avgScore = Math.round((inter + coop + tech) / 3);
 
             return (
@@ -337,6 +351,7 @@ export default function Dashboard() {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Mentor Feedback section – lists all comments left by the mentor */}
         <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">💬</div>
@@ -345,6 +360,7 @@ export default function Dashboard() {
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
             {dashboard.feedbacks && dashboard.feedbacks.length > 0 ? (
               dashboard.feedbacks.map((fb, index) => {
+                // extract an optional task title embedded at the start of the feedback content
                 const match = fb.content.match(/^\[Task:\s*(.*?)\]\s*(.*)$/);
                 const relatedTaskTitle = match ? match[1] : fb.relatedTaskTitle;
                 const displayContent = match ? match[2] : fb.content;
@@ -373,6 +389,7 @@ export default function Dashboard() {
           </div>
         </section>
 
+        {/* Official Assessment section – only shown when the mentor has submitted grades */}
         {dashboard.assessment && dashboard.assessment.assessedAt && (
           <section className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl border border-indigo-100 shadow-sm p-7 col-span-1 lg:col-span-2">
             <div className="flex items-center gap-4 mb-6">
@@ -414,6 +431,7 @@ export default function Dashboard() {
           </section>
         )}
 
+        {/* Live alerts panel */}
         <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">🔔</div>
@@ -422,6 +440,7 @@ export default function Dashboard() {
           <div className="space-y-4">
             {dashboard.alerts && dashboard.alerts.length > 0 ? dashboard.alerts.map((alert, index) => {
               const isMedium = alert.level === 'MEDIUM';
+              // choose yellow for medium severity, red for everything else
               const alertClass = isMedium 
                 ? 'bg-yellow-100 border-yellow-300 text-orange-600' 
                 : 'bg-red-100 border-red-200 text-red-700';

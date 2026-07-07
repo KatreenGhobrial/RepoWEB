@@ -9,17 +9,27 @@ import { detectConflicts } from './iotService';
  * (e.g., protocol overhead on battery power) and provides Socratic guidance.
  */
 export default function DetectConflict() {
+  // list of conflict objects returned from the analysis
   const [results, setResults] = useState([]);
+  // number of non-LOW conflicts found
   const [conflictCount, setConflictCount] = useState(0);
+  // highest severity level found ('HIGH', 'MEDIUM', 'LOW', or 'None')
   const [highestRisk, setHighestRisk] = useState('None');
+  // status/feedback message shown to the user
   const [message, setMessage] = useState('');
+  // true while waiting for the API or local analysis to finish
   const [isLoading, setIsLoading] = useState(false);
   
+  // selected device type from the form dropdown
   const [device, setDevice] = useState('ESP32');
+  // selected power source from the form dropdown
   const [power, setPower] = useState('Battery');
+  // selected communication protocol from the form dropdown
   const [protocol, setProtocol] = useState('HTTP');
+  // selected database type from the form dropdown
   const [database, setDatabase] = useState('MongoDB');
 
+  // submit the architecture config to the conflict-detection API
   const handleCheck = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -38,8 +48,10 @@ export default function DetectConflict() {
 
       if (data.conflicts) {
         setResults(data.conflicts);
+        // count only conflicts above LOW severity
         const count = data.conflicts.filter(c => c.level !== 'LOW').length;
         setConflictCount(count);
+        // determine the highest risk level from the returned conflicts
         const levels = data.conflicts.map(c => c.level);
         if (levels.includes('HIGH')) setHighestRisk('HIGH');
         else if (levels.includes('MEDIUM')) setHighestRisk('MEDIUM');
@@ -55,6 +67,7 @@ export default function DetectConflict() {
       let found = 0;
       let highest = 'None';
 
+      // rule: battery + HTTP is a bad combination due to high power use
       if (power === 'Battery' && protocol === 'HTTP') {
         localResults.push({
           title: 'Battery device using HTTP', level: 'HIGH',
@@ -63,6 +76,7 @@ export default function DetectConflict() {
         });
         found++; highest = 'HIGH';
       }
+      // rule: Arduino Uno lacks built-in WiFi needed for MQTT
       if (device === 'Arduino Uno' && protocol === 'MQTT') {
         localResults.push({
           title: 'Arduino Uno with MQTT', level: 'MEDIUM',
@@ -71,6 +85,7 @@ export default function DetectConflict() {
         });
         found++; if (highest !== 'HIGH') highest = 'MEDIUM';
       }
+      // no issues found — show a safe result
       if (found === 0) {
         localResults.push({
           title: 'No major conflict detected', level: 'LOW',
@@ -88,6 +103,7 @@ export default function DetectConflict() {
     }
   };
 
+  // render a single conflict result card with color based on severity level
   const renderConflictCard = (conflict, idx) => {
     let colorClass = 'bg-red-100 border-red-200 text-red-700';
     if (conflict.level === 'MEDIUM') colorClass = 'bg-yellow-100 border-yellow-300 text-orange-600';
@@ -109,6 +125,7 @@ export default function DetectConflict() {
     <>
       <Header title="Detect Conflict" subtitle="AI-powered architecture risk analysis" />
 
+      {/* summary stat cards */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <p className="text-slate-500 dark:text-slate-400 text-lg mb-3">Current Conflicts</p>
@@ -123,6 +140,7 @@ export default function DetectConflict() {
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* configuration form */}
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold text-slate-950 dark:text-white mb-6">Run conflict analysis</h3>
           <form onSubmit={handleCheck} className="space-y-5">
@@ -162,6 +180,7 @@ export default function DetectConflict() {
           </form>
         </div>
         
+        {/* results panel */}
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold text-slate-950 dark:text-white mb-6">Analysis Results</h3>
           <div className="space-y-4">

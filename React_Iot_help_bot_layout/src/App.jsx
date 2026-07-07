@@ -27,20 +27,27 @@ import { ProjectProvider } from './hooks/ProjectContext';
 function App() {
   return (
     <Router>
+      // Wrap everything in ProjectProvider so all routes can access project state
       <ProjectProvider>
       <Routes>
+        // Redirect the root path to /home by default
         <Route path="/" element={<Navigate to="/home" />} />
 
+        // All page routes share the Layout wrapper (navbar, sidebar, etc.)
         <Route element={<Layout />}>
+          {/* Public routes — accessible without login */}
           <Route path="/home" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Protected routes — require authentication */}
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/project-setup" element={<ProtectedRoute><ProjectSetup /></ProtectedRoute>} />
           <Route path="/tasks-team" element={<ProtectedRoute><TasksTeam /></ProtectedRoute>} />
           <Route path="/detect-conflict" element={<ProtectedRoute><DetectConflict /></ProtectedRoute>} />
+          {/* Student-only routes */}
           <Route path="/monitor-panel" element={<ProtectedRoute allowedRoles={['student']}><MonitorPanel /></ProtectedRoute>} />
           <Route path="/socratic-bot" element={<ProtectedRoute><SocraticBot /></ProtectedRoute>} />
           <Route path="/device-playground" element={<ProtectedRoute allowedRoles={['student']}><DevicePlayground /></ProtectedRoute>} />

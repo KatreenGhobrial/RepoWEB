@@ -9,26 +9,39 @@ import { getHealth, getBrokers } from './iotService';
  * displaying real-time sensor data, device status, and system alerts.
  */
 export default function MonitorPanel() {
+  // backend health and service status summary
   const [monitorData, setMonitorData] = useState({ summary: { health: 'Loading...' }, services: [] });
+  // list of IoT devices with their current online/offline status
   const [activeDevices, setActiveDevices] = useState([]);
+  // sensor readings keyed by a unique sensor ID (e.g., 'device1-temp')
   const [sensors, setSensors] = useState({});
+  // active alert objects triggered by threshold violations
   const [alerts, setAlerts] = useState([]);
+  // recent system log entries (max 5)
   const [logs, setLogs] = useState([]);
+  // true while the initial health check is loading
   const [loading, setLoading] = useState(true);
+  // status message shown when the user pings the system
   const [message, setMessage] = useState('');
+  // current MQTT broker connection status string
   const [mqttStatus, setMqttStatus] = useState('Disconnected');
 
+  // ref keeps a stable reference to alerts so socket callbacks can read the latest value
   const alertsRef = useRef(alerts);
+  // keep the ref in sync with the alerts state on every render
   useEffect(() => { alertsRef.current = alerts; }, [alerts]);
 
+  // add a timestamped entry to the system log, keeping only the 5 most recent
   const addLog = (title, msg) => {
     const time = new Date().toLocaleTimeString();
     setLogs(prev => [{ id: Date.now() + Math.random(), title, message: msg, time }, ...prev].slice(0, 5));
   };
 
+  // evaluate incoming sensor values and trigger or clear alerts based on thresholds
   const checkAlerts = (deviceId, type, value) => {
     const timeStr = new Date().toLocaleTimeString();
 
+    // add an alert only if it doesn't already exist (avoid duplicates)
     const triggerAlert = (alertType, title, level, description) => {
       const alertId = `${deviceId}-${alertType}`;
       const exists = alertsRef.current.some(a => a.id === alertId);
@@ -38,6 +51,7 @@ export default function MonitorPanel() {
       }
     };
 
+    // remove an alert when the value returns to a safe range
     const clearAlert = (alertType, resolveMsg) => {
       const alertId = `${deviceId}-${alertType}`;
       const exists = alertsRef.current.some(a => a.id === alertId);
@@ -47,33 +61,40 @@ export default function MonitorPanel() {
       }
     };
 
+    // temperature threshold: warn above 30°C, HIGH alert above 35°C
     if (type === 'temperature') {
       if (parseFloat(value) > 30) triggerAlert('temp', 'High Temperature Alert', parseFloat(value) > 35 ? 'HIGH' : 'MEDIUM', `Device ${deviceId} reported ${value}°C.`);
       else clearAlert('temp', `Device ${deviceId} temp normalized.`);
     }
 
+    // packet loss threshold: alert if above 5%
     if (type === 'packetLoss' || type === 'packet_loss') {
       if (parseFloat(value) > 5) triggerAlert('packet_loss', 'High Packet Loss Detected', 'HIGH', `Packet loss rate at ${value}% on ${deviceId}.`);
       else clearAlert('packet_loss', `Packet loss normalized on ${deviceId}.`);
     }
 
+    // battery threshold: critical alert below 15%
     if (type === 'battery' || type === 'battery_level') {
       if (parseFloat(value) < 15) triggerAlert('battery_drain', 'Critical Battery Level', 'HIGH', `Battery level dropped to ${value}% on ${deviceId}.`);
       else clearAlert('battery_drain', `Battery level OK on ${deviceId}.`);
     }
 
+    // latency threshold: warn if above 200ms
     if (type === 'latency') {
       if (parseFloat(value) > 200) triggerAlert('high_latency', 'Elevated Network Latency', 'MEDIUM', `Latency is ${value}ms on ${deviceId}.`);
       else clearAlert('high_latency', `Latency normalized on ${deviceId}.`);
     }
 
+    // sensor fault: alert if status is 'fault', 'error', or true
     if (type === 'sensor_fault' || type === 'sensorStatus') {
       if (value === 'fault' || value === true || value === 'error') triggerAlert('sensor_failure', 'Sensor Failure Detected', 'CRITICAL', `A sensor fault was reported on ${deviceId}.`);
       else clearAlert('sensor_failure', `Sensor status OK on ${deviceId}.`);
     }
   };
 
+  // on mount: check backend health, load broker status, and open a WebSocket for live data
   useEffect(() => {
+    // call the health endpoint to determine service statuses
     getHealth()
       .then(() => {
         setMonitorData({
@@ -89,6 +110,7 @@ export default function MonitorPanel() {
       .catch(() => setMonitorData({ summary: { health: 'Down' }, services: [{ name: 'Backend API', status: 'Down', description: 'Unreachable' }] }))
       .finally(() => setLoading(false));
 
+    // check if any custom MQTT broker is currently connected
     getBrokers()
       .then(brokers => {
         const anyConnected = brokers.some(b => b.connected);
@@ -96,22 +118,28 @@ export default function MonitorPanel() {
       })
       .catch(() => setMqttStatus('Connection Error'));
 
+    // open WebSocket connection to receive live device and MQTT events
     const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', { withCredentials: true });
     socket.on('device_status_update', setActiveDevices);
     
+    // update MQTT status badge based on broker connection events
     socket.on('mqtt_broker_status', (data) => {
       if (data.status === 'error') setMqttStatus('Connection Error');
       else if (data.status === 'connected') setMqttStatus('Connected');
       else if (data.status === 'disconnected') setMqttStatus('Disconnected');
     });
+
+    // parse incoming MQTT telemetry messages and update sensor readings
     socket.on('mqtt_message', ({ topic, payload }) => {
       try {
         const parts = topic.split('/');
+        // only process messages on topics ending with '/telemetry'
         if (parts.length >= 3 && parts[parts.length - 1] === 'telemetry') {
           const deviceId = parts[parts.length - 2];
           const data = JSON.parse(payload);
           const time = new Date().toLocaleTimeString();
 
+          // update sensor state immutably for each field present in the payload
           setSensors(prev => {
             const next = { ...prev };
             if (data.temperature !== undefined) {
@@ -146,9 +174,11 @@ export default function MonitorPanel() {
       } catch (err) { console.error('MQTT Error:', err); }
     });
 
+    // disconnect the socket when the component unmounts
     return () => socket.disconnect();
   }, []);
 
+  // log a manual refresh action and show a brief status message
   const handleRefresh = () => {
     addLog('Manual Action', 'User requested refresh.');
     setMessage('Listening to real-time stream...');
@@ -157,13 +187,16 @@ export default function MonitorPanel() {
 
   if (loading) return <div className="p-12 text-center text-slate-500 dark:text-slate-400">Loading monitor...</div>;
 
+  // convert sensors object to array for rendering
   const sensorArray = Object.values(sensors);
+  // count only online devices for the summary stat
   const onlineCount = activeDevices.filter(d => d.status === 'online').length;
 
   return (
     <>
       <Header title="IoT Monitor Panel" subtitle="Manage architecture, detect risks, and view real-time data." />
 
+      {/* top summary stat cards */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 text-center">
         {[
           { l: 'Connected Devices', v: onlineCount, s: 'Active MQTT devices' },
@@ -179,6 +212,7 @@ export default function MonitorPanel() {
         ))}
       </section>
 
+      {/* sensor readings + system services */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <div className="flex justify-between items-center mb-8">
@@ -194,6 +228,7 @@ export default function MonitorPanel() {
                 <div key={s.id} className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 hover:bg-slate-50 dark:bg-zinc-800/50">
                   <div className="flex justify-between items-start mb-4">
                     <div><h4 className="font-bold text-lg text-slate-900 dark:text-white">{s.name}</h4><p className="text-sm text-slate-500 dark:text-slate-400">ID: {s.location}</p></div>
+                    {/* color-coded status badge */}
                     <span className={`text-xs px-3 py-1 rounded-full font-bold ${s.status === 'Warning' ? 'bg-yellow-100 text-orange-600' : s.status === 'Offline' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{s.status}</span>
                   </div>
                   <p className="text-4xl font-bold text-slate-900 dark:text-white">{s.value}<span className="text-2xl text-slate-500 dark:text-slate-400">{s.unit}</span></p>
@@ -205,6 +240,7 @@ export default function MonitorPanel() {
           {message && <p className="text-sm mt-5 text-sky-600 font-bold animate-pulse">{message}</p>}
         </div>
 
+        {/* system services health panel */}
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-4 text-slate-900 dark:text-white"><span className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">🖥️</span> System services</h3>
           <div className="space-y-4">
@@ -215,6 +251,7 @@ export default function MonitorPanel() {
               </div>
             ))}
             
+            {/* MQTT broker connection status card */}
             <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 flex justify-between items-start bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-800">
               <div>
                 <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200 dark:text-slate-200">MQTT Broker</h4>
@@ -228,6 +265,7 @@ export default function MonitorPanel() {
         </div>
       </section>
 
+      {/* active alerts panel */}
       <section className="grid grid-cols-1 gap-6 mb-8">
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-4"><span className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-xl">⚠️</span> Active Alerts</h3>
@@ -252,6 +290,7 @@ export default function MonitorPanel() {
         </div>
       </section>
 
+      {/* system logs panel */}
       <section className="grid grid-cols-1 gap-6">
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm p-7">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-4 text-slate-900 dark:text-white"><span className="w-12 h-12 bg-slate-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-xl">📋</span> System Logs</h3>

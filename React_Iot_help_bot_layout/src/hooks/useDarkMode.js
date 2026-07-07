@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
  * @returns {{ isDark: boolean, theme: 'dark'|'light', toggleTheme: () => void, setTheme: (t: 'dark'|'light') => void }}
  */
 export default function useDarkMode() {
+  // Initialize theme from localStorage, falling back to OS preference
   const [theme, setThemeState] = useState(() => {
     const saved = localStorage.getItem('theme');
     if (saved === 'dark' || saved === 'light') return saved;
@@ -19,6 +20,7 @@ export default function useDarkMode() {
     return 'light';
   });
 
+  // Apply or remove the 'dark' class on <html> and save the choice whenever theme changes
   useEffect(() => {
     const root = document.documentElement;
 
@@ -28,6 +30,7 @@ export default function useDarkMode() {
       root.classList.remove('dark');
     }
 
+    // Persist the user's theme choice across page reloads
     localStorage.setItem('theme', theme);
   }, [theme]);
 
@@ -41,10 +44,13 @@ export default function useDarkMode() {
       }
     };
     mq.addEventListener('change', handler);
+    // Clean up the listener when the hook unmounts
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  // Toggle between dark and light mode
   const toggleTheme = () => setThemeState(prev => (prev === 'light' ? 'dark' : 'light'));
+  // Directly set a specific theme value
   const setTheme = (t) => setThemeState(t);
 
   return { isDark: theme === 'dark', theme, toggleTheme, setTheme };

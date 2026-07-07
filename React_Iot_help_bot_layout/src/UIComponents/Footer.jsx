@@ -1,3 +1,4 @@
+// Displays a simple footer with copyright text at the bottom of every page
 export default function Footer() {
   return (
     <footer className="bg-slate-950 text-white p-6 mt-10">

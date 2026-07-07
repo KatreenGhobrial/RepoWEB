@@ -12,25 +12,37 @@ import { list as listProjects } from '../ProjectManagement/projectService';
  * and meeting notes. Supports creating, editing, filtering, and markdown rendering.
  */
 
+// maps each doc type to a display label and badge color class
 const TYPE_CONFIG = {
   requirements:    { label: 'Requirements',    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
   work_plan:       { label: 'Work Plan',       badge: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' },
   engineering_doc: { label: 'Engineering Doc', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400' },
 };
 
+// default empty values for the create/edit form
 const EMPTY_FORM = { title: '', type: 'requirements', content: '', tags: '' };
 
 export default function TechDocs() {
+  // list of all documents for the selected project
   const [docs, setDocs] = useState([]);
+  // currently opened/viewed document
   const [selectedDoc, setSelectedDoc] = useState(null);
+  // whether the user is in edit mode
   const [isEditing, setIsEditing] = useState(false);
+  // whether the user is creating a new document
   const [isCreating, setIsCreating] = useState(false);
+  // active filter type ('all', 'requirements', etc.)
   const [filterType, setFilterType] = useState('all');
+  // current form field values for create/edit
   const [editForm, setEditForm] = useState({ ...EMPTY_FORM });
+  // controls loading spinner while fetching data
   const [loading, setLoading] = useState(true);
+  // list of all available projects
   const [projects, setProjects] = useState([]);
+  // ID of the project whose docs are shown
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
+  // fetch all projects when component first mounts, then auto-select the first one
   useEffect(() => {
     (async () => {
       try {
@@ -47,6 +59,7 @@ export default function TechDocs() {
     })();
   }, []);
 
+  // fetch documents whenever the selected project changes
   useEffect(() => {
     if (!selectedProjectId) return;
     (async () => {
@@ -62,12 +75,15 @@ export default function TechDocs() {
     })();
   }, [selectedProjectId]);
 
+  // find the full project object that matches the selected ID
   const selectedProject = projects.find(p => p._id === selectedProjectId);
 
   // --- Filter ---
+  // filter doc list by the active type, or show all
   const filtered = docs.filter(d => filterType === 'all' || d.type === filterType);
 
   // --- Handlers ---
+  // open a blank form to create a new document
   const openCreate = () => {
     setSelectedDoc(null);
     setEditForm({ ...EMPTY_FORM });
@@ -75,6 +91,7 @@ export default function TechDocs() {
     setIsEditing(true);
   };
 
+  // open an existing document in view mode and populate the edit form
   const openDoc = (doc) => {
     setSelectedDoc(doc);
     setEditForm({
@@ -87,8 +104,10 @@ export default function TechDocs() {
     setIsEditing(false);
   };
 
+  // switch the current doc into edit mode
   const startEdit = () => setIsEditing(true);
 
+  // cancel editing and restore the original doc values (or close if creating)
   const cancelEdit = () => {
     if (isCreating) {
       setIsCreating(false);
@@ -105,7 +124,9 @@ export default function TechDocs() {
     }
   };
 
+  // save the form — creates a new doc or updates an existing one via API
   const handleSave = async () => {
+    // split comma-separated tags string into a clean array
     const tagsArr = editForm.tags.split(',').map(t => t.trim()).filter(Boolean);
     const payload = { ...editForm, tags: tagsArr, projectId: selectedProjectId };
 
@@ -116,6 +137,7 @@ export default function TechDocs() {
         setDocs(prev => [newDoc, ...prev]);
         setSelectedDoc(newDoc);
       } catch {
+        // fallback: add doc locally if server call fails
         const newDoc = { ...payload, _id: Date.now().toString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
         setDocs(prev => [newDoc, ...prev]);
         setSelectedDoc(newDoc);
@@ -127,6 +149,7 @@ export default function TechDocs() {
         setDocs(prev => prev.map(d => d._id === selectedDoc._id ? updated : d));
         setSelectedDoc(updated);
       } catch {
+        // fallback: update doc locally if server call fails
         const updated = { ...selectedDoc, ...payload, updatedAt: new Date().toISOString() };
         setDocs(prev => prev.map(d => d._id === selectedDoc._id ? updated : d));
         setSelectedDoc(updated);
@@ -136,21 +159,25 @@ export default function TechDocs() {
     setIsEditing(false);
   };
 
+  // delete a document by ID from server and remove it from local state
   const handleDelete = async (id) => {
     try { await deleteDoc(id); } catch { /* proceed locally */ }
     setDocs(prev => prev.filter(d => d._id !== id));
+    // clear selection if the deleted doc was being viewed
     if (selectedDoc?._id === id) {
       setSelectedDoc(null);
       setIsEditing(false);
     }
   };
 
+  // go back to the document list view and clear all edit state
   const backToList = () => {
     setSelectedDoc(null);
     setIsEditing(false);
     setIsCreating(false);
   };
 
+  // filter button config for the toolbar
   const filterButtons = [
     { key: 'all', label: 'All' },
     { key: 'requirements', label: 'Requirements' },
@@ -162,6 +189,7 @@ export default function TechDocs() {
     return <div className="p-12 text-center text-slate-500 dark:text-slate-400 dark:text-slate-400">Loading documents...</div>;
   }
 
+  // shared project selector header rendered at the top of every view
   const renderProjectHeader = () => (
     <>
       <Header title="📝 Technical Documentation" subtitle="Shared workspace for requirements, work plans, and engineering docs" />
@@ -195,6 +223,7 @@ export default function TechDocs() {
   );
 
   // --- Editor / Viewer ---
+  // show the doc detail/editor panel when a doc is selected or being created
   if (selectedDoc || isCreating) {
     return (
       <>
@@ -266,12 +295,14 @@ export default function TechDocs() {
               {/* Markdown Editor + Preview */}
               <LabeledInput label="Content (Markdown)">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* left side: raw markdown textarea */}
                   <textarea
                     className="w-full border border-slate-300 dark:border-zinc-600 rounded-2xl px-4 py-3 bg-white dark:bg-zinc-900 dark:bg-zinc-900 text-slate-900 dark:text-white dark:text-white font-mono text-sm min-h-[400px] resize-y focus:outline-none focus:ring-2 focus:ring-slate-400"
                     value={editForm.content}
                     onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
                     placeholder="Write your markdown here..."
                   />
+                  {/* right side: live rendered markdown preview */}
                   <div className="border border-slate-200 dark:border-zinc-800 dark:border-zinc-600 rounded-2xl px-5 py-4 bg-slate-50 dark:bg-zinc-800/50 dark:bg-zinc-900 min-h-[400px] overflow-auto prose prose-sm dark:prose-invert max-w-none">
                     <p className="text-xs font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">Preview</p>
                     <div dangerouslySetInnerHTML={{ __html: marked(editForm.content || '') }} />
@@ -302,6 +333,7 @@ export default function TechDocs() {
               <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 mb-6">
                 Last updated: {selectedDoc.updatedAt ? new Date(selectedDoc.updatedAt).toLocaleString() : 'N/A'}
               </p>
+              {/* render the doc content as HTML from markdown */}
               <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: marked(selectedDoc.content || '') }} />
             </div>
           )}
@@ -358,6 +390,7 @@ export default function TechDocs() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filtered.map(doc => {
             const cfg = TYPE_CONFIG[doc.type] || TYPE_CONFIG.requirements;
+            // truncate content for the card preview
             const preview = (doc.content || '').slice(0, 100) + ((doc.content || '').length > 100 ? '...' : '');
             return (
               <div
@@ -372,6 +405,7 @@ export default function TechDocs() {
                 <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 line-clamp-2 mb-3">{preview || 'No content'}</p>
                 {doc.tags?.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
+                    {/* show at most 4 tags on the card */}
                     {(Array.isArray(doc.tags) ? doc.tags : []).slice(0, 4).map(tag => (
                       <span key={tag} className="text-xs bg-slate-100 dark:bg-zinc-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 px-2 py-0.5 rounded">
                         #{tag}
@@ -383,6 +417,7 @@ export default function TechDocs() {
                   <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400">
                     {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : ''}
                   </p>
+                  {/* stop propagation so clicking delete doesn't open the doc */}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(doc._id); }}
                     className="text-slate-400 hover:text-red-500 dark:text-zinc-500 dark:hover:text-red-400 transition-colors"

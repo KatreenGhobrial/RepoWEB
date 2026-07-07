@@ -4,6 +4,7 @@ import Header from "../UIComponents/Header";
 import LabeledInput from '../UIComponents/LabeledInput';
 import * as communityService from "./communityService";
 
+// maps tag names to Tailwind color classes for the colored tag badges
 const TAG_COLORS = {
   mqtt: "bg-cyan-100 text-cyan-700",
   hardware: "bg-purple-100 text-purple-700",
@@ -21,45 +22,69 @@ const TAG_COLORS = {
  * upvotes, and marking posts as similar.
  */
 export default function CommunityBoard() {
+  // read the logged-in user from localStorage to identify the current user
   const userStr = localStorage.getItem('currentUser');
   let currentUser = null;
   try {
     currentUser = userStr ? JSON.parse(userStr) : null;
   } catch(e) {}
+  // fall back to "anonymous" if no user is found
   const currentUserId = currentUser ? currentUser._id : "anonymous";
 
+  // list of all community posts fetched from the server
   const [posts, setPosts] = useState([]);
+  // the post currently open in the detail panel
   const [selectedPost, setSelectedPost] = useState(null);
+  // true while an API request is in progress
   const [loading, setLoading] = useState(false);
+  // error message to display if an API call fails
   const [error, setError] = useState("");
+  // controls whether the new-post creation form is visible
   const [showForm, setShowForm] = useState(false);
+  // current value of the search bar
   const [searchQuery, setSearchQuery] = useState("");
+  // currently selected tag filter value
   const [tagFilter, setTagFilter] = useState("");
+  // new post title input value
   const [title, setTitle] = useState("");
+  // new post content input value
   const [content, setContent] = useState("");
+  // comma-separated tags input value for the new post form
   const [tags, setTags] = useState("");
+  // true while the new post is being submitted to the server
   const [saving, setSaving] = useState(false);
+  // current value of the top-level reply input field
   const [replyContent, setReplyContent] = useState("");
+  // true while a reply is being submitted
   const [replying, setReplying] = useState(false);
 
   // States for duplicate question check and threaded replies
+  // list of posts that have a similar title to what the user is typing
   const [similarPosts, setSimilarPosts] = useState([]);
+  // ID of the comment that has its inline reply form open
   const [activeReplyCommentId, setActiveReplyCommentId] = useState(null);
+  // content of the nested reply input
   const [nestedReplyContent, setNestedReplyContent] = useState("");
+  // true while a nested reply is being submitted
   const [submittingNestedReply, setSubmittingNestedReply] = useState(false);
+  // ID of the comment currently being edited, or null if none
   const [editingCommentId, setEditingCommentId] = useState(null);
+  // current value in the edit comment input field
   const [editContent, setEditContent] = useState("");
 
+  // reload posts whenever the tag filter or search query changes
   useEffect(() => {
     loadPosts();
   }, [tagFilter, searchQuery]);
 
   // Debounced check for similar posts
   useEffect(() => {
+    // skip the check if the title is too short
     if (!title.trim() || title.trim().length < 4) {
       setSimilarPosts([]);
       return;
     }
+    // wait 500ms after the user stops typing before calling the API
     const delayDebounce = setTimeout(async () => {
       try {
         const data = await communityService.checkSimilar(title);
@@ -69,9 +94,11 @@ export default function CommunityBoard() {
       }
     }, 500);
 
+    // clear the timeout if the title changes before 500ms
     return () => clearTimeout(delayDebounce);
   }, [title]);
 
+  // fetches posts from the server applying the current tag and search filters
   const loadPosts = async () => {
     setLoading(true);
     try {
@@ -84,6 +111,7 @@ export default function CommunityBoard() {
     }
   };
 
+  // fetches the full post details and opens it in the detail panel
   const handleSelectPost = async (post) => {
     setLoading(true);
     try {
@@ -97,11 +125,13 @@ export default function CommunityBoard() {
     }
   };
 
+  // submits the new post form and refreshes the posts list
   const handleCreate = async (e) => {
     e.preventDefault();
     setSaving(true);
     
     try {
+      // convert the comma-separated tags string into an array
       let tagsArray = tags.split(",");
       
       await communityService.create({
@@ -110,9 +140,11 @@ export default function CommunityBoard() {
         tags: tagsArray
       });
       
+      // refresh the posts list after creating the new post
       const allPosts = await communityService.list();
       setPosts(allPosts);
       
+      // reset the form fields and close the form
       setShowForm(false);
       setTitle("");
       setContent("");
@@ -126,9 +158,11 @@ export default function CommunityBoard() {
     setSaving(false);
   };
 
+  // submits a top-level reply to the selected post and refreshes the view
   const handleReply = async (e) => {
     e.preventDefault();
     
+    // do not submit if the reply box is empty
     if (replyContent === "") {
       return;
     }
@@ -139,6 +173,7 @@ export default function CommunityBoard() {
       await communityService.reply(selectedPost._id, replyContent);
       setReplyContent("");
       
+      // refresh the full posts list and update the selected post with new reply
       const allPosts = await communityService.list();
       setPosts(allPosts);
       
@@ -152,10 +187,12 @@ export default function CommunityBoard() {
     setReplying(false);
   };
 
+  // toggles a rating on a comment and updates both the posts list and selected post
   const handleRateComment = async (commentId) => {
     try {
       const updatedPost = await communityService.rateComment(selectedPost._id, commentId);
       
+      // update the comment's score in the posts list without a full reload
       setPosts((prev) => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
       setSelectedPost(updatedPost);
     } catch (err) {
@@ -163,12 +200,14 @@ export default function CommunityBoard() {
     }
   };
 
+  // saves an edited comment and exits the edit mode
   const handleEditComment = async (commentId, newContent) => {
     try {
       const updatedPost = await communityService.editComment(selectedPost._id, commentId, newContent);
       
       setPosts((prev) => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
       setSelectedPost(updatedPost);
+      // clear the edit state after a successful save
       setEditingCommentId(null);
       setEditContent("");
     } catch (err) {
@@ -176,7 +215,7 @@ export default function CommunityBoard() {
     }
   };
 
-
+  // submits a nested (threaded) reply to a specific comment
   const handleNestedReply = async (e, commentId) => {
     e.preventDefault();
     if (!nestedReplyContent.trim()) return;
@@ -187,6 +226,7 @@ export default function CommunityBoard() {
       
       setPosts((prev) => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
       setSelectedPost(updatedPost);
+      // clear the nested reply input and close the inline form
       setNestedReplyContent("");
       setActiveReplyCommentId(null);
     } catch (err) {
@@ -196,14 +236,17 @@ export default function CommunityBoard() {
     }
   };
 
+  // toggles an upvote on a post and updates the score in the local state
   const handleUpvote = async (postId) => {
     try {
       const res = await communityService.upvote(postId);
+      // optimistically update the upvotes array and score in the posts list
       setPosts(
         (prev) => prev.map(
           (p) => p._id === postId ? { ...p, upvotes: res.upvoted ? [...p.upvotes, currentUserId] : p.upvotes.filter((id) => id !== currentUserId), score: res.score } : p
         )
       );
+      // also update the selected post if it is the one being upvoted
       if (selectedPost && selectedPost._id === postId) {
         setSelectedPost(prev => ({
           ...prev,
@@ -215,6 +258,7 @@ export default function CommunityBoard() {
     }
   };
 
+  // returns the Tailwind color class for a given tag, defaulting to slate
   const getTagColor = (tag) => TAG_COLORS[tag] || "bg-slate-100 text-slate-500 dark:text-slate-400";
 
   return (
@@ -224,10 +268,12 @@ export default function CommunityBoard() {
         subtitle="Share solutions, ask questions, and collaborate with the IoT community"
       />
       
+      {/* toolbar: new post button, search input, and tag filter dropdown */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <button
           onClick={() => {
             setShowForm(!showForm);
+            // clear the selected post and similar results when opening the form
             if (!showForm) {
               setSelectedPost(null);
               setSimilarPosts([]);
@@ -259,6 +305,7 @@ export default function CommunityBoard() {
         </span>
       </div>
 
+      {/* display any API error messages at the top of the page */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600 text-sm mb-4 font-medium">
           ⚠️ {error}
@@ -266,6 +313,7 @@ export default function CommunityBoard() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* post list panel: shrinks to 1/3 when a post is open */}
         <div className={`${(selectedPost || showForm) ? "lg:col-span-1" : "lg:col-span-3"} space-y-4`}>
           {loading && (
             <div className="text-center py-8">
@@ -279,6 +327,7 @@ export default function CommunityBoard() {
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">Be the first to share knowledge!</p>
             </div>
           )}
+          {/* render each post as a clickable card that opens the detail panel */}
           {posts.map((post) => (
             <button
               key={post._id}
@@ -289,6 +338,7 @@ export default function CommunityBoard() {
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2 leading-relaxed">{post.content}</p>
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap gap-1.5">
+                  {/* show up to 3 tags per post card */}
                   {post.tags.slice(0, 3).map((tag) => (
                     <span key={tag} className={`text-xs font-semibold px-2.5 py-1 rounded-full ${getTagColor(tag)}`}>
                       {tag}
@@ -301,6 +351,7 @@ export default function CommunityBoard() {
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-4 text-xs font-medium text-slate-400">
+                {/* only show the author name for mentor-role users */}
                 <span>by {post.author?.role === 'mentor' ? post.author.username : "Unknown"}</span>
                 <span>•</span>
                 <span>{new Date(post.createdAt).toLocaleDateString()}</span>
@@ -309,14 +360,17 @@ export default function CommunityBoard() {
           ))}
         </div>
 
+        {/* right panel: shows either the new post form or the selected post detail */}
         {(selectedPost || showForm) && (
           <div className="lg:col-span-2">
             {showForm ? (
+              // new post creation form
               <form onSubmit={handleCreate} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm rounded-3xl p-8 space-y-6 sticky top-6">
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Create New Post</h3>
                 <div>
                   <LabeledInput label="Title *" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. How to reduce latency in MQTT?" className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" required />
                   
+                  {/* show similar post suggestions while the user types the title */}
                   {similarPosts.length > 0 && (
                     <div className="bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 rounded-2xl p-4 mt-3 space-y-2 animate-fadeIn transition-all shadow-inner">
                       <div className="flex items-center gap-2 text-sky-800 dark:text-sky-300 font-bold text-xs">
@@ -325,6 +379,7 @@ export default function CommunityBoard() {
                       <ul className="space-y-1.5 max-h-36 overflow-y-auto">
                         {similarPosts.map(p => (
                           <li key={p._id}>
+                            {/* clicking a similar post opens it instead of creating a duplicate */}
                             <button
                               type="button"
                               onClick={() => {
@@ -352,20 +407,24 @@ export default function CommunityBoard() {
                   />
                 </LabeledInput>
                 <LabeledInput label="Tags (comma-separated)" type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="mqtt, hardware, security" className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-300 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                {/* submit is disabled until required fields are filled */}
                 <button type="submit" disabled={saving || !title.trim() || !content.trim()} className="bg-slate-950 text-white dark:bg-cyan-600 dark:text-white px-8 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors">
                   {saving ? "⏳ Posting..." : "📢 Publish Post"}
                 </button>
               </form>
             ) : (
+              // selected post detail view
               <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm rounded-3xl overflow-hidden sticky top-6">
                 <div className="px-8 py-6 border-b border-slate-100">
                   <div className="flex items-start justify-between">
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{selectedPost.title}</h2>
+                    {/* close button clears the selected post */}
                     <button onClick={() => setSelectedPost(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-2 bg-slate-50 dark:bg-zinc-800/50 rounded-full transition-colors">✕</button>
                   </div>
                   <div className="flex items-center gap-3 mt-4">
                     <span className="text-sm text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2">
                       by <strong className="text-sky-600">{selectedPost.author?.role === 'mentor' ? selectedPost.author.username : "Unknown"}</strong>
+                      {/* show a mentor badge if the author has the mentor role */}
                       {selectedPost.author?.role === 'mentor' && (
                         <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold px-2 py-0.5 rounded-full">
                           Mentor 🎓
@@ -383,12 +442,14 @@ export default function CommunityBoard() {
                 <div className="px-8 py-6 border-b border-slate-100 bg-slate-50 dark:bg-zinc-800/50/50">
                   <p className="text-base text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{selectedPost.content}</p>
                   <div className="flex items-center gap-4 mt-6">
+                    {/* upvote button highlights when the current user has already voted */}
                     <button onClick={() => handleUpvote(selectedPost._id)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm ${selectedPost.upvotes.includes(currentUserId) ? "bg-sky-100 text-sky-700 border border-sky-200" : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-zinc-800/50"}`}>
                       👍 {selectedPost.score || 0}
                     </button>
                     <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{selectedPost.replies.length} replies</span>
                   </div>
                 </div>
+                {/* scrollable replies section */}
                 <div className="px-8 py-6 space-y-4 max-h-[400px] overflow-y-auto">
                   {selectedPost.replies.map((reply) => (
                     <CommentNode
@@ -413,6 +474,7 @@ export default function CommunityBoard() {
                     <p className="text-sm font-medium text-slate-400 text-center py-6">No replies yet. Be the first to help out!</p>
                   )}
                 </div>
+                {/* reply input form at the bottom of the detail panel */}
                 <form onSubmit={handleReply} className="px-8 py-5 border-t border-slate-100 bg-white dark:bg-zinc-900 flex gap-4 items-center">
                   <input type="text" value={replyContent} onChange={(e) => setReplyContent(e.target.value)} placeholder="Write a helpful reply..." className="flex-1 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-800 rounded-2xl px-5 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all" />
                   <button type="submit" disabled={replying || !replyContent.trim()} className="bg-sky-600 text-white px-6 py-3 rounded-2xl font-bold text-sm disabled:opacity-50 hover:bg-sky-700 shadow-sm transition-all">
@@ -428,6 +490,7 @@ export default function CommunityBoard() {
   );
 }
 
+// renders a single comment with its nested replies, rating, edit, and reply controls
 const CommentNode = ({
   reply,
   currentUserId,
@@ -444,10 +507,15 @@ const CommentNode = ({
   setEditContent,
   handleEditComment
 }) => {
+  // true if the current user has already rated this comment
   const hasRated = !!reply.ratings?.find(r => (r.user?._id || r.user)?.toString() === currentUserId);
+  // number of nested replies this comment has
   const replyCount = reply.replies?.length || 0;
+  // disable the reply button when a comment has reached 10 replies
   const isCapped = replyCount >= 10;
+  // show the username only for mentor-role authors
   const displayName = reply.author?.role === 'mentor' ? reply.author.username : "Unknown";
+  // true if the current user is the author of this comment
   const isAuthor = (reply.author?._id || reply.author)?.toString() === currentUserId;
 
   return (
@@ -468,6 +536,7 @@ const CommentNode = ({
           <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
             {displayName}
           </span>
+          {/* mentor badge next to the author name */}
           {reply.author?.role === 'mentor' && (
             <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
               Mentor 🎓
@@ -478,6 +547,7 @@ const CommentNode = ({
 
         {/* Text content or edit input */}
         {editingCommentId === reply._id ? (
+          // show an inline edit form when this comment is being edited
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -506,6 +576,7 @@ const CommentNode = ({
 
         {/* Action Row */}
         <div className="flex items-center gap-4 mt-3">
+          {/* rate button toggles between rated and unrated state */}
           <button
             type="button"
             onClick={() => handleRateComment(reply._id)}
@@ -516,11 +587,13 @@ const CommentNode = ({
             <span>{reply.score || 0}</span>
           </button>
 
+          {/* reply button opens the inline nested reply form; disabled at 10 replies */}
           <button
             type="button"
             disabled={isCapped}
             onClick={() => {
               setActiveReplyCommentId(reply._id === activeReplyCommentId ? null : reply._id);
+              // pre-fill with @mention if the author is a mentor
               setNestedReplyContent(reply.author?.role === 'mentor' ? `@${reply.author.username} ` : "");
             }}
             className={`text-xs font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
@@ -528,6 +601,7 @@ const CommentNode = ({
             💬 Reply ({replyCount}/10)
           </button>
 
+          {/* edit button is only shown to the comment's own author */}
           {isAuthor && (
             <button
               type="button"
@@ -566,6 +640,7 @@ const CommentNode = ({
         {reply.replies && reply.replies.length > 0 && (
           <div className="mt-2 pl-4 border-l border-slate-200 dark:border-zinc-800 space-y-2">
             {reply.replies.map((child) => (
+              // recursively render each child reply using the same CommentNode
               <CommentNode
                 key={child._id}
                 reply={child}

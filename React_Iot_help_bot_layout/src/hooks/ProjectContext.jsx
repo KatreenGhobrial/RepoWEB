@@ -1,13 +1,19 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { list as listProjects } from '../ProjectManagement/projectService';
 
+// Create the context that will hold global project state
 const ProjectContext = createContext(null);
 
+// Provider component that fetches and shares project data with the whole app
 export function ProjectProvider({ children }) {
+  // list of all projects fetched from the server
   const [allProjects, setAllProjects] = useState([]);
+  // ID of the currently active/selected project
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  // true while waiting for the server response
   const [loading, setLoading] = useState(true);
 
+  // Read the logged-in user from localStorage
   const getCurrentUser = () => {
     try { return JSON.parse(localStorage.getItem('currentUser') || 'null'); }
     catch { return null; }
@@ -16,6 +22,7 @@ export function ProjectProvider({ children }) {
   // Core fetch function — always gets fresh data from server
   const fetchProjects = useCallback(async () => {
     const currentUser = getCurrentUser();
+    // If no user is logged in, clear project state and stop loading
     if (!currentUser) {
       setAllProjects([]);
       setSelectedProjectId(null);
@@ -40,7 +47,7 @@ export function ProjectProvider({ children }) {
     }
   }, []);
 
-  // Fetch on mount
+  // Fetch projects when the component first mounts
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
@@ -56,6 +63,7 @@ export function ProjectProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [fetchProjects]);
 
+  // Derive the full selected project object from the selected ID
   const selectedProject = allProjects.find(p => p._id === selectedProjectId) || null;
 
   // Helper to refresh the projects list from backend
@@ -76,6 +84,7 @@ export function ProjectProvider({ children }) {
   };
 
   return (
+    // Expose all project state and helpers to any child component via context
     <ProjectContext.Provider value={{
       allProjects,
       setAllProjects,
@@ -93,6 +102,7 @@ export function ProjectProvider({ children }) {
   );
 }
 
+// Custom hook for consuming project context — throws if used outside the provider
 export function useProject() {
   const ctx = useContext(ProjectContext);
   if (!ctx) throw new Error('useProject must be used within ProjectProvider');

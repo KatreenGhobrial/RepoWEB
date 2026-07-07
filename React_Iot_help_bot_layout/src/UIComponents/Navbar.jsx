@@ -15,6 +15,7 @@ export default function Navbar() {
   const location = useLocation();
   const { isDark, toggleTheme } = useDarkMode();
 
+  // read the logged-in user from localStorage; default to null if missing or invalid JSON
   const currentUserStr = localStorage.getItem('currentUser');
   let currentUser = null;
   try {
@@ -23,10 +24,14 @@ export default function Navbar() {
     currentUser = null;
   }
 
+  // list of IoT alerts fetched from the server
   const [alerts, setAlerts] = useState([]);
+  // controls whether the alerts dropdown panel is visible
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // toast notifications shown in the bottom-right corner
   const [toasts, setToasts] = useState([]);
 
+  // fetch alerts from the server whenever the current user changes
   useEffect(() => {
     if (currentUser) {
       getAlerts('demo').then(data => {
@@ -35,6 +40,7 @@ export default function Navbar() {
     }
   }, [currentUserStr]);
 
+  // trigger a test alert on the server, then refresh the alerts list and show a toast
   const handleSimulateAlert = async () => {
     try {
       const newAlert = await simulateAlert('demo');
@@ -48,6 +54,7 @@ export default function Navbar() {
     }
   };
 
+  // mark a single alert as resolved on the server and refresh the list
   const handleResolveAlert = async (id) => {
     try {
       await resolveAlert(id);
@@ -58,11 +65,13 @@ export default function Navbar() {
     }
   };
 
+  // clear the user session and redirect to the login page
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
     window.location.href = '/login';
   };
 
+  // base navigation items available to all logged-in users
   let menuItems = [
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Project Setup', path: '/project-setup' },
@@ -73,16 +82,19 @@ export default function Navbar() {
     { label: 'Tech Docs', path: '/tech-docs' },
   ];
 
+  // add student-only routes when the logged-in user is a student
   if (currentUser?.role === 'student') {
     menuItems.push({ label: 'Device Playground', path: '/device-playground' });
     menuItems.push({ label: 'Monitor Panel', path: '/monitor-panel' });
   }
 
+  // swap "Tasks & Team" for the mentor-specific dashboard when user is a mentor
   if (currentUser?.role === 'mentor') {
     menuItems = menuItems.filter(item => item.label !== 'Tasks & Team');
     menuItems.push({ label: 'Mentor Dashboard', path: '/mentor-dashboard' });
   }
 
+  // add the user management route for admins only
   if (currentUser?.role === 'admin') {
     menuItems.push({ label: 'Manage Users', path: '/manage-users' });
   }
@@ -97,6 +109,7 @@ export default function Navbar() {
           <Link to="/home"><h1 className="font-bold text-lg hidden md:block whitespace-nowrap text-black dark:text-white hover:text-sky-400 transition-colors">IoT Help Bot</h1></Link>
         </div>
 
+        {/* Navigation links – highlighted when path matches the current location */}
         <ul className="hidden lg:flex items-center gap-4 lg:ml-12 font-semibold text-sm text-slate-700 dark:text-slate-200">
           {currentUser && menuItems.map((item) => {
             const isActive = location.pathname.includes(item.path);
@@ -110,6 +123,7 @@ export default function Navbar() {
           })}
           
           <div className="ml-4 flex items-center gap-4">
+            {/* Show login/register links when no user is logged in, otherwise show profile + logout */}
             {!currentUser ? (
               <div className="flex gap-2">
                 <Link to="/login" className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">Log In</Link>
@@ -128,6 +142,7 @@ export default function Navbar() {
             )}
 
             <div className='flex items-center gap-2'>
+              {/* Bell icon with red dot badge when there are unresolved alerts */}
               {currentUser && (
                 <div className="relative">
                   <div className='bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl flex items-center justify-center'>
@@ -139,6 +154,7 @@ export default function Navbar() {
                     </button>
                   </div>
                   
+                  {/* Alerts dropdown panel listing unresolved alerts */}
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl shadow-xl overflow-hidden z-50">
                       <div className="p-3 border-b border-slate-200 dark:border-zinc-700 font-bold text-slate-800 dark:text-white flex justify-between items-center">
@@ -155,6 +171,7 @@ export default function Navbar() {
                             <div key={alert._id || alert.id} className="p-3 border-b border-slate-100 dark:border-zinc-700/50 hover:bg-slate-50 dark:hover:bg-zinc-700/30 transition-colors">
                               <div className="flex justify-between items-start mb-1">
                                 <h4 className="font-semibold text-sm text-slate-800 dark:text-slate-200">{alert.title}</h4>
+                                {/* Colour-coded severity badge */}
                                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                                   alert.severity === 'HIGH' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' :
                                   alert.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-500' :
@@ -178,6 +195,7 @@ export default function Navbar() {
                   )}
                 </div>
               )}
+              {/* Dark/light mode toggle button */}
               <div className='bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl flex items-center justify-center'>
                 <button onClick={toggleTheme} className='bg-transparent p-2 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-black dark:text-white transition-all'>
                   {isDark ? <LuSun size={20} /> : <LuMoon size={20} />}
@@ -187,6 +205,7 @@ export default function Navbar() {
           </div>
         </ul>
       </div>
+      {/* Render toast notifications via AlertToast so they appear over all other content */}
       <AlertToast toasts={toasts} removeToast={(id) => setToasts(ts => ts.filter(t => t.id !== id))} />
     </header>
   );

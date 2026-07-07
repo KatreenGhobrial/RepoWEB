@@ -9,13 +9,17 @@ import LabeledInput from '../UIComponents/LabeledInput';
  * and role (e.g., student, mentor).
  */
 export default function Register() {
+  // controlled values for every registration form field
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // default expertise selection shown in the dropdown
   const [expertise, setExpertise] = useState('Hardware');
+  // holds an error message to display if registration fails
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // send registration data to the API; store the new user session and redirect on success
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -31,11 +35,13 @@ export default function Register() {
     <div className="flex-1 flex items-center justify-center p-6 bg-slate-100 dark:bg-zinc-950">
       <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-zinc-800">
         <h2 className="text-2xl font-bold text-center text-slate-800 dark:text-white mb-6">Create an Account</h2>
+        {/* Show error message if the API returns an error */}
         {error && <div className="mb-4 text-red-500 text-sm text-center">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <LabeledInput label="Username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white" required />
           <LabeledInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white" required />
           <LabeledInput label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border border-slate-300 dark:border-zinc-700 rounded-lg dark:bg-zinc-800 dark:text-white" required />
+          {/* Expertise dropdown wrapped with LabeledInput for consistent label styling */}
           <LabeledInput label="Expertise">
             <select 
               value={expertise}

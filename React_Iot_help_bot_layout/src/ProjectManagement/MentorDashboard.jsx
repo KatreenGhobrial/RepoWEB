@@ -5,36 +5,62 @@ import LabeledInput from '../UIComponents/LabeledInput';
 import * as projectService from "./projectService";
 import * as taskService from "./taskService";
 
+// Dashboard page for mentors to view, evaluate, and give feedback on student projects
 export default function MentorDashboard() {
+  // read the logged-in user from localStorage
   let currentUser = null;
   try {
     currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
   } catch(e) {}
+  // summary stats returned from the mentor dashboard API
   const [dashData, setDashData] = useState(null);
+  // list of all projects assigned to this mentor
   const [projects, setProjects] = useState([]);
+  // ID of the project currently selected in the sidebar
   const [selectedProject, setSelectedProject] = useState("");
+  // feedback entries for the selected project
   const [feedback, setFeedback] = useState([]);
+  // tasks belonging to the selected project
   const [projectTasks, setProjectTasks] = useState([]);
+  // whether the initial data is still loading
   const [loading, setLoading] = useState(false);
+  // error message to display to the user
   const [error, setError] = useState("");
+  // text content typed in the feedback form
   const [fbContent, setFbContent] = useState("");
+  // whether the feedback form is currently submitting
   const [fbSaving, setFbSaving] = useState(false);
+  // ID of the task linked to the feedback being written
   const [fbTaskId, setFbTaskId] = useState("");
+  // map of project ID -> { completed, total, percent } for the progress bars
   const [projectProgress, setProjectProgress] = useState({});
+  // official assessment scores (interdisciplinary, collaboration, technical) + comments
   const [assessment, setAssessment] = useState({ interdisciplinary: 0, collaboration: 0, technical: 0, comments: '' });
+  // whether the official assessment form is saving
   const [assessmentSaving, setAssessmentSaving] = useState(false);
+  // numeric score (0-100) for interdisciplinary quality
   const [interdisciplinaryScore, setInterdisciplinaryScore] = useState(50);
+  // mentor's written notes on interdisciplinary work
   const [interdisciplinaryNotes, setInterdisciplinaryNotes] = useState("");
+  // numeric score (0-100) for team cooperation
   const [cooperationScore, setCooperationScore] = useState(50);
+  // mentor's written notes on cooperation
   const [cooperationNotes, setCooperationNotes] = useState("");
+  // numeric score (0-100) for technical progress
   const [technicalScore, setTechnicalScore] = useState(50);
+  // mentor's written notes on technical progress
   const [technicalNotes, setTechnicalNotes] = useState("");
+  // general summary notes for the evaluation form
   const [summaryNotes, setSummaryNotes] = useState("");
+  // whether the evaluation form is currently saving
   const [evalSaving, setEvalSaving] = useState(false);
+  // success message shown after saving evaluation
   const [evalSuccess, setEvalSuccess] = useState("");
 
+  // redirect non-mentors away from this page
   if (currentUser?.role !== 'mentor') return <Navigate to="/dashboard" replace />;
 
+  // fetch dashboard stats and all mentor projects when the component mounts
   useEffect(() => {
     setLoading(true);
     Promise.all([projectService.getMentorDashboard(), projectService.getMentorProjects()])
@@ -43,6 +69,7 @@ export default function MentorDashboard() {
         const projs = p.data || p;
         setProjects(projs); 
         
+        // calculate task completion percentage for each project
         const progressMap = {};
         await Promise.all(projs.map(async (proj) => {
           try {
@@ -61,9 +88,11 @@ export default function MentorDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  // load assessment scores, feedback, and tasks whenever the selected project changes
   useEffect(() => {
     if (!selectedProject) return;
     const p = projects.find(x => x._id === selectedProject);
+    // pre-fill assessment sliders from saved project data
     if (p && p.assessment) {
       setAssessment({
         interdisciplinary: p.assessment.interdisciplinary || 0,
@@ -75,15 +104,18 @@ export default function MentorDashboard() {
       setAssessment({ interdisciplinary: 0, collaboration: 0, technical: 0, comments: '' });
     }
 
+    // fetch existing feedback for the selected project
     projectService.getMentorFeedback(selectedProject)
       .then(f => setFeedback(f.data || f || []))
       .catch(err => console.error("Failed to fetch feedback", err));
 
+    // fetch tasks for the selected project
     taskService.listByProject(selectedProject)
       .then(t => setProjectTasks(t.data || t || []))
       .catch(err => console.error("Failed to fetch tasks", err));
   }, [selectedProject, projects]);
 
+  // populate the detailed evaluation sliders from saved project evaluation data
   useEffect(() => {
     if (!selectedProject) return;
     const proj = projects.find(p => p._id === selectedProject);
@@ -96,6 +128,7 @@ export default function MentorDashboard() {
       setTechnicalNotes(proj.evaluation.technicalNotes || "");
       setSummaryNotes(proj.evaluation.summaryNotes || "");
     } else {
+      // reset sliders to defaults when switching to a project with no evaluation
       setInterdisciplinaryScore(50);
       setInterdisciplinaryNotes("");
       setCooperationScore(50);
@@ -107,6 +140,7 @@ export default function MentorDashboard() {
     setEvalSuccess("");
   }, [selectedProject, projects]);
 
+  // save the detailed evaluation scores to the server
   const handleSaveEvaluation = async (e) => {
     e.preventDefault();
     if (!selectedProject) return;
@@ -123,8 +157,10 @@ export default function MentorDashboard() {
         summaryNotes
       });
       const updatedProject = response.data || response;
+      // update the local project list so sliders reflect the saved values
       setProjects(prevProjects => prevProjects.map(p => p._id === selectedProject ? updatedProject : p));
       setEvalSuccess("Evaluation saved successfully!");
+      // clear the success message after 4 seconds
       setTimeout(() => setEvalSuccess(""), 4000);
     } catch (err) {
       setError(err.message || "Failed to save evaluation");
@@ -133,29 +169,35 @@ export default function MentorDashboard() {
     }
   };
 
+  // submit feedback for the selected project, optionally linked to a specific task
   const handleFeedback = async (e) => {
     e.preventDefault();
     if (!selectedProject) return;
     setFbSaving(true);
     try {
+      // prefix the feedback content with the task title if a task is selected
       const task = projectTasks.find(t => t._id === fbTaskId);
       const content = task ? `[Task: ${task.title}] ${fbContent}` : fbContent;
       await projectService.giveMentorFeedback({ projectId: selectedProject, content });
       setFbContent(""); setFbTaskId("");
+      // refresh the feedback list after submitting
       const f = await projectService.getMentorFeedback(selectedProject);
       setFeedback(f.data || f || []);
     } catch (err) { setError(err.message || "Failed to send feedback"); }
     finally { setFbSaving(false); }
   };
 
+  // update the phase of a project when the mentor changes the dropdown
   const handlePhaseChange = async (e, projectId, newPhase) => {
     e.stopPropagation();
     try {
       await projectService.updateProjectPhase(projectId, newPhase);
+      // optimistically update the local list
       setProjects(projects.map(p => p._id === projectId ? { ...p, phase: newPhase } : p));
     } catch (err) { setError("Failed to update phase: " + err.message); }
   };
 
+  // save the official assessment grades for the selected project
   const handleAssessmentSave = async (e) => {
     e.preventDefault();
     if (!selectedProject) return;
@@ -163,6 +205,7 @@ export default function MentorDashboard() {
     try {
       const data = { ...assessment, assessor: currentUser?._id };
       await projectService.submitProjectAssessment(selectedProject, data);
+      // update local project cache so the sliders stay correct on re-select
       setProjects(prev => prev.map(p => p._id === selectedProject ? { ...p, assessment: { ...data, assessedAt: new Date().toISOString() } } : p));
     } catch (err) {
       setError(err.message || "Failed to save assessment");
@@ -171,6 +214,7 @@ export default function MentorDashboard() {
     }
   };
 
+  // build and trigger a CSV download of all mentor projects
   const generateCSV = () => {
     const rows = projects.map(p => {
       const team = [p.owner, ...(p.members || [])].filter(Boolean).map(s => s.username || s.name || s.email || s).join('; ');
@@ -211,12 +255,14 @@ export default function MentorDashboard() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* left sidebar: list of student projects with phase selector and progress bar */}
         <div className="lg:col-span-1 space-y-3">
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">📂 Student Projects</h3>
           {projects.map(p => {
             const team = [p.owner, ...(p.members || [])].filter(Boolean).map(s => s.username || s.name || s.email || s);
             const progress = projectProgress[p._id] || { completed: 0, total: 0, percent: 0 };
             return (
+              // clicking a project card sets it as the selected project
               <button key={p._id} onClick={() => setSelectedProject(p._id)} className={`w-full text-left bg-white dark:bg-zinc-900 border rounded-xl p-4 transition-all hover:bg-slate-50 dark:bg-zinc-800/50 shadow-sm ${selectedProject === p._id ? "border-cyan-500 ring-1 ring-cyan-500/30" : "border-slate-200 dark:border-zinc-800"}`}>
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium">{p.name}</p>
@@ -234,6 +280,7 @@ export default function MentorDashboard() {
                 </div>
 
                 <div className="flex items-center gap-2 mt-3">
+                  {/* phase dropdown — stopPropagation prevents triggering the card click */}
                   <select value={p.phase || 'ideation'} onChange={e => handlePhaseChange(e, p._id, e.target.value)} onClick={e => e.stopPropagation()} className="text-xs px-2 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 outline-none cursor-pointer">
                     <option value="ideation">Ideation</option><option value="design">Design</option><option value="integration">Integration</option><option value="testing">Testing</option><option value="reflection">Reflection</option>
                   </select>
@@ -246,6 +293,7 @@ export default function MentorDashboard() {
           {!projects.length && !loading && <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-8">No projects found</p>}
         </div>
 
+        {/* right panel: shown only after a project is selected */}
         <div className="lg:col-span-2 space-y-6">
           {selectedProject ? (
             <>
@@ -411,6 +459,7 @@ export default function MentorDashboard() {
                   <h3 className="text-sm font-semibold mb-3">📋 Feedback History</h3>
                   <div className="space-y-3 max-h-60 overflow-auto">
                     {feedback.map(fb => {
+                      // parse "[Task: title] content" format if present
                       const m = fb.content.match(/^\[Task:\s*(.*?)\]\s*(.*)$/);
                       return (
                         <div key={fb._id} className="bg-slate-50 rounded-lg p-3 text-sm">
@@ -455,6 +504,7 @@ export default function MentorDashboard() {
               </form>
             </>
           ) : (
+            // placeholder shown when no project has been selected yet
             <div className="bg-slate-50 border border-slate-200 dark:border-zinc-800 rounded-2xl p-12 text-center shadow-sm">
               <span className="text-4xl">👈</span>
               <h3 className="text-lg font-semibold mt-4">Select a Project</h3>

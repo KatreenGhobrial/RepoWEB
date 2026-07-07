@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
 import { getAll } from './iotService';
 
+// tab definitions for the library categories
 const TABS = [
   { key: 'hardware', label: 'Hardware', icon: '🔧' },
   { key: 'protocols', label: 'Protocols', icon: '📡' },
@@ -9,18 +10,25 @@ const TABS = [
   { key: 'software', label: 'Software Libraries', icon: '💻' }
 ];
 
+// badge color classes for each difficulty level
 const DIFFICULTY_COLOR = {
   'Beginner': 'bg-green-100 text-green-700',
   'Intermediate': 'bg-yellow-100 text-yellow-700',
   'Advanced': 'bg-red-100 text-red-700'
 };
 
+// IoTSolutionLibrary — browse hardware, protocols, cloud platforms, and software for IoT projects
 export default function IoTSolutionLibrary() {
+  // currently active tab key ('hardware', 'protocols', etc.)
   const [activeTab, setActiveTab] = useState('hardware');
+  // text typed into the search box
   const [search, setSearch] = useState('');
+  // all library data grouped by category, fetched from the server
   const [libraryData, setLibraryData] = useState({ hardware: [], protocols: [], cloud: [], software: [] });
+  // true while the initial library fetch is in progress
   const [loading, setLoading] = useState(true);
 
+  // fetch the full library data when the component mounts
   useEffect(() => {
     const fetchLibrary = async () => {
       try {
@@ -35,6 +43,7 @@ export default function IoTSolutionLibrary() {
     fetchLibrary();
   }, []);
 
+  // filter items in a category by the current search query (case-insensitive, full JSON match)
   const filter = (items) => {
     if (!items || !search.trim()) return items || [];
     const q = search.toLowerCase();
@@ -43,6 +52,7 @@ export default function IoTSolutionLibrary() {
     );
   };
 
+  // get filtered results for the currently active tab
   const results = filter(libraryData[activeTab]);
 
   if (loading) return <div className="flex items-center justify-center p-12"><p className="text-slate-500 dark:text-slate-400 text-lg">Loading library...</p></div>;
@@ -98,6 +108,7 @@ export default function IoTSolutionLibrary() {
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLOR[hw.difficulty]}`}>{hw.difficulty}</span>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{hw.description}</p>
+              {/* specs grid rendered from key-value pairs */}
               <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-xl p-3 mb-3">
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-1">Specs</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -152,6 +163,7 @@ export default function IoTSolutionLibrary() {
                   <p className="font-medium text-slate-800 dark:text-slate-200">{proto.powerUsage}</p>
                 </div>
               </div>
+              {/* pros and cons side by side */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs text-green-600 font-semibold mb-1">✅ Pros</p>
@@ -237,6 +249,7 @@ export default function IoTSolutionLibrary() {
         </div>
       )}
 
+      {/* empty state when search returns no results */}
       {results.length === 0 && (
         <div className="text-center py-16">
           <p className="text-4xl mb-3">🔍</p>

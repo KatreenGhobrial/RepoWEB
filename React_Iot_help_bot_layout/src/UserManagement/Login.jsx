@@ -10,12 +10,15 @@ import { useProject } from '../hooks/ProjectContext';
  * received token/user object in local storage upon success.
  */
 export default function Login() {
+  // controlled input values for the login form
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // holds an error message to display if login fails
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { fetchProjects } = useProject();
 
+  // submit credentials to the API; save user data and redirect on success
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -32,6 +35,7 @@ export default function Login() {
     <div className="flex-1 flex items-center justify-center p-6 bg-slate-100 dark:bg-zinc-950">
       <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-zinc-800">
         <h2 className="text-2xl font-bold text-center text-slate-800 dark:text-white mb-6">Welcome Back</h2>
+        {/* Show error message below the heading if login fails */}
         {error && <div className="mb-4 text-red-500 text-sm text-center">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <LabeledInput 

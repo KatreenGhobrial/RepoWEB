@@ -2,17 +2,23 @@ import React, { useState, useEffect } from 'react';
 import ActionButton from '../UIComponents/ActionButton';
 import { getUsers, updateUser, deleteUser } from './usersService';
 
+// Admin page that lists all registered users and allows editing or deleting each one
 export default function ManageUsers() {
+    // list of all users fetched from the server
     const [users, setUsers] = useState([]);
+    // stores the _id of the user row currently being edited (null = no row in edit mode)
     const [editingId, setEditingId] = useState(null);
+    // holds the form field values while a row is being edited
     const [editForm, setEditForm] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // load users from the server when the component first mounts
     useEffect(() => {
         loadUsers();
     }, []);
 
+    // fetch the full user list from the API and update state
     const loadUsers = async () => {
         try {
             setLoading(true);
@@ -26,6 +32,7 @@ export default function ManageUsers() {
         }
     };
 
+    // enter edit mode for a row by pre-filling the form with the user's current data
     const handleEdit = (user) => {
         setEditingId(user._id);
         setEditForm({ 
@@ -35,6 +42,7 @@ export default function ManageUsers() {
         });
     };
 
+    // save edits: apply an optimistic local update first, then sync to the server
     const handleSave = async () => {
         try {
             const payload = {
@@ -59,6 +67,7 @@ export default function ManageUsers() {
         }
     };
 
+    // delete a user after confirmation: remove locally first, then call the API
     const handleDelete = async (id) => {
         if (confirm('Delete this user?')) {
             try {
@@ -75,6 +84,7 @@ export default function ManageUsers() {
         }
     };
 
+    // update a single field in the edit form without clearing the others
     const handleChange = (field, value) => {
         setEditForm(prev => ({ ...prev, [field]: value }));
     };
@@ -103,6 +113,7 @@ export default function ManageUsers() {
                     <tbody className="divide-y divide-gray-100 dark:divide-zinc-700/50">
                         {users.map(user => (
                             <tr key={user._id} className="hover:bg-gray-50/50 transition-colors duration-200 dark:hover:bg-zinc-800/30">
+                                {/* Render editable inputs when this row is being edited, otherwise show read-only data */}
                                 {editingId === user._id ? (
                                     <>
                                         <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{user.username}</td>
@@ -143,6 +154,7 @@ export default function ManageUsers() {
                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{user.username || '—'}</td>
                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{user.email}</td>
                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
+                                            {/* colour-coded role badge */}
                                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                                                 user.role === 'admin' 
                                                 ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' 
