@@ -15,21 +15,23 @@ export interface IFlowStep {
   description: string;
 }
 
+// Scores and notes given by a mentor for a specific dimension
 export interface IEvaluation {
-  interdisciplinaryScore: number;
+  interdisciplinaryScore: number;    // how well the team combined different disciplines
   interdisciplinaryNotes: string;
-  cooperationScore: number;
+  cooperationScore: number;          // teamwork and collaboration rating
   cooperationNotes: string;
-  technicalScore: number;
+  technicalScore: number;            // technical implementation quality rating
   technicalNotes: string;
-  summaryNotes: string;
-  gradedBy: mongoose.Types.ObjectId | null;
+  summaryNotes: string;              // overall written comments from the mentor
+  gradedBy: mongoose.Types.ObjectId | null;  // which mentor graded it
   gradedAt: Date | null;
 }
 
 // ---------------------------------------------------------------------------
 // Main interface
 // ---------------------------------------------------------------------------
+// Represents a full IoT student project
 export interface IProject extends Document {
   name: string;
   description: string;
@@ -56,7 +58,7 @@ export interface IProject extends Document {
     assessedAt: Date | null;
     assessor: mongoose.Types.ObjectId | null;
   };
-  evaluation?: IEvaluation;
+  evaluation?: IEvaluation;  // detailed mentor grading
   createdAt: Date;
   updatedAt: Date;
 }
@@ -64,6 +66,7 @@ export interface IProject extends Document {
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
+// Sub-schema: one architectural component (e.g. ESP32 as hardware)
 const componentSchema = new Schema<IComponent>(
   {
     name: { type: String, required: true },
@@ -73,6 +76,7 @@ const componentSchema = new Schema<IComponent>(
   { _id: false }
 );
 
+// Sub-schema: one step in the system data-flow diagram
 const flowStepSchema = new Schema<IFlowStep>(
   {
     name: { type: String, required: true },
@@ -84,48 +88,64 @@ const flowStepSchema = new Schema<IFlowStep>(
 
 const projectSchema = new Schema<IProject>(
   {
+    // project display name
     name: {
       type: String,
       required: true,
       trim: true,
     },
+    // project description / goal
     description: {
       type: String,
       default: '',
     },
+    // user who created the project
     owner: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: false,
     },
+    // all team members (including owner)
     members: [
       {
         type: Schema.Types.ObjectId,
         ref: 'User',
       },
     ],
+    // IoT hardware device (microcontroller)
     device: { type: String, default: 'ESP32' },
+    // communication protocol used
     protocol: { type: String, default: 'MQTT' },
+    // backend database
     database: { type: String, default: 'MongoDB' },
+    // how the device is powered
     powerSource: { type: String, default: 'USB Power' },
+    // cloud platform for data (optional)
     cloudPlatform: { type: String, default: '' },
+    // list of connected sensors
     sensors: { type: [String], default: [] },
+    // system components (hardware, backend, etc.)
     components: { type: [componentSchema], default: [] },
+    // data-flow steps from sensor to cloud
     flow: { type: [flowStepSchema], default: [] },
+    // current development phase
     phase: {
       type: String,
       enum: ['ideation', 'design', 'integration', 'testing', 'reflection'],
       default: 'ideation',
     },
+    // overall project status
     status: {
       type: String,
       enum: ['active', 'completed', 'archived'],
       default: 'active',
     },
+    // discipline-specific progress percentages
     progress: {
       type: Schema.Types.Mixed,
       default: { hardware: 0, backend: 0, frontend: 0, ai: 0 },
     },
+    // student self-assessment scores
     assessment: {
       interdisciplinary: { type: Number, min: 0, max: 100, default: null },
       collaboration: { type: Number, min: 0, max: 100, default: null },
@@ -134,6 +154,7 @@ const projectSchema = new Schema<IProject>(
       assessedAt: { type: Date, default: null },
       assessor: { type: Schema.Types.ObjectId, ref: 'User', default: null }
     },
+    // mentor evaluation with per-dimension scores and notes
     evaluation: {
       interdisciplinaryScore: { type: Number, default: 0 },
       interdisciplinaryNotes: { type: String, default: '' },
