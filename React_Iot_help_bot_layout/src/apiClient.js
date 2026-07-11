@@ -7,8 +7,9 @@ import axios from 'axios';
  * Automatically handles attaching the user token/ID to request headers and standardizing error handling.
  */
 
-// Base URL for all API calls, pulled from the environment variable
-const API_BASE = `${import.meta.env.VITE_SERVER_URL}/api`;
+// Base URL for all API calls. Ensures exactly one '/api' at the end.
+const rawUrl = (import.meta.env.VITE_SERVER_URL || 'http://localhost:5000').replace(/\/api\/?$/, '').replace(/\/$/, '');
+const API_BASE = `${rawUrl}/api`;
 
 /**
  * Retrieves the current user's ID from local storage and formats it into request headers.
