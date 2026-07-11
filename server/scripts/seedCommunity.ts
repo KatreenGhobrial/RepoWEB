@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
-import dns from 'dns';
+// import dns from 'dns';
 import CommunityPost from '../src/models/CommunityPost';
 import User from '../src/models/User';
 
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+// dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 // Load env from root
 dotenv.config({ path: path.join(__dirname, '../.env') });
