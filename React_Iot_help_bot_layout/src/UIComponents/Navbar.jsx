@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { LuSun, LuMoon, LuBell, LuX, LuCheck } from "react-icons/lu";
+import { LuSun, LuMoon, LuBell, LuX, LuCheck, LuMenu } from "react-icons/lu";
 import { getAlerts, simulateAlert, resolveAlert } from '../IoTManagement/alertService';
 import AlertToast from './AlertToast';
 import useDarkMode from '../hooks/useDarkMode';
@@ -14,6 +14,9 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark, toggleTheme } = useDarkMode();
+
+  // controls whether the mobile hamburger menu is open
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // read the logged-in user from localStorage; default to null if missing or invalid JSON
   const currentUserStr = localStorage.getItem('currentUser');
@@ -100,8 +103,8 @@ export default function Navbar() {
   }
 
   return (
-    <header className="fixed w-full top-0 py-4 px-6 drop-shadow-md bg-white dark:bg-zinc-900 dark:border-b dark:border-zinc-700 z-50">
-      <div className="flex items-center justify-between gap-8 w-full">
+    <header className="fixed w-full top-0 drop-shadow-md bg-white dark:bg-zinc-900 dark:border-b dark:border-zinc-700 z-50">
+      <div className="flex items-center justify-between gap-8 w-full py-4 px-6">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-xl">
             🤖
@@ -203,8 +206,70 @@ export default function Navbar() {
               </div>
             </div>
           </div>
+          {/* Hamburger button – only visible on small screens (below lg) */}
+          <button
+            onClick={() => setIsMobileMenuOpen(prev => !prev)}
+            className="lg:hidden p-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+            aria-label="Toggle navigation menu"
+          >
+            {isMobileMenuOpen ? <LuX size={22} /> : <LuMenu size={22} />}
+          </button>
         </ul>
       </div>
+
+      {/* Mobile slide-down menu – visible only when hamburger is open and screen is below lg */}
+      {isMobileMenuOpen && (
+        <nav className="lg:hidden border-t border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 pb-4 animate-fade-in-up">
+          <ul className="flex flex-col gap-1 mt-3">
+            {currentUser && menuItems.map((item) => {
+              const isActive = location.pathname.includes(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <li className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    isActive
+                      ? 'bg-cyan-600 text-white'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-cyan-50 dark:hover:bg-zinc-800 hover:text-cyan-600 dark:hover:text-cyan-400'
+                  }`}>
+                    {item.label}
+                  </li>
+                </Link>
+              );
+            })}
+            {!currentUser && (
+              <div className="flex gap-2 mt-2">
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 text-center px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-zinc-600 rounded-lg hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
+                  Log In
+                </Link>
+                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 text-center px-4 py-2 text-sm font-semibold bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors">
+                  Register
+                </Link>
+              </div>
+            )}
+            {currentUser && (
+              <div className="mt-3 pt-3 border-t border-slate-200 dark:border-zinc-700 flex items-center justify-between">
+                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Signed in as</span>
+                  <span className="font-bold">{currentUser.username}</span>
+                </Link>
+                <button
+                  onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                  className="px-3 py-1.5 text-xs font-semibold text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-colors border border-red-500"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </ul>
+        </nav>
+      )}
+
       {/* Render toast notifications via AlertToast so they appear over all other content */}
       <AlertToast toasts={toasts} removeToast={(id) => setToasts(ts => ts.filter(t => t.id !== id))} />
     </header>

@@ -1,43 +1,148 @@
+import { useState, useEffect } from 'react';
 import Header from '../UIComponents/Header';
 import LabeledInput from '../UIComponents/LabeledInput';
+import { updateUser } from './usersService';
 
-// Static profile page showing the current user's info and notification preferences
 export default function Profile() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [formData, setFormData] = useState({ username: '', email: '', discipline: '', role: '' });
+  const [isEditing, setIsEditing] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem('currentUser');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+        setFormData({
+          username: user.username || '',
+          email: user.email || '',
+          discipline: user.discipline || '',
+          role: user.role || 'student'
+        });
+      }
+    } catch (err) {
+      console.error("Failed to parse user from local storage", err);
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage('');
+    setError('');
+    try {
+      if (currentUser && currentUser._id) {
+        const updated = await updateUser(currentUser._id, formData);
+        const updatedUser = { ...currentUser, ...updated };
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        setCurrentUser(updatedUser);
+        setMessage('Profile updated successfully!');
+        setIsEditing(false);
+        // Dispatch a storage event so other components (like Navbar) can update
+        window.dispatchEvent(new Event('storage'));
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!currentUser) return <div className="p-10 text-center dark:text-white">Loading...</div>;
+
   return (
     <>
-      <Header title="User Profile" subtitle="Manage your account settings and preferences." />
-      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 mb-8 max-w-3xl">
-        {/* Avatar and display name */}
+      <Header title="User Profile" subtitle="Manage your account settings." />
+      <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-700 shadow-sm p-10 mb-8 max-w-3xl">
         <div className="flex items-center gap-6 mb-8">
-          <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl shadow-inner border border-slate-200">
+          <div className="w-24 h-24 bg-slate-100 dark:bg-zinc-800 rounded-full flex items-center justify-center text-4xl shadow-inner border border-slate-200 dark:border-zinc-700">
             👤
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-slate-950">Student</h2>
-            <p className="text-slate-500 text-lg">Engineering Faculty</p>
+            <h2 className="text-3xl font-bold text-slate-950 dark:text-white">{currentUser.username}</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-lg">{currentUser.discipline || 'Engineering Faculty'}</p>
           </div>
         </div>
 
-        {/* Read-only account detail fields */}
         <div className="space-y-6">
-          <LabeledInput label="Full Name" type="text" value="Student" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
-          <LabeledInput label="Email Address" type="email" value="student@university.edu" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
-          <LabeledInput label="Role" type="text" value="IoT Developer" disabled className="w-full border border-slate-300 rounded-2xl px-4 py-3 bg-slate-50" />
-          
-          {/* Preferences section with an email notification toggle */}
-          <div className="pt-4 mt-6 border-t border-slate-200">
-            <h3 className="text-xl font-bold text-slate-950 mb-4">Preferences</h3>
-            <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl">
-              <div>
-                <p className="font-bold text-slate-900">Email Notifications</p>
-                <p className="text-sm text-slate-500">Receive alerts about project updates and team tasks</p>
-              </div>
-              {/* Toggle switch – checked by default */}
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-950"></div>
-              </label>
-            </div>
+          {message && <div className="bg-green-100 text-green-700 p-3 rounded-xl text-sm">{message}</div>}
+          {error && <div className="bg-red-100 text-red-700 p-3 rounded-xl text-sm">{error}</div>}
+
+          <LabeledInput 
+            label="Full Name" 
+            type="text" 
+            name="username"
+            value={formData.username} 
+            onChange={handleChange}
+            disabled={!isEditing}
+          />
+          <LabeledInput 
+            label="Email Address" 
+            type="email" 
+            name="email"
+            value={formData.email} 
+            onChange={handleChange}
+            disabled={!isEditing} 
+          />
+          <LabeledInput 
+            label="Discipline" 
+            type="text" 
+            name="discipline"
+            value={formData.discipline} 
+            onChange={handleChange}
+            disabled={!isEditing} 
+          />
+          <LabeledInput 
+            label="Role" 
+            type="text" 
+            name="role"
+            value={formData.role} 
+            disabled 
+          />
+
+          <div className="pt-6 border-t border-slate-200 dark:border-zinc-700 flex justify-end gap-3">
+            {!isEditing ? (
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="px-6 py-2 bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-zinc-700 transition"
+              >
+                Edit Profile
+              </button>
+            ) : (
+              <>
+                <button 
+                  onClick={() => {
+                    setIsEditing(false);
+                    setFormData({
+                      username: currentUser.username || '',
+                      email: currentUser.email || '',
+                      discipline: currentUser.discipline || '',
+                      role: currentUser.role || 'student'
+                    });
+                    setError('');
+                    setMessage('');
+                  }}
+                  className="px-6 py-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-bold transition"
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-cyan-600 text-white font-bold rounded-xl hover:bg-cyan-700 transition disabled:opacity-50"
+                  disabled={saving}
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </section>
