@@ -119,7 +119,9 @@ export default function MonitorPanel() {
       .catch(() => setMqttStatus('Connection Error'));
 
     // open WebSocket connection to receive live device and MQTT events
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', { withCredentials: true });
+    // Derive socket URL from VITE_SERVER_URL by removing the /api suffix — Socket.io connects to the server root
+    const socketUrl = (import.meta.env.VITE_SERVER_URL || 'http://localhost:5000').replace('/api', '');
+    const socket = io(socketUrl, { withCredentials: true });
     socket.on('device_status_update', setActiveDevices);
     
     // update MQTT status badge based on broker connection events
