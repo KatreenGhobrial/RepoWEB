@@ -346,8 +346,8 @@ export default function CommunityBoard() {
                   ))}
                 </div>
                 <div className="flex items-center gap-3 text-xs font-bold text-slate-400">
-                  <span className="flex items-center gap-1">👍 {post.score || 0}</span>
-                  <span className="flex items-center gap-1">💬 {post.replies.length}</span>
+                  <span className="flex items-center gap-1"><span className="text-base">👍</span> {post.score || 0}</span>
+                  <span className="flex items-center gap-1"><span className="text-base">💬</span> {post.replies.length}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-4 text-xs font-medium text-slate-400">
@@ -444,7 +444,7 @@ export default function CommunityBoard() {
                   <div className="flex items-center gap-4 mt-6">
                     {/* upvote button highlights when the current user has already voted */}
                     <button onClick={() => handleUpvote(selectedPost._id)} className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm ${selectedPost.upvotes.includes(currentUserId) ? "bg-sky-100 text-sky-700 border border-sky-200" : "bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-zinc-800/50"}`}>
-                      👍 {selectedPost.score || 0}
+                      <span className="text-lg">👍</span> {selectedPost.score || 0}
                     </button>
                     <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{selectedPost.replies.length} replies</span>
                   </div>
@@ -583,7 +583,7 @@ const CommentNode = ({
             className={`flex items-center gap-1.5 px-3 py-1 rounded-xl transition-all text-xs font-bold border ${hasRated ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400" : "bg-slate-50 border-slate-200 text-slate-500 dark:bg-zinc-800/40 dark:border-zinc-800 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800/80"}`}
             title={hasRated ? "Delete rating" : "Add rating"}
           >
-            <span>👍</span>
+            <span className="text-base">👍</span>
             <span>{reply.score || 0}</span>
           </button>
 
@@ -598,7 +598,7 @@ const CommentNode = ({
             }}
             className={`text-xs font-bold flex items-center gap-1 transition-all ${isCapped ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-sky-600 hover:text-sky-800"}`}
           >
-            💬 Reply ({replyCount}/10)
+            <span className="text-base">💬</span> Reply ({replyCount}/10)
           </button>
 
           {/* edit button is only shown to the comment's own author */}
@@ -611,7 +611,7 @@ const CommentNode = ({
               }}
               className="text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1 transition-all"
             >
-              ✏️ Edit
+              <span className="text-base">✏️</span> Edit
             </button>
           )}
         </div>

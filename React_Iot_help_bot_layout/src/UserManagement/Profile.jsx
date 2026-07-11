@@ -20,7 +20,6 @@ export default function Profile() {
         setFormData({
           username: user.username || '',
           email: user.email || '',
-          discipline: user.discipline || '',
           role: user.role || 'student'
         });
       }
@@ -67,7 +66,6 @@ export default function Profile() {
           </div>
           <div>
             <h2 className="text-3xl font-bold text-slate-950 dark:text-white">{currentUser.username}</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-lg">{currentUser.discipline || 'Engineering Faculty'}</p>
           </div>
         </div>
 
@@ -88,14 +86,6 @@ export default function Profile() {
             type="email" 
             name="email"
             value={formData.email} 
-            onChange={handleChange}
-            disabled={!isEditing} 
-          />
-          <LabeledInput 
-            label="Discipline" 
-            type="text" 
-            name="discipline"
-            value={formData.discipline} 
             onChange={handleChange}
             disabled={!isEditing} 
           />
@@ -123,7 +113,6 @@ export default function Profile() {
                     setFormData({
                       username: currentUser.username || '',
                       email: currentUser.email || '',
-                      discipline: currentUser.discipline || '',
                       role: currentUser.role || 'student'
                     });
                     setError('');
