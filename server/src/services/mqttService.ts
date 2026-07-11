@@ -214,6 +214,29 @@ export const connectToDynamicBroker = (config: { url: string, port?: string | nu
       else console.error(`[MQTT - ${config.name}] Failed to subscribe:`, err);
     });
     
+    // --- DEMO SIMULATOR ---
+    // If the user inputs the specific demo topic, start publishing fake data automatically
+    if (listenTopic === 'project/sensorA/telemetry') {
+      console.log(`[MQTT - ${config.name}] 🚀 Auto-Simulator activated for ${listenTopic}`);
+      const simTimer = setInterval(() => {
+        if (!client.connected) {
+          clearInterval(simTimer);
+          return;
+        }
+        const data = {
+          temperature: Math.floor(Math.random() * 15) + 20, 
+          humidity: Math.floor(Math.random() * 20) + 40,    
+          battery: Math.floor(Math.random() * 100),         
+          latency: Math.floor(Math.random() * 50) + 20      
+        };
+        client.publish(listenTopic, JSON.stringify(data));
+      }, 5000);
+      
+      // Attach timer to client so we can clear it on disconnect
+      (client as any).simTimer = simTimer;
+    }
+    // -----------------------
+
     if (transientBrokers.has(id)) {
       transientBrokers.get(id).status = 'connected';
     }
@@ -238,6 +261,7 @@ export const connectToDynamicBroker = (config: { url: string, port?: string | nu
 export const disconnectFromDynamicBroker = (id: string) => {
   const client = mqttClients.get(id);
   if (client) {
+    if ((client as any).simTimer) clearInterval((client as any).simTimer);
     client.end();
     mqttClients.delete(id);
     transientBrokers.delete(id);
@@ -249,6 +273,7 @@ export const disconnectAllBrokers = () => {
   for (const id of mqttClients.keys()) {
     const client = mqttClients.get(id);
     if (client) {
+      if ((client as any).simTimer) clearInterval((client as any).simTimer);
       client.end();
     }
   }
