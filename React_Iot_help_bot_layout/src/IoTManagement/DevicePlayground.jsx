@@ -36,7 +36,8 @@ export default function DevicePlayground() {
     fetchBrokers();
 
     // connect to the backend WebSocket server
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+    // VITE_SOCKET_URL points to the root of the backend (no /api/) so Socket.io can connect correctly
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
       withCredentials: true,
     });
     
