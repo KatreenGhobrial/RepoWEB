@@ -3,7 +3,7 @@
  * Evaluates IoT architectures for potential conflicts (e.g., protocol vs power).
  * Utilizes a rule-based engine and AI fallback to provide Socratic feedback to students.
  */
-import { getClient } from './openaiService';
+import { getClient } from './geminiService';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ---------------------------------------------------------------------------
@@ -510,7 +510,7 @@ Always respond in the same language the input is written in.
 
 /**
  * Detect architectural conflicts using AI.
- * Falls back to rule-based detection if OpenAI is unavailable.
+ * Falls back to rule-based detection if Gemini is unavailable.
  */
 export async function detectConflictsAI(architecture: {
     device: string;
@@ -555,7 +555,7 @@ export async function detectConflictsAI(architecture: {
         }
     } catch (error: any) {
         if (error?.code !== 'invalid_api_key') {
-            console.warn('⚠️  OpenAI API error in conflict detection, using rule-based fallback:', error?.code || error?.message);
+            console.warn('⚠️  Gemini API error in conflict detection, using rule-based fallback:', error?.code || error?.message);
         }
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -707,7 +707,7 @@ export async function detectConflictsAI(architecture: {
 
 /**
  * Analyze an architecture and return Socratic feedback.
- * Falls back to a template response if OpenAI is unavailable.
+ * Falls back to a template response if Gemini is unavailable.
  */
 export async function analyzeArchitectureAI(architecture: {
     device: string;

@@ -114,7 +114,7 @@ The team is reflecting on the project. Your questions should:
 // ═══════════════════════════════════════════════════════════════════════════
 // FALLBACK  SOCRATIC  ENGINE
 // ═══════════════════════════════════════════════════════════════════════════
-// When OpenAI is unavailable (quota exceeded, network error, etc.),
+// When Gemini is unavailable (quota exceeded, network error, timeout, etc.),
 // use a rule-based Socratic engine that still asks intelligent IoT questions.
 // ═══════════════════════════════════════════════════════════════════════════
 

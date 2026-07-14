@@ -3,7 +3,7 @@ import ChatHistory from '../models/ChatHistory';
 import Project from '../models/Project';
 import {
   socraticChat,
-} from '../services/openaiService';
+} from '../services/geminiService';
 import { detectConflictsAI, analyzeArchitectureAI } from '../services/analyze';
 
 const router = Router();
@@ -56,7 +56,7 @@ router.post('/chat', async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    // Build message history for OpenAI (exclude system messages, keep last 20)
+    // Build message history for Gemini (exclude system messages, keep last 20)
     const historyForAI = chatHistory.messages
       .filter((m) => m.role !== 'system')
       .slice(-20)
