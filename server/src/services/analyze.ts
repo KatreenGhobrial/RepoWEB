@@ -4,7 +4,7 @@
  * Utilizes a rule-based engine and AI fallback to provide Socratic feedback to students.
  */
 import { getClient } from './openaiService';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -526,22 +526,18 @@ export async function detectConflictsAI(architecture: {
     suggestion: string;
 }>> {
     try {
-        const openai = getClient();
+        const genAI = getClient();
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const userMessage = `Analyze this IoT architecture for conflicts:\n${JSON.stringify(architecture, null, 2)}`;
 
-        const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-            {role: 'system', content: CONFLICT_DETECTION_PROMPT},
-            {role: 'user', content: userMessage},
-        ];
-
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-oss:20b',
-            messages,
-            temperature: 0.3,
+        const result = await model.generateContent({
+            systemInstruction: CONFLICT_DETECTION_PROMPT,
+            contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+            generationConfig: { temperature: 0.3 },
         });
 
-        const raw = completion.choices[0]?.message?.content || '[]';
+        const raw = result.response.text() || '[]';
 
         try {
             // Strip potential markdown code fences
@@ -723,25 +719,20 @@ export async function analyzeArchitectureAI(architecture: {
     components: Array<{ name: string; type: string; description: string }>;
 }): Promise<string> {
     try {
-        const openai = getClient();
+        const genAI = getClient();
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const userMessage = `Review this IoT project architecture:\n${JSON.stringify(architecture, null, 2)}`;
 
-        const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-            {role: 'system', content: ARCHITECTURE_ANALYSIS_PROMPT},
-            {role: 'user', content: userMessage},
-        ];
-
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-oss:20b',
-            messages,
-            temperature: 0.5,
-            max_tokens: 1500,
+        const result = await model.generateContent({
+            systemInstruction: ARCHITECTURE_ANALYSIS_PROMPT,
+            contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+            generationConfig: { temperature: 0.5, maxOutputTokens: 1500 },
         });
 
-        return completion.choices[0]?.message?.content || 'Could you describe your architecture in more detail?';
+        return result.response.text() || 'Could you describe your architecture in more detail?';
     } catch (error: any) {
-        console.warn('⚠️  OpenAI API error in architecture analysis, using fallback:', error?.code || error?.message);
+        console.warn('⚠️  Gemini API error in architecture analysis, using fallback:', error?.code || error?.message);
 
         return `## Architecture Review for ${architecture.device} + ${architecture.protocol}
 

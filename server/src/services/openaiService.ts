@@ -3,27 +3,21 @@
  * Provides Socratic assistance for projects, guiding students without giving direct answers.
  * Features a fallback rule-based engine if the primary AI service is offline.
  */
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ---------------------------------------------------------------------------
-// OpenAI client (initialised lazily so the module can be imported even when
-// the env var is not yet set).
+// Google Gemini client (initialised lazily so the module can be imported even
+// when the env var is not yet set).
 // ---------------------------------------------------------------------------
-let client: OpenAI | null = null;
+let geminiClient: GoogleGenerativeAI | null = null;
 
-export const getClient = (): OpenAI => {
-    if (!client) {
-        client = new OpenAI({
-            baseURL: process.env.OPENAI_BASE_URL,
-            apiKey: "ollama",
-            maxRetries: 2,
-            timeout: 600000,
-            defaultHeaders: {
-                "ngrok-skip-browser-warning": "true",
-            }
-        });
+export const getClient = (): GoogleGenerativeAI => {
+    if (!geminiClient) {
+        geminiClient = new GoogleGenerativeAI(
+            process.env.GEMINI_API_KEY || ''
+        );
     }
-    return client;
+    return geminiClient;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -43,6 +37,7 @@ You are BridgeBot — a highly practical troubleshooting assistant for interdisc
 3. Avoid overly philosophical or vague questions. Focus on actionable debugging steps across the full system (hardware, firmware, network, cloud).
 4. Guide the student to narrow down the root cause layer by layer through focused inquiry.
 5. Always respond in the SAME language the student writes in. If they write in Hebrew — answer in Hebrew. If in English — answer in English.
+6. **ASK EXACTLY ONE QUESTION PER RESPONSE.** Never ask multiple questions in one reply. Keep your response short — one focused question, optionally with one sentence of context. Do not list options or give bullet points.
 
 ## IoT-SPECIFIC KNOWLEDGE AREAS
 You are an expert in these IoT domains and should probe students about practical checks in:
@@ -187,7 +182,7 @@ function getFallbackReply(userMessage: string, messageCount: number = 0): string
 
 /**
  * Send a chat message to the Socratic bot.
- * Falls back to rule-based Socratic engine if OpenAI is unavailable.
+ * Uses Google Gemini API. Falls back to rule-based Socratic engine if Gemini is unavailable.
  */
 export async function socraticChat(
     messages: { role: 'user' | 'assistant' | 'system'; content: string }[],
@@ -195,34 +190,51 @@ export async function socraticChat(
     projectContext: string = ''
 ): Promise<string> {
     try {
-        const openai = getClient();
+        const genAI = getClient();
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const phasePrompt = PHASE_PROMPTS[phase] || PHASE_PROMPTS.ideation;
 
-        const systemMessage = `${SOCRATIC_BASE_PROMPT}\n${phasePrompt}\n${
+        const systemInstruction = `${SOCRATIC_BASE_PROMPT}\n${phasePrompt}\n${
             projectContext
                 ? `\n## PROJECT CONTEXT\n${projectContext}\n`
                 : ''
         }`;
 
-        const fullMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-            {role: 'system', content: systemMessage},
-            ...messages.map((m) => ({
-                role: m.role as 'user' | 'assistant' | 'system',
-                content: m.content,
-            })),
-        ];
+        // Build Gemini chat history (exclude system messages, convert roles)
+        // Gemini uses 'user' and 'model' roles
+        const geminiHistory = messages
+            .filter(m => m.role !== 'system')
+            .slice(0, -1) // All messages except the last (which is the current user message)
+            .map(m => ({
+                role: m.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: m.content }],
+            }));
 
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-oss:20b',
-            messages: fullMessages,
-            temperature: 0.7,
-            max_tokens: 1024,
+        // The last user message is sent as the new prompt
+        const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
+
+        const chat = model.startChat({
+            systemInstruction,
+            history: geminiHistory,
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 300,  // Keep responses short — one question
+            },
         });
 
-        return completion.choices[0]?.message?.content || 'I need a moment to think about that. Could you rephrase your question?';
+        // Timeout: if Gemini doesn’t respond within 10s, fall back to rule-based engine
+        const TIMEOUT_MS = 10_000;
+        const result = await Promise.race([
+            chat.sendMessage(lastUserMessage),
+            new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Gemini timeout after 10s')), TIMEOUT_MS)
+            ),
+        ]);
+
+        return result.response.text() || 'Could you rephrase your question?';
     } catch (error: any) {
-        console.warn('⚠️  OpenAI API error, using fallback Socratic engine:', error?.code || error?.message || 'unknown');
+        console.warn('⚠️  Gemini API error, using fallback Socratic engine:', error?.code || error?.message || 'unknown');
 
         // Use the last user message for context-aware fallback
         const lastUserMsg = messages.filter(m => m.role === 'user').pop();
