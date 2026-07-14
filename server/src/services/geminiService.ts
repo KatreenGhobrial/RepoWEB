@@ -143,12 +143,34 @@ const FALLBACK_QUESTIONS: Record<string, string[]> = {
         "How would your system scale if you needed to add 100 more sensor nodes? What would break first?",
         "Have you considered security at each layer? Is the data encrypted in transit AND at rest?",
     ],
+    http_error: [
+        // 404 — Not Found
+        "A 404 means the server couldn’t find the resource at that URL. Does the route you’re requesting actually exist on your server — have you checked your route definitions?",
+        // 500 — Internal Server Error
+        "A 500 error means something crashed on the server side. Have you checked your server logs to see which function or route is throwing the exception?",
+        // 401 / 403 — Auth
+        "An auth error (401/403) means the request was rejected before reaching the logic. Are you sending the correct token or API key in the request headers?",
+        // 400 — Bad Request
+        "A 400 Bad Request usually means the server received unexpected or missing data. Have you checked that the JSON body you’re sending matches what the server expects?",
+        // CORS
+        "CORS errors happen when the server doesn’t allow requests from your frontend’s origin. Have you added your frontend URL to the allowed origins list on the server?",
+        // 503
+        "A 503 Service Unavailable usually means the server is overloaded or down. Is your backend actually running and reachable at the expected URL and port?",
+        // Timeout
+        "Request timeouts can happen when the server takes too long to respond. Is there a slow database query, a long-running operation, or a missing await in your async code?",
+    ],
+    firmware: [
+        "Have you checked the serial monitor output of your microcontroller to see if any error or warning is printed there?",
+        "Is the firmware actually being flashed correctly? Have you tried a complete erase and re-flash of the device?",
+        "Are you using any blocking delays (like `delay()`) that could be preventing the device from handling other tasks in time?",
+        "Does the problem happen every time, or only after a certain period of uptime? That could indicate a memory leak or stack overflow.",
+    ],
     general: [
-        "That's an interesting challenge. Can you break down the problem into smaller parts? Which layer do you think is most likely causing the issue — hardware, firmware, network, or cloud?",
+        "That’s an interesting challenge. Can you break down the problem into smaller parts? Which layer do you think is most likely causing the issue — hardware, firmware, network, or cloud?",
         "What debugging steps have you already tried? What did you observe at each step?",
         "If you had to explain this problem to a teammate from a different discipline (e.g., a software engineer explaining to a hardware engineer), how would you describe it?",
         "What assumptions are you making about your system? Which of those assumptions could you test or verify?",
-        "Before looking for a solution, can you clearly define what 'working correctly' looks like? What are the specific success criteria?",
+        "Before looking for a solution, can you clearly define what ‘working correctly’ looks like? What are the specific success criteria?",
     ],
 };
 
@@ -156,7 +178,21 @@ function getFallbackReply(userMessage: string, messageCount: number = 0): string
     const msg = userMessage.toLowerCase();
 
     let category = 'general';
-    if (msg.includes('battery') || msg.includes('power') || msg.includes('voltage') || msg.includes('current') || msg.includes('sleep') || msg.includes('charging')) {
+
+    // HTTP error codes — check first so "404", "500" etc. don't fall into wrong categories
+    if (
+        msg.includes('404') || msg.includes('500') || msg.includes('503') ||
+        msg.includes('401') || msg.includes('403') || msg.includes('400') ||
+        msg.includes('cors') || msg.includes('status code') ||
+        msg.includes('not found') || msg.includes('bad request') ||
+        msg.includes('unauthorized') || msg.includes('forbidden') ||
+        msg.includes('internal server error') || msg.includes('timeout') ||
+        msg.includes('request failed') || msg.includes('fetch failed')
+    ) {
+        category = 'http_error';
+    } else if (msg.includes('firmware') || msg.includes('flash') || msg.includes('serial') || msg.includes('arduino') || msg.includes('esp') || msg.includes('upload') || msg.includes('sketch')) {
+        category = 'firmware';
+    } else if (msg.includes('battery') || msg.includes('power') || msg.includes('voltage') || msg.includes('current') || msg.includes('sleep') || msg.includes('charging')) {
         category = 'power';
     } else if (msg.includes('wifi') || msg.includes('disconnect') || msg.includes('mqtt') || msg.includes('http') || msg.includes('network') || msg.includes('connect') || msg.includes('protocol')) {
         category = 'connectivity';
